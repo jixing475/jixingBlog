@@ -1,0 +1,16 @@
+image: rocker/tidyverse:3.5.2
+
+before_script:
+  - apt-get update && apt-get -y install pandoc pandoc-citeproc
+  - R -e "install.packages('rmarkdown')"
+  - R -e "install.packages('distill')"
+  
+
+pages:
+  script:
+    - R -e "rmarkdown::render_site(encoding = 'UTF-8')"
+  artifacts:
+    paths:
+      - public
+  only:
+    - master

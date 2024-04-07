@@ -1,0 +1,42 @@
+{
+  "articles": [
+    {
+      "path": "404.html",
+      "author": [],
+      "contents": "\n\nOops! The page you’re looking for can’t be found!\n\n\n\n\n\n\n\n\n",
+      "last_modified": "2024-04-07T11:17:01+08:00"
+    },
+    {
+      "path": "about.html",
+      "title": "About",
+      "description": "",
+      "author": [],
+      "contents": "\n\n\n\n\nJixing Liu\nHome\nPost\nResources\nAbout\n\n\n\n\n\n\n\n\n\n\n\n☰\n\n\n  \n    \n      \n        \n        \n        \n      \n      \n    \n    \n      \n  Home\n\n\n  Post\n\n\n  Resources\n\n\n  About\n\n      \n  \n    \n     \n  \n\n\n  \n    \n     \n  \n\n\n  \n    \n     \n  \n\n      \n  \n\n\n\n\n\n\n\n\n\n\n\n\nLoading my github calendar data.\n\n\n\n\nYou can find me at …\n\n\n\n\n\n\n\n\n© Copyright 2021 Jixing Liu\n The\nsite made with the Hugo \n\n\n\n\n\n  ",
+      "last_modified": "2024-04-07T11:17:04+08:00"
+    },
+    {
+      "path": "blog.html",
+      "title": "Blog listing",
+      "description": "This blog contains a mixture of posts on statistics, data science, Bioinformatics, R&Python and academia. \n",
+      "author": [],
+      "contents": "\n\n\n\n",
+      "last_modified": "2024-04-07T11:17:05+08:00"
+    },
+    {
+      "path": "index.html",
+      "title": "ZERO",
+      "author": [],
+      "contents": "\nRecent news\nHow can we effectively cut down on communication costs?\n\n\n\n\n\n\n\n\n\n\n\n",
+      "last_modified": "2024-04-07T11:17:06+08:00"
+    },
+    {
+      "path": "resources.html",
+      "title": "Resources",
+      "description": "This section contains some resources that are perhaps useful for others.",
+      "author": [],
+      "contents": "\nResources\nAustralia\nProfessional societies\nStatistical Society of Australia\nANZSTAT forum:\nGeneral topics\nEvent announcment\nJob vancancies and scholarships\n\nEvents listing\n\nInternational Biometrics Society Australasia Region\nAustralian Mathematical Society\n\nThe society is (rightfully) mathematics oriented but occasionally features statistics. Contrary to common belief, statistics is not a subset of mathematics, although some areas of statistics have a large intersection with the field.\nFor women, Women in Mathematics Special Interest Group (WIMSIG) may be of interest. I find their newsletter to be excellent.\n\nLearning R\nAustralian Local R-Ladies Chapters:\nR-Ladies Melbourne  \nR-Ladies Sydney  \nR-Ladies Canberra  \nR-Ladies Perth  \nR-Ladies Adelaide  \nR-Ladies Brisbane  \n\nR for data science community  \nTidy Tuesday\nBig Book of R\n\n\n\n",
+      "last_modified": "2024-04-07T11:17:07+08:00"
+    }
+  ],
+  "collections": ["posts/posts.json"]
+}

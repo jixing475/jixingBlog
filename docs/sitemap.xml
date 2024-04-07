@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" version="1.0">
+  <url>
+    <loc>https://jixing.org/404.html</loc>
+    <lastmod>2021-12-30T08:13:35+08:00</lastmod>
+  </url>
+  <url>
+    <loc>https://jixing.org/about.html</loc>
+    <lastmod>2024-04-07T11:05:04+08:00</lastmod>
+  </url>
+  <url>
+    <loc>https://jixing.org/blog.html</loc>
+    <lastmod>2021-12-30T08:13:35+08:00</lastmod>
+  </url>
+  <url>
+    <loc>https://jixing.org/</loc>
+    <lastmod>2024-04-07T09:35:20+08:00</lastmod>
+  </url>
+  <url>
+    <loc>https://jixing.org/resources.html</loc>
+    <lastmod>2021-12-30T08:13:35+08:00</lastmod>
+  </url>
+  <url>
+    <loc>https://jixing.org/posts/2022-05-15-figreproduction001/</loc>
+    <lastmod>2024-04-07T11:05:03+08:00</lastmod>
+  </url>
+  <url>
+    <loc>https://jixing.org/posts/2021-02-03-current-state-of-experimental-design-r-packages/</loc>
+    <lastmod>2024-04-07T11:05:03+08:00</lastmod>
+  </url>
+  <url>
+    <loc>https://jixing.org/posts/2022-02-04-buildblock/</loc>
+    <lastmod>2024-04-07T11:05:03+08:00</lastmod>
+  </url>
+  <url>
+    <loc>https://jixing.org/posts/2024-04-07-testpost/</loc>
+    <lastmod>2024-04-07T11:16:54+08:00</lastmod>
+  </url>
+</urlset>

@@ -1,0 +1,96 @@
+---
+title: "Build block data clean"
+description: |
+  A short description of the post.
+author:
+  - name: Jixing Liu
+    url: https://emitanaka.org
+    affiliation: Centre for Artificial Intelligence Driven Drug Discovery
+    affiliation_url: https://www.mpu.edu.mo/esca/en/aidd.php
+date: 2021-02-03
+draft: false
+base_url: http://emitanaka.org/
+twitter:
+  creator: "@statsgen"
+categories: [experimental design, R]
+output:
+  distill::distill_article:
+    self_contained: false
+    highlight: default
+    toc: true
+    #highlight_downlit: false # downlit makes attr.source not work
+    toc_float: true
+preview: "https://gitee.com/jixing475/tuchuang/raw/master/uPic/image-20210601220146194.png"
+---
+
+```{r knit-setup, include=FALSE}
+knitr::knit_hooks$set(toggle = function(before, options) {
+  if(options$toggle) {
+    ifelse(before, "<div class='toggle-code'>", "</div>")
+  }
+})
+
+knitr::opts_chunk$set(echo = TRUE, 
+                      toggle = TRUE,
+                      cache = TRUE,
+                      collapse = TRUE,
+                      comment = "#>",
+                      fig.path = "graphics/knitr-",
+                      fig.retina = 2, # Control using dpi
+                      fig.width = 6,  # generated images
+                      fig.pos = "t",  # pdf mode
+                      fig.align = "center",
+                      dpi = if (knitr::is_latex_output()) 72 else 300, 
+                      out.width = "100%",
+                      dev = "svg",
+                      dev.args = list(png = list(type = "cairo-png")),
+                      optipng = "-o1 -quiet")
+```
+
+
+```{r}
+library(tidyverse)
+data_path_ACEMOL <- here::here("analysis/data/raw_data/Build_block_ACEMOL.csv")
+```
+
+## ACEMOL
+```{r}
+df <- read_csv(data_path_ACEMOL)
+
+df %>% head()
+df %>% colnames()
+
+df_clean <- 
+df %>%
+  select(name = Name,
+         name_zh = CNName,
+         SMILES = `cards-box-desc1`) %>%
+  mutate(name_zh = str_remove(name_zh, "CN Name:"),
+         name = str_remove(name, "^>"))
+
+
+```
+
+```{r eval=FALSE}
+
+
+library(docking)
+docking::init_py()
+
+df_clean %>% 
+  pull(SMILES) %>% 
+  map_chr(~ py$smiles_to_canonical(.x))
+
+is.na(.Last.value) %>% sum()
+
+
+
+# df_clean %>% 
+#   py$df_add_ROMol() %>% 
+#   rename(ID = name) %>% 
+#   open_in_DataWarrior()
+```
+
+
+
+
