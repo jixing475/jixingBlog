@@ -4,14 +4,14 @@ description: |
   A short description of the post.
 author:
   - name: Jixing Liu
-    url: https://emitanaka.org
+    url: https://jixing.netlify.app
     affiliation: Centre for Artificial Intelligence Driven Drug Discovery
     affiliation_url: https://www.mpu.edu.mo/esca/en/aidd.php
 date: 2021-02-03
 draft: false
 base_url: http://emitanaka.org/
 twitter:
-  creator: "@statsgen"
+  creator: "@studentZero475"
 categories: [experimental design, R]
 output:
   distill::distill_article:

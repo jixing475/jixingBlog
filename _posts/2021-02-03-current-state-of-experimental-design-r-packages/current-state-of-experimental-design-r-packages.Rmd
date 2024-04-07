@@ -4,7 +4,7 @@ description: |
   Your analytical toolkit matters very little if the data are no good. Ideally you want to know to how the data were collected before delving into the analysis of the data; better yet, get involved _before_ the collection of data and design its collection. In this post I explore some of the top downloaded R packages for the design of experiments and analysis of experimental data.
 author:
   - name: Jixing Liu
-    url: https://emitanaka.org
+    url: https://jixing.netlify.app
     affiliation: Centre for Artificial Intelligence Driven Drug Discovery
     affiliation_url: https://www.mpu.edu.mo/esca/en/aidd.php
 date: 2021-02-03
@@ -12,7 +12,7 @@ draft: false
 # bibliography: ref.bib
 base_url: http://emitanaka.org/
 twitter:
-  creator: "@statsgen"
+  creator: "@studentZero475"
 categories: [experimental design, R]
 output:
   distill::distill_article:
@@ -146,7 +146,7 @@ survey_pkgs <- dat_survey %>%
 ```
 
 
-There are all together  R-packages in the [CRAN Task View of Design of Experiments & Analysis of Experimental Data](https://cran.r-project.org/web/views/ExperimentalDesign.html) as of .^[I originally had a webscrapping error where I didn't remove duplicate entries so numbers presented at [TokyoR](https://emitanaka.org/slides/TokyoR2021/#32) and [SSA Webinar](https://emitanaka.org/slides/SSA2020/#52) had the wrong numbers.] I'm going to refer these packages as **_DoE packages_**, although there are some packages in the mix that are more about the analysis of experimental data rather than the design of experiments and there are some packages that are missing in the list (e.g. `DeclareDesign`). The DoE packages make up about % of the  packages available in CRAN.
+There are all together  R-packages in the [CRAN Task View of Design of Experiments & Analysis of Experimental Data](https://cran.r-project.org/web/views/ExperimentalDesign.html) as of .^[I originally had a webscrapping error where I didn't remove duplicate entries so numbers presented at [TokyoR](https://jixing.netlify.app/slides/TokyoR2021/#32) and [SSA Webinar](https://jixing.netlify.app/slides/SSA2020/#52) had the wrong numbers.] I'm going to refer these packages as **_DoE packages_**, although there are some packages in the mix that are more about the analysis of experimental data rather than the design of experiments and there are some packages that are missing in the list (e.g. `DeclareDesign`). The DoE packages make up about % of the  packages available in CRAN.
 
 The DoE packages don't include survey design. These instead belong to the [CRAN Task View of Official Statistics & Survey Methodology](https://cran.r-project.org/web/views/OfficialStatistics.html) which contains   packages. While some surveys are part of an experimental study, most often they generate observational data. 
 
