@@ -5,6 +5,8 @@
 .DS_Store
 .Rdata
 .httr-oauth
+analysis/*
+_posts/*
 easyBlog.Rproj
 README.Rmd
 .quarto
