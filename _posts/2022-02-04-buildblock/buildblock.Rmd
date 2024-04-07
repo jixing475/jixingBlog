@@ -4,7 +4,7 @@ description: |
   A short description of the post.
 author:
   - name: Jixing Liu
-    url: https://jixing.netlify.app
+    url: https://jixing475.github.io/jixingBlog
     affiliation: Centre for Artificial Intelligence Driven Drug Discovery
     affiliation_url: https://www.mpu.edu.mo/esca/en/aidd.php
 date: 2021-02-03
