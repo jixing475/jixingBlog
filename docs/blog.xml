@@ -47,15 +47,5 @@ statistics, data science, Bioinformatics, R&amp;Python and academia.
       <pubDate>Wed, 03 Feb 2021 00:00:00 +0000</pubDate>
       <media:content url="https://gitee.com/jixing475/tuchuang/raw/master/uPic/image-20210601220146194.png" medium="image" type="image/png"/>
     </item>
-    <item>
-      <title>Current state of R packages for the design of experiments</title>
-      <dc:creator>Jixing Liu</dc:creator>
-      <link>https://jixing.org/posts/2024-04-07-testpost</link>
-      <description>Your analytical toolkit matters very little if the data are no good. Ideally you want to know to how the data were collected before delving into the analysis of the data; better yet, get involved _before_ the collection of data and design its collection. In this post I explore some of the top downloaded R packages for the design of experiments and analysis of experimental data.</description>
-      <category>experimental design</category>
-      <category>R</category>
-      <guid>https://jixing.org/posts/2024-04-07-testpost</guid>
-      <pubDate>Wed, 03 Feb 2021 00:00:00 +0000</pubDate>
-    </item>
   </channel>
 </rss>
