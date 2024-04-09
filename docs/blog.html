@@ -22,7 +22,7 @@
 <style type="text/css">code{white-space: pre;}</style>
 <style type="text/css" data-origin="pandoc">
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -33,7 +33,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
   { counter-reset: source-line 0; }
@@ -2728,6 +2728,23 @@ function init_posts_list() {
 <div class="posts-container posts-with-sidebar posts-apply-limit l-screen-inset">
 <div class="posts-list">
 <h1 class="posts-list-caption" data-caption="Blog listing">Blog listing</h1>
+<a href="posts/2024-04-09-using-active-learning-in-a-3d-similarity-search/" class="post-preview">
+<script class="post-metadata" type="text/json">{"categories":["experimental design","R"]}</script>
+<div class="metadata">
+<div class="publishedDate">April 9, 2024</div>
+</div>
+<div class="thumbnail">
+<img/>
+</div>
+<div class="description">
+<h2>学习笔记: 在 3D 相似性搜索中使用主动学习</h2>
+<div class="dt-tags">
+<div class="dt-tag">experimental design</div>
+<div class="dt-tag">R</div>
+</div>
+<p>在药物发现中，使用主动学习来识别具有所需特性的分子非常有价值。本文演示了如何使用主动学习来查找具有与查询分子相似的形状和药效团特征的分子。我们使用高斯过程回归作为机器学习模型，并使用 Tanimoto 相似性作为核函数。我们还定义了几个获取函数，包括贪婪函数和最大化概率改进 (PI) 函数。我们使用来自 LitPCBA 数据集的分子进行了实验，结果表明主动学习优于随机选择。</p>
+</div>
+</a>
 <a href="posts/2022-05-15-figreproduction001/" class="post-preview">
 <script class="post-metadata" type="text/json">{"categories":["experimental design","R"]}</script>
 <div class="metadata">
@@ -2804,15 +2821,15 @@ function init_posts_list() {
 <ul>
 <li>
 <a href="#category:Articles">Articles</a>
-<span class="category-count">(3)</span>
+<span class="category-count">(4)</span>
 </li>
 <li>
 <a href="#category:experimental_design">experimental design</a>
-<span class="category-count">(3)</span>
+<span class="category-count">(4)</span>
 </li>
 <li>
 <a href="#category:R">R</a>
-<span class="category-count">(3)</span>
+<span class="category-count">(4)</span>
 </li>
 </ul>
 </div>

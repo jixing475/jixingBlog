@@ -64,7 +64,7 @@ button {
   
 </aside>
 
-```{r setup, cache = FALSE}
+```{r setup, echo=FALSE, cache = FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(rvest)
