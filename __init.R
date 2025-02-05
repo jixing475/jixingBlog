@@ -1,5 +1,7 @@
 distill::create_post("Using-Active-Learning-in-a-3D-Similarity-Search")
 
+rstudioapi::filesPaneNavigate(path = here::here("_posts"))
+
 usethis::edit_file("_posts/2024-04-09-using-active-learning-in-a-3d-similarity-search.Rmd")
 
 # 注意设置不要重新编译
@@ -9,4 +11,7 @@ usethis::edit_file("_posts/2024-04-09-using-active-learning-in-a-3d-similarity-s
 
 
 distill::create_post("Kinase-Bench-Comprehensive-benchmarking-tool-for-improving-kinase-inhibitor-selectivity")
+
+
+
 
