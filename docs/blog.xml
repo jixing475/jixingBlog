@@ -13,7 +13,17 @@ statistics, data science, Bioinformatics, R&amp;Python and academia.
       <link>https://jixing.org</link>
     </image>
     <generator>Distill</generator>
-    <lastBuildDate>Tue, 09 Apr 2024 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Tue, 04 Feb 2025 00:00:00 +0000</lastBuildDate>
+    <item>
+      <title>JCIM | Kinase-Bench：提高激酶抑制剂选择性的综合基准测试工具</title>
+      <dc:creator>Jixing Liu</dc:creator>
+      <link>https://jixing.org/posts/2025-02-05-kinase-bench-comprehensive-benchmarking-tool-for-improving-kinase-inhibitor-selectivity</link>
+      <description>激酶作为细胞信号通路的调节剂，在药物化学中一直是肿瘤学、免疫学和传染病最具吸引力的药物靶点。然而，激酶结构的高度相似性导致脱靶毒性，造成严重的不良药物反应。例如，泛 JAK 抑制剂因缺乏对其他 JAK 成员的选择性，导致心血管疾病、肿瘤和死亡风险。本研究旨在解决激酶选择性问题，采用虚拟筛选结合定制的蛋白 - 配体相互作用过滤器，对激酶选择性进行了广泛的基准研究。研究者利用严格的计算分析和验证实验，评估了该方法在识别选择性激酶抑制剂方面的有效性和可靠性。</description>
+      <category>AIDD</category>
+      <category>榴莲忘返 2014</category>
+      <guid>https://jixing.org/posts/2025-02-05-kinase-bench-comprehensive-benchmarking-tool-for-improving-kinase-inhibitor-selectivity</guid>
+      <pubDate>Tue, 04 Feb 2025 00:00:00 +0000</pubDate>
+    </item>
     <item>
       <title>学习笔记: 在 3D 相似性搜索中使用主动学习</title>
       <dc:creator>Jixing Liu</dc:creator>

@@ -1,0 +1,2862 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1"/>
+  <meta name="generator" content="distill" />
+
+  <style type="text/css">
+  /* Hide doc at startup (prevent jankiness while JS renders/transforms) */
+  body {
+    visibility: hidden;
+  }
+  </style>
+
+ <!--radix_placeholder_import_source-->
+ <!--/radix_placeholder_import_source-->
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  { color: #00769e; background-color: #f1f3f5; }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span { color: #00769e; } /* Normal */
+code span.al { color: #ad0000; } /* Alert */
+code span.an { color: #5e5e5e; } /* Annotation */
+code span.at { color: #657422; } /* Attribute */
+code span.bn { color: #ad0000; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #00769e; } /* ControlFlow */
+code span.ch { color: #20794d; } /* Char */
+code span.cn { color: #8f5902; } /* Constant */
+code span.co { color: #5e5e5e; } /* Comment */
+code span.cv { color: #5e5e5e; font-style: italic; } /* CommentVar */
+code span.do { color: #5e5e5e; font-style: italic; } /* Documentation */
+code span.dt { color: #ad0000; } /* DataType */
+code span.dv { color: #ad0000; } /* DecVal */
+code span.er { color: #ad0000; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #ad0000; } /* Float */
+code span.fu { color: #4758ab; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #5e5e5e; } /* Information */
+code span.kw { color: #00769e; } /* Keyword */
+code span.op { color: #5e5e5e; } /* Operator */
+code span.ot { color: #00769e; } /* Other */
+code span.pp { color: #ad0000; } /* Preprocessor */
+code span.sc { color: #5e5e5e; } /* SpecialChar */
+code span.ss { color: #20794d; } /* SpecialString */
+code span.st { color: #20794d; } /* String */
+code span.va { color: #111111; } /* Variable */
+code span.vs { color: #20794d; } /* VerbatimString */
+code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
+</style>
+
+
+  <!--radix_placeholder_meta_tags-->
+<title>Jixing Liu: JCIM | Kinase-Bench：提高激酶抑制剂选择性的综合基准测试工具</title>
+
+<meta property="description" itemprop="description" content="激酶作为细胞信号通路的调节剂，在药物化学中一直是肿瘤学、免疫学和传染病最具吸引力的药物靶点。然而，激酶结构的高度相似性导致脱靶毒性，造成严重的不良药物反应。例如，泛 JAK 抑制剂因缺乏对其他 JAK 成员的选择性，导致心血管疾病、肿瘤和死亡风险。本研究旨在解决激酶选择性问题，采用虚拟筛选结合定制的蛋白 - 配体相互作用过滤器，对激酶选择性进行了广泛的基准研究。研究者利用严格的计算分析和验证实验，评估了该方法在识别选择性激酶抑制剂方面的有效性和可靠性。"/>
+
+<link rel="canonical" href="https://jixing.org/posts/2025-02-05-kinase-bench-comprehensive-benchmarking-tool-for-improving-kinase-inhibitor-selectivity/"/>
+<link rel="license" href="https://creativecommons.org/licenses/by/4.0/"/>
+<link rel="icon" type="image/png" href="../../images/avatar.png"/>
+
+<!--  https://schema.org/Article -->
+<meta property="article:published" itemprop="datePublished" content="2025-02-05"/>
+<meta property="article:created" itemprop="dateCreated" content="2025-02-05"/>
+<meta name="article:author" content="Jixing Liu"/>
+
+<!--  https://developers.facebook.com/docs/sharing/webmasters#markup -->
+<meta property="og:title" content="Jixing Liu: JCIM | Kinase-Bench：提高激酶抑制剂选择性的综合基准测试工具"/>
+<meta property="og:type" content="article"/>
+<meta property="og:description" content="激酶作为细胞信号通路的调节剂，在药物化学中一直是肿瘤学、免疫学和传染病最具吸引力的药物靶点。然而，激酶结构的高度相似性导致脱靶毒性，造成严重的不良药物反应。例如，泛 JAK 抑制剂因缺乏对其他 JAK 成员的选择性，导致心血管疾病、肿瘤和死亡风险。本研究旨在解决激酶选择性问题，采用虚拟筛选结合定制的蛋白 - 配体相互作用过滤器，对激酶选择性进行了广泛的基准研究。研究者利用严格的计算分析和验证实验，评估了该方法在识别选择性激酶抑制剂方面的有效性和可靠性。"/>
+<meta property="og:url" content="https://jixing.org/posts/2025-02-05-kinase-bench-comprehensive-benchmarking-tool-for-improving-kinase-inhibitor-selectivity/"/>
+<meta property="og:locale" content="en_US"/>
+<meta property="og:site_name" content="Jixing Liu"/>
+
+<!--  https://dev.twitter.com/cards/types/summary -->
+<meta property="twitter:card" content="summary"/>
+<meta property="twitter:title" content="Jixing Liu: JCIM | Kinase-Bench：提高激酶抑制剂选择性的综合基准测试工具"/>
+<meta property="twitter:description" content="激酶作为细胞信号通路的调节剂，在药物化学中一直是肿瘤学、免疫学和传染病最具吸引力的药物靶点。然而，激酶结构的高度相似性导致脱靶毒性，造成严重的不良药物反应。例如，泛 JAK 抑制剂因缺乏对其他 JAK 成员的选择性，导致心血管疾病、肿瘤和死亡风险。本研究旨在解决激酶选择性问题，采用虚拟筛选结合定制的蛋白 - 配体相互作用过滤器，对激酶选择性进行了广泛的基准研究。研究者利用严格的计算分析和验证实验，评估了该方法在识别选择性激酶抑制剂方面的有效性和可靠性。"/>
+<meta property="twitter:url" content="https://jixing.org/posts/2025-02-05-kinase-bench-comprehensive-benchmarking-tool-for-improving-kinase-inhibitor-selectivity/"/>
+<meta property="twitter:site" content="@studentZero475"/>
+<meta property="twitter:creator" content="@studentZero475"/>
+
+<!--  https://scholar.google.com/intl/en/scholar/inclusion.html#indexing -->
+<meta name="citation_title" content="Jixing Liu: JCIM | Kinase-Bench：提高激酶抑制剂选择性的综合基准测试工具"/>
+<meta name="citation_fulltext_html_url" content="https://jixing.org/posts/2025-02-05-kinase-bench-comprehensive-benchmarking-tool-for-improving-kinase-inhibitor-selectivity/"/>
+<meta name="citation_fulltext_world_readable" content=""/>
+<meta name="citation_online_date" content="2025/02/05"/>
+<meta name="citation_publication_date" content="2025/02/05"/>
+<meta name="citation_author" content="Jixing Liu"/>
+<meta name="citation_author_institution" content="Centre for Artificial Intelligence Driven Drug Discovery"/>
+<!--/radix_placeholder_meta_tags-->
+  <!--radix_placeholder_rmarkdown_metadata-->
+
+<script type="text/json" id="radix-rmarkdown-metadata">
+{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["creative_commons","title","description","author","date","draft","base_url","twitter","categories","output","citation_url","canonical_url"]}},"value":[{"type":"character","attributes":{},"value":["CC BY"]},{"type":"character","attributes":{},"value":["JCIM | Kinase-Bench：提高激酶抑制剂选择性的综合基准测试工具"]},{"type":"character","attributes":{},"value":["激酶作为细胞信号通路的调节剂，在药物化学中一直是肿瘤学、免疫学和传染病最具吸引力的药物靶点。然而，激酶结构的高度相似性导致脱靶毒性，造成严重的不良药物反应。例如，泛 JAK 抑制剂因缺乏对其他 JAK 成员的选择性，导致心血管疾病、肿瘤和死亡风险。本研究旨在解决激酶选择性问题，采用虚拟筛选结合定制的蛋白 - 配体相互作用过滤器，对激酶选择性进行了广泛的基准研究。研究者利用严格的计算分析和验证实验，评估了该方法在识别选择性激酶抑制剂方面的有效性和可靠性。"]},{"type":"list","attributes":{},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["name","url","affiliation","affiliation_url"]}},"value":[{"type":"character","attributes":{},"value":["Jixing Liu"]},{"type":"character","attributes":{},"value":["https://jixing475.github.io/jixingBlog"]},{"type":"character","attributes":{},"value":["Centre for Artificial Intelligence Driven Drug Discovery"]},{"type":"character","attributes":{},"value":["https://www.mpu.edu.mo/esca/en/aidd.php"]}]}]},{"type":"character","attributes":{},"value":["2025-02-05"]},{"type":"logical","attributes":{},"value":[false]},{"type":"character","attributes":{},"value":["https://jixing475.github.io/jixingBlog"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["creator"]}},"value":[{"type":"character","attributes":{},"value":["@studentZero475"]}]},{"type":"character","attributes":{},"value":["AIDD","榴莲忘返 2014"]},{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["distill::distill_article"]}},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["self_contained","highlight","toc","toc_float"]}},"value":[{"type":"logical","attributes":{},"value":[false]},{"type":"character","attributes":{},"value":["default"]},{"type":"logical","attributes":{},"value":[true]},{"type":"logical","attributes":{},"value":[true]}]}]},{"type":"character","attributes":{},"value":["https://jixing.org/posts/2025-02-05-kinase-bench-comprehensive-benchmarking-tool-for-improving-kinase-inhibitor-selectivity/"]},{"type":"character","attributes":{},"value":["https://jixing.org/posts/2025-02-05-kinase-bench-comprehensive-benchmarking-tool-for-improving-kinase-inhibitor-selectivity/"]}]}
+</script>
+<!--/radix_placeholder_rmarkdown_metadata-->
+  
+  <script type="text/json" id="radix-resource-manifest">
+  {"type":"character","attributes":{},"value":["cache/__packages","cache/unnamed-chunk-1_7762956bd2cff8d7e14b9e3299140ed8.RData","cache/unnamed-chunk-1_7762956bd2cff8d7e14b9e3299140ed8.rdb","cache/unnamed-chunk-1_7762956bd2cff8d7e14b9e3299140ed8.rdx","images/0194d46d-7ab1-7d73-8ab9-08185218be05_0_134_619_1500_594_0.jpg","images/0194d46d-7ab1-7d73-8ab9-08185218be05_1_138_164_1494_1002_0.jpg","images/0194d46d-7ab1-7d73-8ab9-08185218be05_10_134_154_1497_1306_0.jpg","images/0194d46d-7ab1-7d73-8ab9-08185218be05_12_230_134_1340_1410_0.jpg","images/0194d46d-7ab1-7d73-8ab9-08185218be05_13_262_167_1244_480_0.jpg","images/0194d46d-7ab1-7d73-8ab9-08185218be05_14_272_164_1246_1580_0.jpg","images/0194d46d-7ab1-7d73-8ab9-08185218be05_16_141_159_1483_1190_0.jpg","images/0194d46d-7ab1-7d73-8ab9-08185218be05_17_510_1061_291_192_0.jpg","images/0194d46d-7ab1-7d73-8ab9-08185218be05_17_517_802_281_226_0.jpg","images/0194d46d-7ab1-7d73-8ab9-08185218be05_17_524_449_265_124_0.jpg","images/0194d46d-7ab1-7d73-8ab9-08185218be05_17_535_605_245_175_0.jpg","images/0194d46d-7ab1-7d73-8ab9-08185218be05_18_344_161_1082_1134_0.jpg","images/0194d46d-7ab1-7d73-8ab9-08185218be05_2_148_164_1481_987_0.jpg","images/0194d46d-7ab1-7d73-8ab9-08185218be05_3_141_171_1488_537_0.jpg","images/0194d46d-7ab1-7d73-8ab9-08185218be05_4_130_162_1504_1317_0.jpg","images/0194d46d-7ab1-7d73-8ab9-08185218be05_8_144_115_1484_776_0.jpg","images/0194d46d-7ab1-7d73-8ab9-08185218be05_9_131_104_1500_1323_0.jpg","kinase-bench-comprehensive-benchmarking-tool-for-improving-kinase-inhibitor-selectivity_files/anchor-4.2.2/anchor.min.js","kinase-bench-comprehensive-benchmarking-tool-for-improving-kinase-inhibitor-selectivity_files/bowser-1.9.3/bowser.min.js","kinase-bench-comprehensive-benchmarking-tool-for-improving-kinase-inhibitor-selectivity_files/distill-2.2.21/template.v2.js","kinase-bench-comprehensive-benchmarking-tool-for-improving-kinase-inhibitor-selectivity_files/header-attrs-2.25/header-attrs.js","kinase-bench-comprehensive-benchmarking-tool-for-improving-kinase-inhibitor-selectivity_files/jquery-3.6.0/jquery-3.6.0.js","kinase-bench-comprehensive-benchmarking-tool-for-improving-kinase-inhibitor-selectivity_files/jquery-3.6.0/jquery-3.6.0.min.js","kinase-bench-comprehensive-benchmarking-tool-for-improving-kinase-inhibitor-selectivity_files/jquery-3.6.0/jquery-3.6.0.min.map","kinase-bench-comprehensive-benchmarking-tool-for-improving-kinase-inhibitor-selectivity_files/popper-2.6.0/popper.min.js","kinase-bench-comprehensive-benchmarking-tool-for-improving-kinase-inhibitor-selectivity_files/tippy-6.2.7/tippy-bundle.umd.min.js","kinase-bench-comprehensive-benchmarking-tool-for-improving-kinase-inhibitor-selectivity_files/tippy-6.2.7/tippy-light-border.css","kinase-bench-comprehensive-benchmarking-tool-for-improving-kinase-inhibitor-selectivity_files/tippy-6.2.7/tippy.css","kinase-bench-comprehensive-benchmarking-tool-for-improving-kinase-inhibitor-selectivity_files/tippy-6.2.7/tippy.umd.min.js","kinase-bench-comprehensive-benchmarking-tool-for-improving-kinase-inhibitor-selectivity_files/webcomponents-2.0.0/webcomponents.js","md_nice_image/image-20250205131503674.png","md_nice_image/image-20250205131647634.png"]}
+  </script>
+  <!--radix_placeholder_navigation_in_header-->
+<meta name="distill:offset" content="../.."/>
+
+<script type="application/javascript">
+
+  window.headroom_prevent_pin = false;
+
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+
+    // initialize headroom for banner
+    var header = $('header').get(0);
+    var headerHeight = header.offsetHeight;
+    var headroom = new Headroom(header, {
+      tolerance: 5,
+      onPin : function() {
+        if (window.headroom_prevent_pin) {
+          window.headroom_prevent_pin = false;
+          headroom.unpin();
+        }
+      }
+    });
+    headroom.init();
+    if(window.location.hash)
+      headroom.unpin();
+    $(header).addClass('headroom--transition');
+
+    // offset scroll location for banner on hash change
+    // (see: https://github.com/WickyNilliams/headroom.js/issues/38)
+    window.addEventListener("hashchange", function(event) {
+      window.scrollTo(0, window.pageYOffset - (headerHeight + 25));
+    });
+
+    // responsive menu
+    $('.distill-site-header').each(function(i, val) {
+      var topnav = $(this);
+      var toggle = topnav.find('.nav-toggle');
+      toggle.on('click', function() {
+        topnav.toggleClass('responsive');
+      });
+    });
+
+    // nav dropdowns
+    $('.nav-dropbtn').click(function(e) {
+      $(this).next('.nav-dropdown-content').toggleClass('nav-dropdown-active');
+      $(this).parent().siblings('.nav-dropdown')
+         .children('.nav-dropdown-content').removeClass('nav-dropdown-active');
+    });
+    $("body").click(function(e){
+      $('.nav-dropdown-content').removeClass('nav-dropdown-active');
+    });
+    $(".nav-dropdown").click(function(e){
+      e.stopPropagation();
+    });
+  });
+</script>
+
+<style type="text/css">
+
+/* Theme (user-documented overrideables for nav appearance) */
+
+.distill-site-nav {
+  color: rgba(255, 255, 255, 0.8);
+  background-color: #0F2E3D;
+  font-size: 15px;
+  font-weight: 300;
+}
+
+.distill-site-nav a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.distill-site-nav a:hover {
+  color: white;
+}
+
+@media print {
+  .distill-site-nav {
+    display: none;
+  }
+}
+
+.distill-site-header {
+
+}
+
+.distill-site-footer {
+
+}
+
+
+/* Site Header */
+
+.distill-site-header {
+  width: 100%;
+  box-sizing: border-box;
+  z-index: 3;
+}
+
+.distill-site-header .nav-left {
+  display: inline-block;
+  margin-left: 8px;
+}
+
+@media screen and (max-width: 768px) {
+  .distill-site-header .nav-left {
+    margin-left: 0;
+  }
+}
+
+
+.distill-site-header .nav-right {
+  float: right;
+  margin-right: 8px;
+}
+
+.distill-site-header a,
+.distill-site-header .title {
+  display: inline-block;
+  text-align: center;
+  padding: 14px 10px 14px 10px;
+}
+
+.distill-site-header .title {
+  font-size: 18px;
+  min-width: 150px;
+}
+
+.distill-site-header .logo {
+  padding: 0;
+}
+
+.distill-site-header .logo img {
+  display: none;
+  max-height: 20px;
+  width: auto;
+  margin-bottom: -4px;
+}
+
+.distill-site-header .nav-image img {
+  max-height: 18px;
+  width: auto;
+  display: inline-block;
+  margin-bottom: -3px;
+}
+
+
+
+@media screen and (min-width: 1000px) {
+  .distill-site-header .logo img {
+    display: inline-block;
+  }
+  .distill-site-header .nav-left {
+    margin-left: 20px;
+  }
+  .distill-site-header .nav-right {
+    margin-right: 20px;
+  }
+  .distill-site-header .title {
+    padding-left: 12px;
+  }
+}
+
+
+.distill-site-header .nav-toggle {
+  display: none;
+}
+
+.nav-dropdown {
+  display: inline-block;
+  position: relative;
+}
+
+.nav-dropdown .nav-dropbtn {
+  border: none;
+  outline: none;
+  color: rgba(255, 255, 255, 0.8);
+  padding: 16px 10px;
+  background-color: transparent;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  margin: 0;
+  margin-top: 1px;
+  z-index: 2;
+}
+
+.nav-dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: white;
+  min-width: 200px;
+  border: 1px solid rgba(0,0,0,0.15);
+  border-radius: 4px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.1);
+  z-index: 1;
+  margin-top: 2px;
+  white-space: nowrap;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+.nav-dropdown-content hr {
+  margin-top: 4px;
+  margin-bottom: 4px;
+  border: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.nav-dropdown-active {
+  display: block;
+}
+
+.nav-dropdown-content a, .nav-dropdown-content .nav-dropdown-header {
+  color: black;
+  padding: 6px 24px;
+  text-decoration: none;
+  display: block;
+  text-align: left;
+}
+
+.nav-dropdown-content .nav-dropdown-header {
+  display: block;
+  padding: 5px 24px;
+  padding-bottom: 0;
+  text-transform: uppercase;
+  font-size: 14px;
+  color: #999999;
+  white-space: nowrap;
+}
+
+.nav-dropdown:hover .nav-dropbtn {
+  color: white;
+}
+
+.nav-dropdown-content a:hover {
+  background-color: #ddd;
+  color: black;
+}
+
+.nav-right .nav-dropdown-content {
+  margin-left: -45%;
+  right: 0;
+}
+
+@media screen and (max-width: 768px) {
+  .distill-site-header a, .distill-site-header .nav-dropdown  {display: none;}
+  .distill-site-header a.nav-toggle {
+    float: right;
+    display: block;
+  }
+  .distill-site-header .title {
+    margin-left: 0;
+  }
+  .distill-site-header .nav-right {
+    margin-right: 0;
+  }
+  .distill-site-header {
+    overflow: hidden;
+  }
+  .nav-right .nav-dropdown-content {
+    margin-left: 0;
+  }
+}
+
+
+@media screen and (max-width: 768px) {
+  .distill-site-header.responsive {position: relative; min-height: 500px; }
+  .distill-site-header.responsive a.nav-toggle {
+    position: absolute;
+    right: 0;
+    top: 0;
+  }
+  .distill-site-header.responsive a,
+  .distill-site-header.responsive .nav-dropdown {
+    display: block;
+    text-align: left;
+  }
+  .distill-site-header.responsive .nav-left,
+  .distill-site-header.responsive .nav-right {
+    width: 100%;
+  }
+  .distill-site-header.responsive .nav-dropdown {float: none;}
+  .distill-site-header.responsive .nav-dropdown-content {position: relative;}
+  .distill-site-header.responsive .nav-dropdown .nav-dropbtn {
+    display: block;
+    width: 100%;
+    text-align: left;
+  }
+}
+
+/* Site Footer */
+
+.distill-site-footer {
+  width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+  z-index: 3;
+  margin-top: 30px;
+  padding-top: 30px;
+  padding-bottom: 30px;
+  text-align: center;
+}
+
+/* Headroom */
+
+d-title {
+  padding-top: 6rem;
+}
+
+@media print {
+  d-title {
+    padding-top: 4rem;
+  }
+}
+
+.headroom {
+  z-index: 1000;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+
+.headroom--transition {
+  transition: all .4s ease-in-out;
+}
+
+.headroom--unpinned {
+  top: -100px;
+}
+
+.headroom--pinned {
+  top: 0;
+}
+
+/* adjust viewport for navbar height */
+/* helps vertically center bootstrap (non-distill) content */
+.min-vh-100 {
+  min-height: calc(100vh - 100px) !important;
+}
+
+</style>
+
+<script src="../../site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<link href="../../site_libs/font-awesome-6.2.1/css/all.min.css" rel="stylesheet"/>
+<link href="../../site_libs/font-awesome-6.2.1/css/v4-shims.min.css" rel="stylesheet"/>
+<script src="../../site_libs/headroom-0.9.4/headroom.min.js"></script>
+<script src="../../site_libs/autocomplete-0.37.1/autocomplete.min.js"></script>
+<script src="../../site_libs/fuse-6.4.1/fuse.min.js"></script>
+
+<script type="application/javascript">
+
+function getMeta(metaName) {
+  var metas = document.getElementsByTagName('meta');
+  for (let i = 0; i < metas.length; i++) {
+    if (metas[i].getAttribute('name') === metaName) {
+      return metas[i].getAttribute('content');
+    }
+  }
+  return '';
+}
+
+function offsetURL(url) {
+  var offset = getMeta('distill:offset');
+  return offset ? offset + '/' + url : url;
+}
+
+function createFuseIndex() {
+
+  // create fuse index
+  var options = {
+    keys: [
+      { name: 'title', weight: 20 },
+      { name: 'categories', weight: 15 },
+      { name: 'description', weight: 10 },
+      { name: 'contents', weight: 5 },
+    ],
+    ignoreLocation: true,
+    threshold: 0
+  };
+  var fuse = new window.Fuse([], options);
+
+  // fetch the main search.json
+  return fetch(offsetURL('search.json'))
+    .then(function(response) {
+      if (response.status == 200) {
+        return response.json().then(function(json) {
+          // index main articles
+          json.articles.forEach(function(article) {
+            fuse.add(article);
+          });
+          // download collections and index their articles
+          return Promise.all(json.collections.map(function(collection) {
+            return fetch(offsetURL(collection)).then(function(response) {
+              if (response.status === 200) {
+                return response.json().then(function(articles) {
+                  articles.forEach(function(article) {
+                    fuse.add(article);
+                  });
+                })
+              } else {
+                return Promise.reject(
+                  new Error('Unexpected status from search index request: ' +
+                            response.status)
+                );
+              }
+            });
+          })).then(function() {
+            return fuse;
+          });
+        });
+
+      } else {
+        return Promise.reject(
+          new Error('Unexpected status from search index request: ' +
+                      response.status)
+        );
+      }
+    });
+}
+
+window.document.addEventListener("DOMContentLoaded", function (event) {
+
+  // get search element (bail if we don't have one)
+  var searchEl = window.document.getElementById('distill-search');
+  if (!searchEl)
+    return;
+
+  createFuseIndex()
+    .then(function(fuse) {
+
+      // make search box visible
+      searchEl.classList.remove('hidden');
+
+      // initialize autocomplete
+      var options = {
+        autoselect: true,
+        hint: false,
+        minLength: 2,
+      };
+      window.autocomplete(searchEl, options, [{
+        source: function(query, callback) {
+          const searchOptions = {
+            isCaseSensitive: false,
+            shouldSort: true,
+            minMatchCharLength: 2,
+            limit: 10,
+          };
+          var results = fuse.search(query, searchOptions);
+          callback(results
+            .map(function(result) { return result.item; })
+          );
+        },
+        templates: {
+          suggestion: function(suggestion) {
+            var img = suggestion.preview && Object.keys(suggestion.preview).length > 0
+              ? `<img src="${offsetURL(suggestion.preview)}"</img>`
+              : '';
+            var html = `
+              <div class="search-item">
+                <h3>${suggestion.title}</h3>
+                <div class="search-item-description">
+                  ${suggestion.description || ''}
+                </div>
+                <div class="search-item-preview">
+                  ${img}
+                </div>
+              </div>
+            `;
+            return html;
+          }
+        }
+      }]).on('autocomplete:selected', function(event, suggestion) {
+        window.location.href = offsetURL(suggestion.path);
+      });
+      // remove inline display style on autocompleter (we want to
+      // manage responsive display via css)
+      $('.algolia-autocomplete').css("display", "");
+    })
+    .catch(function(error) {
+      console.log(error);
+    });
+
+});
+
+</script>
+
+<style type="text/css">
+
+.nav-search {
+  font-size: x-small;
+}
+
+/* Algolioa Autocomplete */
+
+.algolia-autocomplete {
+  display: inline-block;
+  margin-left: 10px;
+  vertical-align: sub;
+  background-color: white;
+  color: black;
+  padding: 6px;
+  padding-top: 8px;
+  padding-bottom: 0;
+  border-radius: 6px;
+  border: 1px #0F2E3D solid;
+  width: 180px;
+}
+
+
+@media screen and (max-width: 768px) {
+  .distill-site-nav .algolia-autocomplete {
+    display: none;
+    visibility: hidden;
+  }
+  .distill-site-nav.responsive .algolia-autocomplete {
+    display: inline-block;
+    visibility: visible;
+  }
+  .distill-site-nav.responsive .algolia-autocomplete .aa-dropdown-menu {
+    margin-left: 0;
+    width: 400px;
+    max-height: 400px;
+  }
+}
+
+.algolia-autocomplete .aa-input, .algolia-autocomplete .aa-hint {
+  width: 90%;
+  outline: none;
+  border: none;
+}
+
+.algolia-autocomplete .aa-hint {
+  color: #999;
+}
+.algolia-autocomplete .aa-dropdown-menu {
+  width: 550px;
+  max-height: 70vh;
+  overflow-x: visible;
+  overflow-y: scroll;
+  padding: 5px;
+  margin-top: 3px;
+  margin-left: -150px;
+  background-color: #fff;
+  border-radius: 5px;
+  border: 1px solid #999;
+  border-top: none;
+}
+
+.algolia-autocomplete .aa-dropdown-menu .aa-suggestion {
+  cursor: pointer;
+  padding: 5px 4px;
+  border-bottom: 1px solid #eee;
+}
+
+.algolia-autocomplete .aa-dropdown-menu .aa-suggestion:last-of-type {
+  border-bottom: none;
+  margin-bottom: 2px;
+}
+
+.algolia-autocomplete .aa-dropdown-menu .aa-suggestion .search-item {
+  overflow: hidden;
+  font-size: 0.8em;
+  line-height: 1.4em;
+}
+
+.algolia-autocomplete .aa-dropdown-menu .aa-suggestion .search-item h3 {
+  font-size: 1rem;
+  margin-block-start: 0;
+  margin-block-end: 5px;
+}
+
+.algolia-autocomplete .aa-dropdown-menu .aa-suggestion .search-item-description {
+  display: inline-block;
+  overflow: hidden;
+  height: 2.8em;
+  width: 80%;
+  margin-right: 4%;
+}
+
+.algolia-autocomplete .aa-dropdown-menu .aa-suggestion .search-item-preview {
+  display: inline-block;
+  width: 15%;
+}
+
+.algolia-autocomplete .aa-dropdown-menu .aa-suggestion .search-item-preview img {
+  height: 3em;
+  width: auto;
+  display: none;
+}
+
+.algolia-autocomplete .aa-dropdown-menu .aa-suggestion .search-item-preview img[src] {
+  display: initial;
+}
+
+.algolia-autocomplete .aa-dropdown-menu .aa-suggestion.aa-cursor {
+  background-color: #eee;
+}
+.algolia-autocomplete .aa-dropdown-menu .aa-suggestion em {
+  font-weight: bold;
+  font-style: normal;
+}
+
+</style>
+
+
+<!--/radix_placeholder_navigation_in_header-->
+  <!--radix_placeholder_distill-->
+
+<style type="text/css">
+
+body {
+  background-color: white;
+}
+
+.pandoc-table {
+  width: 100%;
+}
+
+.pandoc-table>caption {
+  margin-bottom: 10px;
+}
+
+.pandoc-table th:not([align]) {
+  text-align: left;
+}
+
+.pagedtable-footer {
+  font-size: 15px;
+}
+
+d-byline .byline {
+  grid-template-columns: 2fr 2fr;
+}
+
+d-byline .byline h3 {
+  margin-block-start: 1.5em;
+}
+
+d-byline .byline .authors-affiliations h3 {
+  margin-block-start: 0.5em;
+}
+
+.authors-affiliations .orcid-id {
+  width: 16px;
+  height:16px;
+  margin-left: 4px;
+  margin-right: 4px;
+  vertical-align: middle;
+  padding-bottom: 2px;
+}
+
+d-title .dt-tags {
+  margin-top: 1em;
+  grid-column: text;
+}
+
+.dt-tags .dt-tag {
+  text-decoration: none;
+  display: inline-block;
+  color: rgba(0,0,0,0.6);
+  padding: 0em 0.4em;
+  margin-right: 0.5em;
+  margin-bottom: 0.4em;
+  font-size: 70%;
+  border: 1px solid rgba(0,0,0,0.2);
+  border-radius: 3px;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+d-article table.gt_table td,
+d-article table.gt_table th {
+  border-bottom: none;
+  font-size: 100%;
+}
+
+.html-widget {
+  margin-bottom: 2.0em;
+}
+
+.l-screen-inset {
+  padding-right: 16px;
+}
+
+.l-screen .caption {
+  margin-left: 10px;
+}
+
+.shaded {
+  background: rgb(247, 247, 247);
+  padding-top: 20px;
+  padding-bottom: 20px;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.shaded .html-widget {
+  margin-bottom: 0;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.shaded .shaded-content {
+  background: white;
+}
+
+.text-output {
+  margin-top: 0;
+  line-height: 1.5em;
+}
+
+.hidden {
+  display: none !important;
+}
+
+hr.section-separator {
+  border: none;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  margin: 0px;
+}
+
+
+d-byline {
+  border-top: none;
+}
+
+d-article {
+  padding-top: 2.5rem;
+  padding-bottom: 30px;
+  border-top: none;
+}
+
+d-appendix {
+  padding-top: 30px;
+}
+
+d-article>p>img {
+  width: 100%;
+}
+
+d-article h2 {
+  margin: 1rem 0 1.5rem 0;
+}
+
+d-article h3 {
+  margin-top: 1.5rem;
+}
+
+d-article iframe {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  margin-bottom: 2.0em;
+  width: 100%;
+}
+
+/* Tweak code blocks */
+
+d-article div.sourceCode code,
+d-article pre code {
+  font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+}
+
+d-article pre,
+d-article div.sourceCode,
+d-article div.sourceCode pre {
+  overflow: auto;
+}
+
+d-article div.sourceCode {
+  background-color: white;
+}
+
+d-article div.sourceCode pre {
+  padding-left: 10px;
+  font-size: 12px;
+  border-left: 2px solid rgba(0,0,0,0.1);
+}
+
+d-article pre {
+  font-size: 12px;
+  color: black;
+  background: none;
+  margin-top: 0;
+  text-align: left;
+  white-space: pre;
+  word-spacing: normal;
+  word-break: normal;
+  word-wrap: normal;
+  line-height: 1.5;
+
+  -moz-tab-size: 4;
+  -o-tab-size: 4;
+  tab-size: 4;
+
+  -webkit-hyphens: none;
+  -moz-hyphens: none;
+  -ms-hyphens: none;
+  hyphens: none;
+}
+
+d-article pre a {
+  border-bottom: none;
+}
+
+d-article pre a:hover {
+  border-bottom: none;
+  text-decoration: underline;
+}
+
+d-article details {
+  grid-column: text;
+  margin-bottom: 0.8em;
+}
+
+@media(min-width: 768px) {
+
+d-article pre,
+d-article div.sourceCode,
+d-article div.sourceCode pre {
+  overflow: visible !important;
+}
+
+d-article div.sourceCode pre {
+  padding-left: 18px;
+  font-size: 14px;
+}
+
+/* tweak for Pandoc numbered line within distill */
+d-article pre.numberSource code > span {
+    left: -2em;
+}
+
+d-article pre {
+  font-size: 14px;
+}
+
+}
+
+figure img.external {
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.1);
+  padding: 18px;
+  box-sizing: border-box;
+}
+
+/* CSS for d-contents */
+
+.d-contents {
+  grid-column: text;
+  color: rgba(0,0,0,0.8);
+  font-size: 0.9em;
+  padding-bottom: 1em;
+  margin-bottom: 1em;
+  padding-bottom: 0.5em;
+  margin-bottom: 1em;
+  padding-left: 0.25em;
+  justify-self: start;
+}
+
+@media(min-width: 1000px) {
+  .d-contents.d-contents-float {
+    height: 0;
+    grid-column-start: 1;
+    grid-column-end: 4;
+    justify-self: center;
+    padding-right: 3em;
+    padding-left: 2em;
+  }
+}
+
+.d-contents nav h3 {
+  font-size: 18px;
+  margin-top: 0;
+  margin-bottom: 1em;
+}
+
+.d-contents li {
+  list-style-type: none
+}
+
+.d-contents nav > ul {
+  padding-left: 0;
+}
+
+.d-contents ul {
+  padding-left: 1em
+}
+
+.d-contents nav ul li {
+  margin-top: 0.6em;
+  margin-bottom: 0.2em;
+}
+
+.d-contents nav a {
+  font-size: 13px;
+  border-bottom: none;
+  text-decoration: none
+  color: rgba(0, 0, 0, 0.8);
+}
+
+.d-contents nav a:hover {
+  text-decoration: underline solid rgba(0, 0, 0, 0.6)
+}
+
+.d-contents nav > ul > li > a {
+  font-weight: 600;
+}
+
+.d-contents nav > ul > li > ul {
+  font-weight: inherit;
+}
+
+.d-contents nav > ul > li > ul > li {
+  margin-top: 0.2em;
+}
+
+
+.d-contents nav ul {
+  margin-top: 0;
+  margin-bottom: 0.25em;
+}
+
+.d-article-with-toc h2:nth-child(2) {
+  margin-top: 0;
+}
+
+
+/* Figure */
+
+.figure {
+  position: relative;
+  margin-bottom: 2.5em;
+  margin-top: 1.5em;
+}
+
+.figure .caption {
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 12px;
+  line-height: 1.5em;
+}
+
+.figure img.external {
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.1);
+  padding: 18px;
+  box-sizing: border-box;
+}
+
+.figure .caption a {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.figure .caption b,
+.figure .caption strong, {
+  font-weight: 600;
+  color: rgba(0, 0, 0, 1.0);
+}
+
+/* Citations */
+
+d-article .citation {
+  color: inherit;
+  cursor: inherit;
+}
+
+div.hanging-indent{
+  margin-left: 1em; text-indent: -1em;
+}
+
+/* Citation hover box */
+
+.tippy-box[data-theme~=light-border] {
+  background-color: rgba(250, 250, 250, 0.95);
+}
+
+.tippy-content > p {
+  margin-bottom: 0;
+  padding: 2px;
+}
+
+
+/* Tweak 1000px media break to show more text */
+
+@media(min-width: 1000px) {
+  .base-grid,
+  distill-header,
+  d-title,
+  d-abstract,
+  d-article,
+  d-appendix,
+  distill-appendix,
+  d-byline,
+  d-footnote-list,
+  d-citation-list,
+  distill-footer {
+    grid-template-columns: [screen-start] 1fr [page-start kicker-start] 80px [middle-start] 50px [text-start kicker-end] 65px 65px 65px 65px 65px 65px 65px 65px [text-end gutter-start] 65px [middle-end] 65px [page-end gutter-end] 1fr [screen-end];
+    grid-column-gap: 16px;
+  }
+
+  .grid {
+    grid-column-gap: 16px;
+  }
+
+  d-article {
+    font-size: 1.06rem;
+    line-height: 1.7em;
+  }
+  figure .caption, .figure .caption, figure figcaption {
+    font-size: 13px;
+  }
+}
+
+@media(min-width: 1180px) {
+  .base-grid,
+  distill-header,
+  d-title,
+  d-abstract,
+  d-article,
+  d-appendix,
+  distill-appendix,
+  d-byline,
+  d-footnote-list,
+  d-citation-list,
+  distill-footer {
+    grid-template-columns: [screen-start] 1fr [page-start kicker-start] 60px [middle-start] 60px [text-start kicker-end] 60px 60px 60px 60px 60px 60px 60px 60px [text-end gutter-start] 60px [middle-end] 60px [page-end gutter-end] 1fr [screen-end];
+    grid-column-gap: 32px;
+  }
+
+  .grid {
+    grid-column-gap: 32px;
+  }
+}
+
+
+/* Get the citation styles for the appendix (not auto-injected on render since
+   we do our own rendering of the citation appendix) */
+
+d-appendix .citation-appendix,
+.d-appendix .citation-appendix {
+  font-size: 11px;
+  line-height: 15px;
+  border-left: 1px solid rgba(0, 0, 0, 0.1);
+  padding-left: 18px;
+  border: 1px solid rgba(0,0,0,0.1);
+  background: rgba(0, 0, 0, 0.02);
+  padding: 10px 18px;
+  border-radius: 3px;
+  color: rgba(150, 150, 150, 1);
+  overflow: hidden;
+  margin-top: -12px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* Include appendix styles here so they can be overridden */
+
+d-appendix {
+  contain: layout style;
+  font-size: 0.8em;
+  line-height: 1.7em;
+  margin-top: 60px;
+  margin-bottom: 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  color: rgba(0,0,0,0.5);
+  padding-top: 60px;
+  padding-bottom: 48px;
+}
+
+d-appendix h3 {
+  grid-column: page-start / text-start;
+  font-size: 15px;
+  font-weight: 500;
+  margin-top: 1em;
+  margin-bottom: 0;
+  color: rgba(0,0,0,0.65);
+}
+
+d-appendix h3 + * {
+  margin-top: 1em;
+}
+
+d-appendix ol {
+  padding: 0 0 0 15px;
+}
+
+@media (min-width: 768px) {
+  d-appendix ol {
+    padding: 0 0 0 30px;
+    margin-left: -30px;
+  }
+}
+
+d-appendix li {
+  margin-bottom: 1em;
+}
+
+d-appendix a {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+d-appendix > * {
+  grid-column: text;
+}
+
+d-appendix > d-footnote-list,
+d-appendix > d-citation-list,
+d-appendix > distill-appendix {
+  grid-column: screen;
+}
+
+/* Include footnote styles here so they can be overridden */
+
+d-footnote-list {
+  contain: layout style;
+}
+
+d-footnote-list > * {
+  grid-column: text;
+}
+
+d-footnote-list a.footnote-backlink {
+  color: rgba(0,0,0,0.3);
+  padding-left: 0.5em;
+}
+
+
+
+/* Anchor.js */
+
+.anchorjs-link {
+  /*transition: all .25s linear; */
+  text-decoration: none;
+  border-bottom: none;
+}
+*:hover > .anchorjs-link {
+  margin-left: -1.125em !important;
+  text-decoration: none;
+  border-bottom: none;
+}
+
+/* Social footer */
+
+.social_footer {
+  margin-top: 30px;
+  margin-bottom: 0;
+  color: rgba(0,0,0,0.67);
+}
+
+.disqus-comments {
+  margin-right: 30px;
+}
+
+.disqus-comment-count {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.4);
+  cursor: pointer;
+}
+
+#disqus_thread {
+  margin-top: 30px;
+}
+
+.article-sharing a {
+  border-bottom: none;
+  margin-right: 8px;
+}
+
+.article-sharing a:hover {
+  border-bottom: none;
+}
+
+.sidebar-section.subscribe {
+  font-size: 12px;
+  line-height: 1.6em;
+}
+
+.subscribe p {
+  margin-bottom: 0.5em;
+}
+
+
+.article-footer .subscribe {
+  font-size: 15px;
+  margin-top: 45px;
+}
+
+
+.sidebar-section.custom {
+  font-size: 12px;
+  line-height: 1.6em;
+}
+
+.custom p {
+  margin-bottom: 0.5em;
+}
+
+/* Styles for listing layout (hide title) */
+.layout-listing d-title, .layout-listing .d-title {
+  display: none;
+}
+
+/* Styles for posts lists (not auto-injected) */
+
+
+.posts-with-sidebar {
+  padding-left: 45px;
+  padding-right: 45px;
+}
+
+.posts-list .description h2,
+.posts-list .description p {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", Arial, sans-serif;
+}
+
+.posts-list .description h2 {
+  font-weight: 700;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.posts-list h2.post-tag {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.2);
+  padding-bottom: 12px;
+}
+.posts-list {
+  margin-top: 60px;
+  margin-bottom: 24px;
+}
+
+.posts-list .post-preview {
+  text-decoration: none;
+  overflow: hidden;
+  display: block;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 24px 0;
+}
+
+.post-preview-last {
+  border-bottom: none !important;
+}
+
+.posts-list .posts-list-caption {
+  grid-column: screen;
+  font-weight: 400;
+}
+
+.posts-list .post-preview h2 {
+  margin: 0 0 6px 0;
+  line-height: 1.2em;
+  font-style: normal;
+  font-size: 24px;
+}
+
+.posts-list .post-preview p {
+  margin: 0 0 12px 0;
+  line-height: 1.4em;
+  font-size: 16px;
+}
+
+.posts-list .post-preview .thumbnail {
+  box-sizing: border-box;
+  margin-bottom: 24px;
+  position: relative;
+  max-width: 500px;
+}
+.posts-list .post-preview img {
+  width: 100%;
+  display: block;
+}
+
+.posts-list .metadata {
+  font-size: 12px;
+  line-height: 1.4em;
+  margin-bottom: 18px;
+}
+
+.posts-list .metadata > * {
+  display: inline-block;
+}
+
+.posts-list .metadata .publishedDate {
+  margin-right: 2em;
+}
+
+.posts-list .metadata .dt-authors {
+  display: block;
+  margin-top: 0.3em;
+  margin-right: 2em;
+}
+
+.posts-list .dt-tags {
+  display: block;
+  line-height: 1em;
+}
+
+.posts-list .dt-tags .dt-tag {
+  display: inline-block;
+  color: rgba(0,0,0,0.6);
+  padding: 0.3em 0.4em;
+  margin-right: 0.2em;
+  margin-bottom: 0.4em;
+  font-size: 60%;
+  border: 1px solid rgba(0,0,0,0.2);
+  border-radius: 3px;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.posts-list img {
+  opacity: 1;
+}
+
+.posts-list img[data-src] {
+  opacity: 0;
+}
+
+.posts-more {
+  clear: both;
+}
+
+
+.posts-sidebar {
+  font-size: 16px;
+}
+
+.posts-sidebar h3 {
+  font-size: 16px;
+  margin-top: 0;
+  margin-bottom: 0.5em;
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+.sidebar-section {
+  margin-bottom: 30px;
+}
+
+.categories ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+.categories li {
+  color: rgba(0, 0, 0, 0.8);
+  margin-bottom: 0;
+}
+
+.categories li>a {
+  border-bottom: none;
+}
+
+.categories li>a:hover {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.4);
+}
+
+.categories .active {
+  font-weight: 600;
+}
+
+.categories .category-count {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+
+@media(min-width: 768px) {
+  .posts-list .post-preview h2 {
+    font-size: 26px;
+  }
+  .posts-list .post-preview .thumbnail {
+    float: right;
+    width: 30%;
+    margin-bottom: 0;
+  }
+  .posts-list .post-preview .description {
+    float: left;
+    width: 45%;
+  }
+  .posts-list .post-preview .metadata {
+    float: left;
+    width: 20%;
+    margin-top: 8px;
+  }
+  .posts-list .post-preview p {
+    margin: 0 0 12px 0;
+    line-height: 1.5em;
+    font-size: 16px;
+  }
+  .posts-with-sidebar .posts-list {
+    float: left;
+    width: 75%;
+  }
+  .posts-with-sidebar .posts-sidebar {
+    float: right;
+    width: 20%;
+    margin-top: 60px;
+    padding-top: 24px;
+    padding-bottom: 24px;
+  }
+}
+
+
+/* Improve display for browsers without grid (IE/Edge <= 15) */
+
+.downlevel {
+  line-height: 1.6em;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", Arial, sans-serif;
+  margin: 0;
+}
+
+.downlevel .d-title {
+  padding-top: 6rem;
+  padding-bottom: 1.5rem;
+}
+
+.downlevel .d-title h1 {
+  font-size: 50px;
+  font-weight: 700;
+  line-height: 1.1em;
+  margin: 0 0 0.5rem;
+}
+
+.downlevel .d-title p {
+  font-weight: 300;
+  font-size: 1.2rem;
+  line-height: 1.55em;
+  margin-top: 0;
+}
+
+.downlevel .d-byline {
+  padding-top: 0.8em;
+  padding-bottom: 0.8em;
+  font-size: 0.8rem;
+  line-height: 1.8em;
+}
+
+.downlevel .section-separator {
+  border: none;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.downlevel .d-article {
+  font-size: 1.06rem;
+  line-height: 1.7em;
+  padding-top: 1rem;
+  padding-bottom: 2rem;
+}
+
+
+.downlevel .d-appendix {
+  padding-left: 0;
+  padding-right: 0;
+  max-width: none;
+  font-size: 0.8em;
+  line-height: 1.7em;
+  margin-bottom: 0;
+  color: rgba(0,0,0,0.5);
+  padding-top: 40px;
+  padding-bottom: 48px;
+}
+
+.downlevel .footnotes ol {
+  padding-left: 13px;
+}
+
+.downlevel .base-grid,
+.downlevel .distill-header,
+.downlevel .d-title,
+.downlevel .d-abstract,
+.downlevel .d-article,
+.downlevel .d-appendix,
+.downlevel .distill-appendix,
+.downlevel .d-byline,
+.downlevel .d-footnote-list,
+.downlevel .d-citation-list,
+.downlevel .distill-footer,
+.downlevel .appendix-bottom,
+.downlevel .posts-container {
+  padding-left: 40px;
+  padding-right: 40px;
+}
+
+@media(min-width: 768px) {
+  .downlevel .base-grid,
+  .downlevel .distill-header,
+  .downlevel .d-title,
+  .downlevel .d-abstract,
+  .downlevel .d-article,
+  .downlevel .d-appendix,
+  .downlevel .distill-appendix,
+  .downlevel .d-byline,
+  .downlevel .d-footnote-list,
+  .downlevel .d-citation-list,
+  .downlevel .distill-footer,
+  .downlevel .appendix-bottom,
+  .downlevel .posts-container {
+  padding-left: 150px;
+  padding-right: 150px;
+  max-width: 900px;
+}
+}
+
+.downlevel pre code {
+  display: block;
+  border-left: 2px solid rgba(0, 0, 0, .1);
+  padding: 0 0 0 20px;
+  font-size: 14px;
+}
+
+.downlevel code, .downlevel pre {
+  color: black;
+  background: none;
+  font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+  text-align: left;
+  white-space: pre;
+  word-spacing: normal;
+  word-break: normal;
+  word-wrap: normal;
+  line-height: 1.5;
+
+  -moz-tab-size: 4;
+  -o-tab-size: 4;
+  tab-size: 4;
+
+  -webkit-hyphens: none;
+  -moz-hyphens: none;
+  -ms-hyphens: none;
+  hyphens: none;
+}
+
+.downlevel .posts-list .post-preview {
+  color: inherit;
+}
+
+
+
+</style>
+
+<script type="application/javascript">
+
+function is_downlevel_browser() {
+  if (bowser.isUnsupportedBrowser({ msie: "12", msedge: "16"},
+                                 window.navigator.userAgent)) {
+    return true;
+  } else {
+    return window.load_distill_framework === undefined;
+  }
+}
+
+// show body when load is complete
+function on_load_complete() {
+
+  // add anchors
+  if (window.anchors) {
+    window.anchors.options.placement = 'left';
+    window.anchors.add('d-article > h2, d-article > h3, d-article > h4, d-article > h5');
+  }
+
+
+  // set body to visible
+  document.body.style.visibility = 'visible';
+
+  // force redraw for leaflet widgets
+  if (window.HTMLWidgets) {
+    var maps = window.HTMLWidgets.findAll(".leaflet");
+    $.each(maps, function(i, el) {
+      var map = this.getMap();
+      map.invalidateSize();
+      map.eachLayer(function(layer) {
+        if (layer instanceof L.TileLayer)
+          layer.redraw();
+      });
+    });
+  }
+
+  // trigger 'shown' so htmlwidgets resize
+  $('d-article').trigger('shown');
+}
+
+function init_distill() {
+
+  init_common();
+
+  // create front matter
+  var front_matter = $('<d-front-matter></d-front-matter>');
+  $('#distill-front-matter').wrap(front_matter);
+
+  // create d-title
+  $('.d-title').changeElementType('d-title');
+
+  // separator
+  var separator = '<hr class="section-separator" style="clear: both"/>';
+  // prepend separator above appendix
+  $('.d-byline').before(separator);
+  $('.d-article').before(separator);
+
+  // create d-byline
+  var byline = $('<d-byline></d-byline>');
+  $('.d-byline').replaceWith(byline);
+
+  // create d-article
+  var article = $('<d-article></d-article>');
+  $('.d-article').wrap(article).children().unwrap();
+
+  // move posts container into article
+  $('.posts-container').appendTo($('d-article'));
+
+  // create d-appendix
+  $('.d-appendix').changeElementType('d-appendix');
+
+  // flag indicating that we have appendix items
+  var appendix = $('.appendix-bottom').children('h3').length > 0;
+
+  // replace footnotes with <d-footnote>
+  $('.footnote-ref').each(function(i, val) {
+    appendix = true;
+    var href = $(this).attr('href');
+    var id = href.replace('#', '');
+    var fn = $('#' + id);
+    var fn_p = $('#' + id + '>p');
+    fn_p.find('.footnote-back').remove();
+    var text = fn_p.html();
+    var dtfn = $('<d-footnote></d-footnote>');
+    dtfn.html(text);
+    $(this).replaceWith(dtfn);
+  });
+  // remove footnotes
+  $('.footnotes').remove();
+
+  // move refs into #references-listing
+  $('#references-listing').replaceWith($('#refs'));
+
+  $('h1.appendix, h2.appendix').each(function(i, val) {
+    $(this).changeElementType('h3');
+  });
+  $('h3.appendix').each(function(i, val) {
+    var id = $(this).attr('id');
+    $('.d-contents a[href="#' + id + '"]').parent().remove();
+    appendix = true;
+    $(this).nextUntil($('h1, h2, h3')).addBack().appendTo($('d-appendix'));
+  });
+
+  // show d-appendix if we have appendix content
+  $("d-appendix").css('display', appendix ? 'grid' : 'none');
+
+  // localize layout chunks to just output
+  $('.layout-chunk').each(function(i, val) {
+
+    // capture layout
+    var layout = $(this).attr('data-layout');
+
+    // apply layout to markdown level block elements
+    var elements = $(this).children().not('details, div.sourceCode, pre, script');
+    elements.each(function(i, el) {
+      var layout_div = $('<div class="' + layout + '"></div>');
+      if (layout_div.hasClass('shaded')) {
+        var shaded_content = $('<div class="shaded-content"></div>');
+        $(this).wrap(shaded_content);
+        $(this).parent().wrap(layout_div);
+      } else {
+        $(this).wrap(layout_div);
+      }
+    });
+
+
+    // unwrap the layout-chunk div
+    $(this).children().unwrap();
+  });
+
+  // remove code block used to force  highlighting css
+  $('.distill-force-highlighting-css').parent().remove();
+
+  // remove empty line numbers inserted by pandoc when using a
+  // custom syntax highlighting theme, except when numbering line
+  // in code chunk
+  $('pre:not(.numberLines) code.sourceCode a:empty').remove();
+
+  // load distill framework
+  load_distill_framework();
+
+  // wait for window.distillRunlevel == 4 to do post processing
+  function distill_post_process() {
+
+    if (!window.distillRunlevel || window.distillRunlevel < 4)
+      return;
+
+    // hide author/affiliations entirely if we have no authors
+    var front_matter = JSON.parse($("#distill-front-matter").html());
+    var have_authors = front_matter.authors && front_matter.authors.length > 0;
+    if (!have_authors)
+      $('d-byline').addClass('hidden');
+
+    // article with toc class
+    $('.d-contents').parent().addClass('d-article-with-toc');
+
+    // strip links that point to #
+    $('.authors-affiliations').find('a[href="#"]').removeAttr('href');
+
+    // add orcid ids
+    $('.authors-affiliations').find('.author').each(function(i, el) {
+      var orcid_id = front_matter.authors[i].orcidID;
+      var author_name = front_matter.authors[i].author
+      if (orcid_id) {
+        var a = $('<a></a>');
+        a.attr('href', 'https://orcid.org/' + orcid_id);
+        var img = $('<img></img>');
+        img.addClass('orcid-id');
+        img.attr('alt', author_name ? 'ORCID ID for ' + author_name : 'ORCID ID');
+        img.attr('src','data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg==');
+        a.append(img);
+        $(this).append(a);
+      }
+    });
+
+    // hide elements of author/affiliations grid that have no value
+    function hide_byline_column(caption) {
+      $('d-byline').find('h3:contains("' + caption + '")').parent().css('visibility', 'hidden');
+    }
+
+    // affiliations
+    var have_affiliations = false;
+    for (var i = 0; i<front_matter.authors.length; ++i) {
+      var author = front_matter.authors[i];
+      if (author.affiliation !== "&nbsp;") {
+        have_affiliations = true;
+        break;
+      }
+    }
+    if (!have_affiliations)
+      $('d-byline').find('h3:contains("Affiliations")').css('visibility', 'hidden');
+
+    // published date
+    if (!front_matter.publishedDate)
+      hide_byline_column("Published");
+
+    // document object identifier
+    var doi = $('d-byline').find('h3:contains("DOI")');
+    var doi_p = doi.next().empty();
+    if (!front_matter.doi) {
+      // if we have a citation and valid citationText then link to that
+      if ($('#citation').length > 0 && front_matter.citationText) {
+        doi.html('Citation');
+        $('<a href="#citation"></a>')
+          .text(front_matter.citationText)
+          .appendTo(doi_p);
+      } else {
+        hide_byline_column("DOI");
+      }
+    } else {
+      $('<a></a>')
+         .attr('href', "https://doi.org/" + front_matter.doi)
+         .html(front_matter.doi)
+         .appendTo(doi_p);
+    }
+
+     // change plural form of authors/affiliations
+    if (front_matter.authors.length === 1) {
+      var grid = $('.authors-affiliations');
+      grid.children('h3:contains("Authors")').text('Author');
+      grid.children('h3:contains("Affiliations")').text('Affiliation');
+    }
+
+    // remove d-appendix and d-footnote-list local styles
+    $('d-appendix > style:first-child').remove();
+    $('d-footnote-list > style:first-child').remove();
+
+    // move appendix-bottom entries to the bottom
+    $('.appendix-bottom').appendTo('d-appendix').children().unwrap();
+    $('.appendix-bottom').remove();
+
+    // hoverable references
+    $('span.citation[data-cites]').each(function() {
+      const citeChild = $(this).children()[0]
+      // Do not process if @xyz has been used without escaping and without bibliography activated
+      // https://github.com/rstudio/distill/issues/466
+      if (citeChild === undefined) return true
+
+      if (citeChild.nodeName == "D-FOOTNOTE") {
+        var fn = citeChild
+        $(this).html(fn.shadowRoot.querySelector("sup"))
+        $(this).id = fn.id
+        fn.remove()
+      }
+      var refs = $(this).attr('data-cites').split(" ");
+      var refHtml = refs.map(function(ref) {
+        // Could use CSS.escape too here, we insure backward compatibility in navigator
+        return "<p>" + $('div[id="ref-' + ref + '"]').html() + "</p>";
+      }).join("\n");
+      window.tippy(this, {
+        allowHTML: true,
+        content: refHtml,
+        maxWidth: 500,
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'light-border',
+        placement: 'bottom-start'
+      });
+    });
+
+    // fix footnotes in tables (#411)
+    // replacing broken distill.pub feature
+    $('table d-footnote').each(function() {
+      // we replace internal showAtNode methode which is triggered when hovering a footnote
+      this.hoverBox.showAtNode = function(node) {
+        // ported from https://github.com/distillpub/template/pull/105/files
+        calcOffset = function(elem) {
+            let x = elem.offsetLeft;
+            let y = elem.offsetTop;
+            // Traverse upwards until an `absolute` element is found or `elem`
+            // becomes null.
+            while (elem = elem.offsetParent && elem.style.position != 'absolute') {
+                x += elem.offsetLeft;
+                y += elem.offsetTop;
+            }
+
+            return { left: x, top: y };
+        }
+        // https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/offsetTop
+        const bbox = node.getBoundingClientRect();
+        const offset = calcOffset(node);
+        this.show([offset.left + bbox.width, offset.top + bbox.height]);
+      }
+    })
+
+    // clear polling timer
+    clearInterval(tid);
+
+    // show body now that everything is ready
+    on_load_complete();
+  }
+
+  var tid = setInterval(distill_post_process, 50);
+  distill_post_process();
+
+}
+
+function init_downlevel() {
+
+  init_common();
+
+   // insert hr after d-title
+  $('.d-title').after($('<hr class="section-separator"/>'));
+
+  // check if we have authors
+  var front_matter = JSON.parse($("#distill-front-matter").html());
+  var have_authors = front_matter.authors && front_matter.authors.length > 0;
+
+  // manage byline/border
+  if (!have_authors)
+    $('.d-byline').remove();
+  $('.d-byline').after($('<hr class="section-separator"/>'));
+  $('.d-byline a').remove();
+
+  // remove toc
+  $('.d-contents').remove();
+
+  // move appendix elements
+  $('h1.appendix, h2.appendix').each(function(i, val) {
+    $(this).changeElementType('h3');
+  });
+  $('h3.appendix').each(function(i, val) {
+    $(this).nextUntil($('h1, h2, h3')).addBack().appendTo($('.d-appendix'));
+  });
+
+
+  // inject headers into references and footnotes
+  var refs_header = $('<h3></h3>');
+  refs_header.text('References');
+  $('#refs').prepend(refs_header);
+
+  var footnotes_header = $('<h3></h3');
+  footnotes_header.text('Footnotes');
+  $('.footnotes').children('hr').first().replaceWith(footnotes_header);
+
+  // move appendix-bottom entries to the bottom
+  $('.appendix-bottom').appendTo('.d-appendix').children().unwrap();
+  $('.appendix-bottom').remove();
+
+  // remove appendix if it's empty
+  if ($('.d-appendix').children().length === 0)
+    $('.d-appendix').remove();
+
+  // prepend separator above appendix
+  $('.d-appendix').before($('<hr class="section-separator" style="clear: both"/>'));
+
+  // trim code
+  $('pre>code').each(function(i, val) {
+    $(this).html($.trim($(this).html()));
+  });
+
+  // move posts-container right before article
+  $('.posts-container').insertBefore($('.d-article'));
+
+  $('body').addClass('downlevel');
+
+  on_load_complete();
+}
+
+
+function init_common() {
+
+  // jquery plugin to change element types
+  (function($) {
+    $.fn.changeElementType = function(newType) {
+      var attrs = {};
+
+      $.each(this[0].attributes, function(idx, attr) {
+        attrs[attr.nodeName] = attr.nodeValue;
+      });
+
+      this.replaceWith(function() {
+        return $("<" + newType + "/>", attrs).append($(this).contents());
+      });
+    };
+  })(jQuery);
+
+  // prevent underline for linked images
+  $('a > img').parent().css({'border-bottom' : 'none'});
+
+  // mark non-body figures created by knitr chunks as 100% width
+  $('.layout-chunk').each(function(i, val) {
+    var figures = $(this).find('img, .html-widget');
+    // ignore leaflet img layers (#106)
+    figures = figures.filter(':not(img[class*="leaflet"])')
+    if ($(this).attr('data-layout') !== "l-body") {
+      figures.css('width', '100%');
+    } else {
+      figures.css('max-width', '100%');
+      figures.filter("[width]").each(function(i, val) {
+        var fig = $(this);
+        fig.css('width', fig.attr('width') + 'px');
+      });
+
+    }
+  });
+
+  // auto-append index.html to post-preview links in file: protocol
+  // and in rstudio ide preview
+  $('.post-preview').each(function(i, val) {
+    if (window.location.protocol === "file:")
+      $(this).attr('href', $(this).attr('href') + "index.html");
+  });
+
+  // get rid of index.html references in header
+  if (window.location.protocol !== "file:") {
+    $('.distill-site-header a[href]').each(function(i,val) {
+      $(this).attr('href', $(this).attr('href').replace(/^index[.]html/, "./"));
+    });
+  }
+
+  // add class to pandoc style tables
+  $('tr.header').parent('thead').parent('table').addClass('pandoc-table');
+  $('.kable-table').children('table').addClass('pandoc-table');
+
+  // add figcaption style to table captions
+  $('caption').parent('table').addClass("figcaption");
+
+  // initialize posts list
+  if (window.init_posts_list)
+    window.init_posts_list();
+
+  // implmement disqus comment link
+  $('.disqus-comment-count').click(function() {
+    window.headroom_prevent_pin = true;
+    $('#disqus_thread').toggleClass('hidden');
+    if (!$('#disqus_thread').hasClass('hidden')) {
+      var offset = $(this).offset();
+      $(window).resize();
+      $('html, body').animate({
+        scrollTop: offset.top - 35
+      });
+    }
+  });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  if (is_downlevel_browser())
+    init_downlevel();
+  else
+    window.addEventListener('WebComponentsReady', init_distill);
+});
+
+</script>
+
+<style type="text/css">
+/* base variables */
+
+/* Edit the CSS properties in this file to create a custom
+   Distill theme. Only edit values in the right column
+   for each row; values shown are the CSS defaults.
+   To return any property to the default,
+   you may set its value to: unset
+   All rows must end with a semi-colon.                      */
+
+/* Optional: embed custom fonts here with `@import`          */
+/* This must remain at the top of this file.                 */
+
+
+
+html {
+  /*-- Main font sizes --*/
+  --title-size:      50px;
+  --body-size:       1.06rem;
+  --code-size:       14px;
+  --aside-size:      12px;
+  --fig-cap-size:    13px;
+  /*-- Main font colors --*/
+  --title-color:     #000000;
+  --header-color:    rgba(0, 0, 0, 0.8);
+  --body-color:      rgba(0, 0, 0, 0.8);
+  --aside-color:     rgba(0, 0, 0, 0.6);
+  --fig-cap-color:   rgba(0, 0, 0, 0.6);
+  /*-- Specify custom fonts ~~~ must be imported above   --*/
+  --heading-font:    sans-serif;
+  --mono-font:       monospace;
+  --body-font:       sans-serif;
+  --navbar-font:     sans-serif;  /* websites + blogs only */
+}
+
+/*-- ARTICLE METADATA --*/
+d-byline {
+  --heading-size:    0.6rem;
+  --heading-color:   rgba(0, 0, 0, 0.5);
+  --body-size:       0.8rem;
+  --body-color:      rgba(0, 0, 0, 0.8);
+}
+
+/*-- ARTICLE TABLE OF CONTENTS --*/
+.d-contents {
+  --heading-size:    18px;
+  --contents-size:   13px;
+}
+
+/*-- ARTICLE APPENDIX --*/
+d-appendix {
+  --heading-size:    15px;
+  --heading-color:   rgba(0, 0, 0, 0.65);
+  --text-size:       0.8em;
+  --text-color:      rgba(0, 0, 0, 0.5);
+}
+
+/*-- WEBSITE HEADER + FOOTER --*/
+/* These properties only apply to Distill sites and blogs  */
+
+.distill-site-header {
+  --title-size:       18px;
+  --text-color:       rgba(255, 255, 255, 0.8);
+  --text-size:        15px;
+  --hover-color:      white;
+  --bkgd-color:       #0F2E3D;
+}
+
+.distill-site-footer {
+  --text-color:       rgba(255, 255, 255, 0.8);
+  --text-size:        15px;
+  --hover-color:      white;
+  --bkgd-color:       #0F2E3D;
+}
+
+/*-- Additional custom styles --*/
+/* Add any additional CSS rules below                      */
+</style>
+<style type="text/css">/* atma-regular - latin */
+  @font-face {
+    font-family: 'Atma';
+    font-style: normal;
+    font-weight: 400;
+    src: url('../fonts/atma-v6-latin-regular.eot'); /* IE9 Compat Modes */
+      src: local(''),
+    url('../fonts/atma-v6-latin-regular.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+      url('../fonts/atma-v6-latin-regular.woff2') format('woff2'), /* Super Modern Browsers */
+      url('../fonts/atma-v6-latin-regular.woff') format('woff'), /* Modern Browsers */
+      url('../fonts/atma-v6-latin-regular.ttf') format('truetype'), /* Safari, Android, iOS */
+      url('../fonts/atma-v6-latin-regular.svg#Atma') format('svg'); /* Legacy iOS */
+  }
+/* atma-600 - latin */
+  @font-face {
+    font-family: 'Atma';
+    font-style: normal;
+    font-weight: 600;
+    src: url('../fonts/atma-v6-latin-600.eot'); /* IE9 Compat Modes */
+      src: local(''),
+    url('../fonts/atma-v6-latin-600.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+      url('../fonts/atma-v6-latin-600.woff2') format('woff2'), /* Super Modern Browsers */
+      url('../fonts/atma-v6-latin-600.woff') format('woff'), /* Modern Browsers */
+      url('../fonts/atma-v6-latin-600.ttf') format('truetype'), /* Safari, Android, iOS */
+      url('../fonts/atma-v6-latin-600.svg#Atma') format('svg'); /* Legacy iOS */
+  }
+
+/* base variables */
+  
+  /* Edit the CSS properties in this file to create a custom
+Distill theme. Only edit values in the right column
+for each row; values shown are the CSS defaults.
+To return any property to the default,
+you may set its value to: unset
+All rows must end with a semi-colon.                      */
+  
+  /* Optional: embed custom fonts here with `@import`          */
+  /* This must remain at the top of this file.                 */
+  
+  
+  
+  html {
+    /*-- Main font sizes --*/
+    --title-size:      50px;
+    --body-size:       1.06rem;
+    --code-size:       14px;
+    --aside-size:      12px;
+    --fig-cap-size:    13px;
+    /*-- Main font colors --*/
+    --title-color:     white;
+    --header-color:    rgba(0, 0, 0, 0.8);
+    --body-color:      rgba(0, 0, 0, 0.8);
+    --aside-color:     rgba(0, 0, 0, 0.6);
+    --fig-cap-color:   rgba(0, 0, 0, 0.6);
+    /*-- Specify custom fonts ~~~ must be imported above   --*/
+      --heading-font:    Atma;
+    --mono-font:       monospace;
+    --body-font:       sans-serif;
+    --navbar-font:     Atma;  /* websites + blogs only */
+  }
+
+/*-- ARTICLE METADATA --*/
+  d-byline {
+    --heading-size:    0.6rem;
+    --heading-color:   rgba(75, 129, 96, 0.5);
+    --body-size:       0.8rem;
+    --body-color:      rgba(75, 129, 96, 0.8);
+  }
+
+/*-- ARTICLE TABLE OF CONTENTS --*/
+  .d-contents {
+    --heading-size:    18px;
+    --contents-size:   13px;
+  }
+
+/*-- ARTICLE APPENDIX --*/
+  d-appendix {
+    --heading-size:    15px;
+    --heading-color:   rgba(0, 0, 0, 0.65);
+    --text-size:       0.8em;
+    --text-color:      rgba(0, 0, 0, 0.5);
+  }
+
+/*-- WEBSITE HEADER + FOOTER --*/
+  /* These properties only apply to Distill sites and blogs  */
+  
+  .distill-site-header {
+    --title-size:       18px;
+    --text-color:       #4B8160;
+    --text-size:        15px;
+    --hover-color:      black;
+    --bkgd-color:       white;
+  }
+
+.distill-site-footer {
+  --text-color:       rgba(255, 255, 255, 0.8);
+  --text-size:        15px;
+  --hover-color:      rgba(0, 0, 0, 1);
+  --bkgd-color:       #4B8160;
+}
+
+/*-- Additional custom styles --*/
+  /* Add any additional CSS rules below                      */
+  
+  nav {
+    border-bottom: 2px solid rgba(222, 222, 222, 0.3);
+  }
+
+
+.distill-site-header .title {
+  min-width: 0px;
+}
+
+
+**Theme purple**
+/*Steps to change: 1: rgba(106, 63, 173, 1) */
+/*Steps to change: 2: #6A3FAD */
+
+
+**Current Theme: Green**
+/*Steps to change: 1: rgba(75, 129, 96, 1) */
+/*Steps to change: 2: #4B8160 */
+
+
+/* You can just use global search to replace these two encodings */
+
+d-title {
+  background-color: rgba(75, 129, 96, 0.5);
+  color: white;
+}
+
+.posts-list > h1 {
+  color: black!important;
+}
+
+d-title a {
+  color: white;
+}
+
+/* 文章抬头的背景 */
+d-byline {
+  background-color: #f0f0f0;
+}
+
+d-appendix {
+  background-color: #F8F8F8;
+}
+
+d-appendix .citation-appendix {
+  color: black;
+}
+
+.distill-site-footer {
+  margin-top: 0;
+}
+
+@media print {
+  d-byline {
+    --heading-color:   rgba(0, 0, 0, 0.5);
+    --body-color:      rgba(0, 0, 0, 0.8);
+  }
+  d-title {
+    --title-color: rgba(0, 0, 0, 1);
+    color: rgba(0, 0, 0, 0.8);
+  }
+}
+
+/*  category tag color  */ 
+  .dt-tags .dt-tag {
+    color: rgba(255, 255, 255, 0.6);
+    border-color: rgba(255, 255, 255, 0.6);
+  }
+
+/*  code color highlights and bg */ 
+  d-article div.sourceCode pre {
+    border-left: 2px solid rgba(75, 129, 96, 0.1);
+    background-color: #f0f0f0!important;
+      padding-top: 10px;
+    padding-bottom: 10px;
+    overflow-x: auto!important;
+  }
+
+/* scroll bar color */
+  
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+::-webkit-scrollbar-track {
+  -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3); 
+  -webkit-border-radius: 5px;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+  -webkit-border-radius: 5px;
+  border-radius: 5px;
+  background: rgba(75, 129, 96, 0.8); 
+  -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5); 
+}
+
+/* end scroll bar color */
+  
+  d-article pre {
+    background-color: #e3e3e3;
+      padding: 10px;
+  }
+
+code span.fu, code span.kw {
+  color: #4B8160;
+}
+
+div.sourceCode {
+  margin: 0;
+}
+
+pre, d-article pre {
+  margin: 0;
+}</style>
+<style type="text/css">
+/* base style */
+
+/* FONT FAMILIES */
+
+:root {
+  --heading-default: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", Arial, sans-serif;
+  --mono-default: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+  --body-default: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", Arial, sans-serif;
+}
+
+body,
+.posts-list .post-preview p,
+.posts-list .description p {
+  font-family: var(--body-font), var(--body-default);
+}
+
+h1, h2, h3, h4, h5, h6,
+.posts-list .post-preview h2,
+.posts-list .description h2 {
+  font-family: var(--heading-font), var(--heading-default);
+}
+
+d-article div.sourceCode code,
+d-article pre code {
+  font-family: var(--mono-font), var(--mono-default);
+}
+
+
+/*-- TITLE --*/
+d-title h1,
+.posts-list > h1 {
+  color: var(--title-color, black);
+}
+
+d-title h1 {
+  font-size: var(--title-size, 50px);
+}
+
+/*-- HEADERS --*/
+d-article h1,
+d-article h2,
+d-article h3,
+d-article h4,
+d-article h5,
+d-article h6 {
+  color: var(--header-color, rgba(0, 0, 0, 0.8));
+}
+
+/*-- BODY --*/
+d-article > p,  /* only text inside of <p> tags */
+d-article > ul, /* lists */
+d-article > ol {
+  color: var(--body-color, rgba(0, 0, 0, 0.8));
+  font-size: var(--body-size, 1.06rem);
+}
+
+
+/*-- CODE --*/
+d-article div.sourceCode code,
+d-article pre code {
+  font-size: var(--code-size, 14px);
+}
+
+/*-- ASIDE --*/
+d-article aside {
+  font-size: var(--aside-size, 12px);
+  color: var(--aside-color, rgba(0, 0, 0, 0.6));
+}
+
+/*-- FIGURE CAPTIONS --*/
+figure .caption,
+figure figcaption,
+.figure .caption {
+  font-size: var(--fig-cap-size, 13px);
+  color: var(--fig-cap-color, rgba(0, 0, 0, 0.6));
+}
+
+/*-- METADATA --*/
+d-byline h3 {
+  font-size: var(--heading-size, 0.6rem);
+  color: var(--heading-color, rgba(0, 0, 0, 0.5));
+}
+
+d-byline {
+  font-size: var(--body-size, 0.8rem);
+  color: var(--body-color, rgba(0, 0, 0, 0.8));
+}
+
+d-byline a,
+d-article d-byline a {
+  color: var(--body-color, rgba(0, 0, 0, 0.8));
+}
+
+/*-- TABLE OF CONTENTS --*/
+.d-contents nav h3 {
+  font-size: var(--heading-size, 18px);
+}
+
+.d-contents nav a {
+  font-size: var(--contents-size, 13px);
+}
+
+/*-- APPENDIX --*/
+d-appendix h3 {
+  font-size: var(--heading-size, 15px);
+  color: var(--heading-color, rgba(0, 0, 0, 0.65));
+}
+
+d-appendix {
+  font-size: var(--text-size, 0.8em);
+  color: var(--text-color, rgba(0, 0, 0, 0.5));
+}
+
+d-appendix d-footnote-list a.footnote-backlink {
+  color: var(--text-color, rgba(0, 0, 0, 0.5));
+}
+
+/*-- WEBSITE HEADER + FOOTER --*/
+.distill-site-header .title {
+  font-size: var(--title-size, 18px);
+  font-family: var(--navbar-font), var(--heading-default);
+}
+
+.distill-site-header a,
+.nav-dropdown .nav-dropbtn {
+  font-family: var(--navbar-font), var(--heading-default);
+}
+
+.nav-dropdown .nav-dropbtn {
+  color: var(--text-color, rgba(255, 255, 255, 0.8));
+  font-size: var(--text-size, 15px);
+}
+
+.distill-site-header a:hover,
+.nav-dropdown:hover .nav-dropbtn {
+  color: var(--hover-color, white);
+}
+
+.distill-site-header {
+  font-size: var(--text-size, 15px);
+  color: var(--text-color, rgba(255, 255, 255, 0.8));
+  background-color: var(--bkgd-color, #0F2E3D);
+}
+
+.distill-site-footer {
+  font-size: var(--text-size, 15px);
+  color: var(--text-color, rgba(255, 255, 255, 0.8));
+  background-color: var(--bkgd-color, #0F2E3D);
+}
+
+.distill-site-footer a:hover {
+  color: var(--hover-color, white);
+}</style>
+<!--/radix_placeholder_distill-->
+  <script src="../../site_libs/header-attrs-2.25/header-attrs.js"></script>
+  <script src="../../site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+  <script src="../../site_libs/popper-2.6.0/popper.min.js"></script>
+  <link href="../../site_libs/tippy-6.2.7/tippy.css" rel="stylesheet" />
+  <link href="../../site_libs/tippy-6.2.7/tippy-light-border.css" rel="stylesheet" />
+  <script src="../../site_libs/tippy-6.2.7/tippy.umd.min.js"></script>
+  <script src="../../site_libs/anchor-4.2.2/anchor.min.js"></script>
+  <script src="../../site_libs/bowser-1.9.3/bowser.min.js"></script>
+  <script src="../../site_libs/webcomponents-2.0.0/webcomponents.js"></script>
+  <script src="../../site_libs/distill-2.2.21/template.v2.js"></script>
+  <!--radix_placeholder_site_in_header-->
+<script type="text/javascript" cookie-consent="tracking" async src="https://www.googletagmanager.com/gtag/js?id=UA-77195073-2"></script>
+<script type="text/javascript" cookie-consent="tracking">
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'UA-77195073-2');
+</script>
+<!--/radix_placeholder_site_in_header-->
+
+
+</head>
+
+<body>
+
+<!--radix_placeholder_front_matter-->
+
+<script id="distill-front-matter" type="text/json">
+{"title":"JCIM | Kinase-Bench：提高激酶抑制剂选择性的综合基准测试工具","description":"激酶作为细胞信号通路的调节剂，在药物化学中一直是肿瘤学、免疫学和传染病最具吸引力的药物靶点。然而，激酶结构的高度相似性导致脱靶毒性，造成严重的不良药物反应。例如，泛 JAK 抑制剂因缺乏对其他 JAK 成员的选择性，导致心血管疾病、肿瘤和死亡风险。本研究旨在解决激酶选择性问题，采用虚拟筛选结合定制的蛋白 - 配体相互作用过滤器，对激酶选择性进行了广泛的基准研究。研究者利用严格的计算分析和验证实验，评估了该方法在识别选择性激酶抑制剂方面的有效性和可靠性。","authors":[{"author":"Jixing Liu","authorURL":"https://jixing475.github.io/jixingBlog","affiliation":"Centre for Artificial Intelligence Driven Drug Discovery","affiliationURL":"https://www.mpu.edu.mo/esca/en/aidd.php","orcidID":""}],"publishedDate":"2025-02-05T00:00:00.000+08:00","citationText":"Liu, 2025"}
+</script>
+
+<!--/radix_placeholder_front_matter-->
+<!--radix_placeholder_navigation_before_body-->
+<header class="header header--fixed" role="banner">
+<nav class="distill-site-nav distill-site-header">
+<div class="nav-left">
+<a class="logo" href="https://jixing.org/">
+<img src="../../images/avatar.png" alt="Logo"/>
+</a>
+<a href="../../index.html" class="title">Jixing Liu</a>
+<a href="../../index.html">Home</a>
+<a href="../../blog.html">Post</a>
+<a href="../../resources.html">Resources</a>
+<a href="../../about.html">About</a>
+<input id="distill-search" class="nav-search hidden" type="text" placeholder="Search..."/>
+</div>
+<div class="nav-right">
+<a href="https://github.com/jixing475">
+<i class="fab fa-github" aria-hidden="true"></i>
+</a>
+<a href="https://twitter.com/statsgen">
+<i class="fab fa-twitter" aria-hidden="true"></i>
+</a>
+<a href="../../blog.xml">
+<i class="fa fa-rss" aria-hidden="true"></i>
+</a>
+<a href="javascript:void(0);" class="nav-toggle">&#9776;</a>
+</div>
+</nav>
+</header>
+<!--/radix_placeholder_navigation_before_body-->
+<!--radix_placeholder_site_before_body-->
+<!--/radix_placeholder_site_before_body-->
+
+<div class="d-title">
+<h1>JCIM | Kinase-Bench：提高激酶抑制剂选择性的综合基准测试工具</h1>
+
+<!--radix_placeholder_categories-->
+<div class="dt-tags">
+  <a href="../../blog.html#category:AIDD" class="dt-tag">AIDD</a>
+  <a href="../../blog.html#category:榴莲忘返_2014" class="dt-tag">榴莲忘返 2014</a>
+</div>
+<!--/radix_placeholder_categories-->
+<p><p>激酶作为细胞信号通路的调节剂，在药物化学中一直是肿瘤学、免疫学和传染病最具吸引力的药物靶点。然而，激酶结构的高度相似性导致脱靶毒性，造成严重的不良药物反应。例如，泛 JAK 抑制剂因缺乏对其他 JAK 成员的选择性，导致心血管疾病、肿瘤和死亡风险。本研究旨在解决激酶选择性问题，采用虚拟筛选结合定制的蛋白 - 配体相互作用过滤器，对激酶选择性进行了广泛的基准研究。研究者利用严格的计算分析和验证实验，评估了该方法在识别选择性激酶抑制剂方面的有效性和可靠性。</p></p>
+</div>
+
+<div class="d-byline">
+  Jixing Liu <a href="https://jixing475.github.io/jixingBlog" class="uri">https://jixing475.github.io/jixingBlog</a> (Centre for Artificial Intelligence Driven Drug Discovery)<a href="https://www.mpu.edu.mo/esca/en/aidd.php" class="uri">https://www.mpu.edu.mo/esca/en/aidd.php</a>
+  
+<br/>2025-02-05
+</div>
+
+<div class="d-article">
+<div class="d-contents d-contents-float">
+<nav class="l-text toc figcaption" id="TOC">
+<h3>Contents</h3>
+<ul>
+<li><a href="#导读" id="toc-导读">导读</a></li>
+<li><a href="#激酶虚拟筛选方法优化" id="toc-激酶虚拟筛选方法优化">激酶虚拟筛选方法优化</a></li>
+<li><a href="#激酶虚拟筛选性能评估与增强" id="toc-激酶虚拟筛选性能评估与增强">激酶虚拟筛选性能评估与增强</a></li>
+<li><a href="#总结" id="toc-总结">总结</a></li>
+</ul>
+</nav>
+</div>
+<div class="layout-chunk" data-layout="l-body">
+<div class="toggle-code">
+
+</div>
+</div>
+<h2 id="导读">导读</h2>
+<p>激酶作为细胞信号通路的调节剂，在药物化学中一直是肿瘤学、免疫学和传染病最具吸引力的药物靶点。然而，激酶结构的高度相似性导致脱靶毒性，造成严重的不良药物反应。例如，泛 JAK 抑制剂因缺乏对其他 JAK 成员的选择性，导致心血管疾病、肿瘤和死亡风险。</p>
+<p>本研究旨在解决激酶选择性问题，采用虚拟筛选结合定制的蛋白 - 配体相互作用过滤器，对激酶选择性进行了广泛的基准研究。研究者利用严格的计算分析和验证实验，评估了该方法在识别选择性激酶抑制剂方面的有效性和可靠性。</p>
+<p><img src="images/0194d46d-7ab1-7d73-8ab9-08185218be05_1_138_164_1494_1002_0.jpg" /></p>
+<p style="text-align: center;line-height: 1.5em;margin-bottom: 8px;">
+<span style="font-size: 13px;color: rgb(136, 136, 136);">图 1. (A) 人类激酶组树，根据七个主要结构家族进行颜色编码，并标记了关键激酶受体。(B) 激酶图的示意图，显示了本研究中目标的选择性值。(C) ATP 结合位点 (85 个残基) 的序列比对显示了本研究中所有激酶的保守性和多样性。</span>
+</p>
+<p>研究者检索了 322 种结构已被阐明和发表的激酶的所有已知配体活性数据。将具有亲和力和活性数据（来自 ChEMBL 数据库）的配体收集到单独的数据集中，并根据其选择性规则性能进行分离。所有 150 个数据集都系统地用于虚拟筛选方法，目的是理解和预测激酶选择性的分子基础。</p>
+<p>此外，研究者尝试通过结合经典的（基于能量的）方法和定制的过滤规则来提高虚拟筛选的选择性性能。研究的工作流程包括以下步骤： (A) 选择性受体对定义； (B) 配体和 VS 诱饵数据库准备； (C) 虚拟筛选； (D) 评估和增强虚拟筛选性能。</p>
+<p><img src="images/0194d46d-7ab1-7d73-8ab9-08185218be05_2_148_164_1481_987_0.jpg" /></p>
+<p style="text-align: center;line-height: 1.5em;margin-bottom: 8px;">
+<span style="font-size: 13px;color: rgb(136, 136, 136);">图 2. 选择性激酶组基准虚拟筛选工作流程概述，包括 (A) 选择性受体对定义，(B) 配体数据库准备，(C) 虚拟筛选工作流程，以及 (D) 评估和增强虚拟筛选性能。</span>
+</p>
+<p><img src="images/0194d46d-7ab1-7d73-8ab9-08185218be05_3_141_171_1488_537_0.jpg" /></p>
+<p style="text-align: center;line-height: 1.5em;margin-bottom: 8px;">
+<span style="font-size: 13px;color: rgb(136, 136, 136);">图 3. (A) 基于生物活性信息的所有激酶选择性化合物的统计热图。(B) 组合配体数据库，由选择性配体（绿色）和相应的诱饵（红色）组成。</span>
+</p>
+<p>通过系统地评估各种过滤器和筛选方案在不同激酶组中的性能，本研究希望阐明影响选择性的关键因素，并为合理设计激酶靶向疗法提供见解。最终，本研究致力于促进开发更安全、更有效的激酶抑制剂，从而改善各种疾病的治疗方法。</p>
+<h2 id="激酶虚拟筛选方法优化">激酶虚拟筛选方法优化</h2>
+<p>研究者首先从 ChEMBL 数据库中检索了具有活性生物活性和结构信息的激酶抑制剂，并根据选择性定义了 150 个受体对和 75 个靶点。利用 DUD-E 在线工具生成了对应的 422,799 个诱饵分子。将选择性配体数据集和诱饵分子合并后，使用 RDKit 将其转换为三维 SDF 数据库，并计算了 Tanimoto 相似性、拓扑极性表面积 (TPSA)、氢键供体和氢键受体等分子理化性质。</p>
+<p><img src="images/0194d46d-7ab1-7d73-8ab9-08185218be05_4_130_162_1504_1317_0.jpg" /></p>
+<p style="text-align: center;line-height: 1.5em;margin-bottom: 8px;">
+<span style="font-size: 13px;color: rgb(136, 136, 136);">图 4. (A, B) 基于 RDKit 生成的 Morgan 指纹，八个激酶家族活性配体数据库的 Tanimoto 相似性、拓扑极性表面积 (TPSA) (A)、氢键供体和氢键受体 (B) 的散点图和密度曲线。(C) 代表性已上市药物（例如，Itacitinib (JAK1)、Quizartinib (FLT3) 等）和其他最相似 ChEMBL 分子的基于结构的相似性图，通过 Morgan 指纹计算。</span>
+</p>
+<p>随后，研究者使用 LigPrep 模块对配体数据库进行处理，并使用 OPLS3 力场在 pH 7.4 ± 2 条件下进行离子化。从 PDB 数据库中获取了激酶晶体结构，并使用 Maestro 中的 Protein Preparation Wizard 模块进行预处理，包括添加氢原子和优化蛋白质能量状态。利用 Prime 程序填充缺失的环和侧链，并根据共晶配体在 ATP 结合口袋中手动设置一个 10Å的盒子作为结合位点。</p>
+<p>虚拟筛选模拟使用 Glide HTVS 进行，并使用对接分数、Glide Gscore 和 Glide Emodel 三种评分函数评估性能。此外，研究者基于 KLIFS 数据库和 PLIP 工具定义了定制的蛋白 - 配体相互作用过滤器。该过滤器考虑了<strong>七种不同类型</strong>的相互作用，并根据 150 个激酶的相互作用指纹 (<strong>IFP</strong>) 确定了 10 个关键的 KLIFS 残基位置。通过该过滤器，筛选出与这 10 个残基位置形成氢键或芳香相互作用的对接构象，并重新排序和计算富集因子。最后，通过激酶抑制实验和细胞生长抑制实验验证了筛选结果。</p>
+<p>研究者还进行了激酶抑制实验和细胞生长抑制实验，以验证虚拟筛选方法的有效性。实验结果表明，定制的蛋白 - 配体相互作用过滤器可以有效提高筛选的命中率和富集因子。</p>
+<p>图 5 展示了 150 个激酶及其共晶配体的相互作用指纹。</p>
+<p><img src="md_nice_image/image-20250205131503674.png" />
+图 5. 150 个激酶及其共晶配体的相互作用指纹 (IFPs)。残基根据其 85 个 KLIFS 编号进行着色。结构受体 - 配体相互作用模式由 KLIFS 中的 IFP 位串描述，编码七种不同的相互作用类型：疏水相互作用、芳香面面相互作用、芳香面边相互作用、氢键供体（受体）、氢键受体（受体）、离子正电（受体）和离子负电（受体）。配体与不同激酶氨基酸残基之间发生的这些相互作用主要以蓝色着色。根据 IFPs 下方的密度曲线，相互作用发生在&gt;80% IFPs 的残基点以绿色着色（KLIFS Nr. 3、11、15、17、45-48、77 和 80)，并设置为我们的自定义过滤规则。</p>
+<h2 id="激酶虚拟筛选性能评估与增强">激酶虚拟筛选性能评估与增强</h2>
+<p>研究构建了一个开源激酶基准集，用于评估和改进激酶靶向选择性计算模型。研究者从 PDB 数据库中检索激酶靶标，并从 ChEMBL 数据库中获取配体及其生物活性信息（Ki, IC50, Kb, Kd 或 EC50）。使用 DUD-E 工具生成约 60 个计算诱饵，并采用 Glide HTVS 和 SP 对接协议及三种评分函数进行回顾性虚拟筛选。表 1 总结了基于三种评分函数的虚拟筛选结果（EF1%）。</p>
+<p><img src="md_nice_image/image-20250205131647634.png" /></p>
+<p>表 1. 回顾性虚拟筛选结果（EF1%）。</p>
+<p>结果显示，大多数选择性配体集在不同激酶家族中表现良好（EF1% &gt; 20%），例如 ROCK1-GSK3B (50.0%) 和 ROCK2-AKT1 (51.9%)。然而，近一半的选择性配体集未产生理想的 Glide 对接构象和评分（EF1% &lt; 20%）。尤其在 TK 家族中，三种评分函数和 Glide HTVS 对接程序中的结合构象均差于其他激酶家族（大多 EF1% &lt; 20%）。</p>
+<img src="images/0194d46d-7ab1-7d73-8ab9-08185218be05_8_144_115_1484_776_0.jpg" />
+<p style="text-align: center;line-height: 1.5em;margin-bottom: 8px;">
+<span style="font-size: 13px;color: rgb(136, 136, 136);">图 6. (A) 基于 Docking Score, Glide Gscore 和 Glide Emodel 三个变量的主成分分析 (PCA) 得分图。(B) 基于三种能量评分函数的虚拟筛选性能总体 EF1%。</span>
+</p>
+<p>主成分分析（PCA）表明，Docking Score 和 Glide Gscore 对 PC1 贡献最大，且性能相似，而 Glide Emodel 与 PC1 和 PC2 均相关，但不如前两者强。此外，Docking Score (中位数 EF1%: 16.52) 和 Glide Gscore (中位数 EF1%: 14.42) 的性能优于 Glide Emodel (中位数 EF1%: 6.34)。</p>
+<img src="images/0194d46d-7ab1-7d73-8ab9-08185218be05_9_131_104_1500_1323_0.jpg" />
+<p style="text-align: center;line-height: 1.5em;margin-bottom: 8px;">
+<span style="font-size: 13px;color: rgb(136, 136, 136);">图 7. (A-C) 基于 Docking Score (A), Glide Gscore (B) 和 Glide Emodel (C) 的九个主要家族的 EF1% 雨云图。(D-G) 代表性配体和诱饵的对接构象及 2D 化学结构。</span>
+</p>
+<p>通过对不同激酶家族的雨云图分析，研究者发现 Docking Score 的 EF1% 分布更广，表明预测结合亲和力的差异更大。然而，Docking Score 和 Glide Gscore 结果中的异常值表明，这些评分函数无法完全捕捉激酶 - 配体相互作用的每个独特方面。</p>
+<p>为了提高虚拟筛选的性能，特别是选择性，研究者开发了一个基于 KLIFS 残基相互作用的定制过滤器。结果表明，该过滤器显著提高了三种 Glide 评分函数的虚拟筛选性能（图 9）。</p>
+<img src="images/0194d46d-7ab1-7d73-8ab9-08185218be05_12_230_134_1340_1410_0.jpg" />
+<p style="text-align: center;line-height: 1.5em;margin-bottom: 8px;">
+<span style="font-size: 13px;color: rgb(136, 136, 136);">图 9. (A) 基于三种 Glide 评分函数的定制蛋白 - 配体相互作用过滤器增强虚拟筛选的 3D 散点图。(B) 基于三种 Glide 评分函数的虚拟筛选总体命中率性能，有无定制的蛋白 - 配体相互作用过滤器。(C-E) 代表性配体和诱饵的对接构象及 2D 化学结构。</span>
+</p>
+<p>进一步的分析表明，Nr. 17, Nr. 45, Nr. 46 和 Nr. 47 等位置的残基相互作用对提高选择性至关重要。此外，将对接协议从 HTVS 升级到 SP 也提高了虚拟筛选的性能，尤其是在选择性方面。体外药物验证实验表明，所选化合物对 JAK1 的抑制活性高于 TYK2，证实了该方法的有效性。最后，研究者还探讨了共价设计、别构抑制剂、伪激酶等策略在选择性虚拟筛选中的应用潜力，为未来的研究提供了方向。</p>
+<h2 id="总结">总结</h2>
+<blockquote>
+<p>Kinase-Bench 基准测试套件通过定制的虚拟筛选流程有效提升了激酶抑制剂的选择性和效力。</p>
+</blockquote>
+<ul>
+<li>Kinase-Bench 基准测试套件助力选择性激酶抑制剂的发现。</li>
+<li>该套件整合了 ChEMBL 数据库的生物活性数据、DUD-E 生成的诱饵化合物以及定制的虚拟筛选流程。</li>
+<li>案例研究验证了该方法的有效性，并发现了具有 JAK1 选择性的潜在抑制剂。</li>
+</ul>
+<p>由于腺苷三磷酸 (ATP) 结合位点在激酶家族中的高度保守性，开发选择性激酶抑制剂仍然是药物发现中的一项巨大挑战。作者构建了名为”Kinase-Bench”的基准测试套件，旨在改进虚拟筛选流程，从而提高激酶抑制剂的选择性和效力。该套件包含针对 75 种激酶的 6875 个选择性配体和 422,799 个诱饵化合物，数据来源于 ChEMBL 数据库的广泛生物活性数据和 DUD-E（Directory of Useful Decoys-Enhanced）生成的诱饵化合物。研究者采用 Glide 高通量虚拟筛选和标准精度筛选，并结合三个评分函数和定制的蛋白 - 配体相互作用过滤器，以靶向特定的激酶残基相互作用。</p>
+<p>在针对 JAK1 抑制剂并使其对家族成员 TYK2 具有选择性的虚拟筛选工作中，这些创新得到了成功的应用。结果发现了新的潜在苗头化合物：化合物 2（JAK1 IC₅₀：980.5 nM，TYK2 IC₅₀：4.5 μM）和已获批的泛 AKT 抑制剂 Capivasertib（JAK1 IC₅₀：275.9 nM，TYK2 IC₅₀：10.9 μM）。使用 Kinase-Bench 协议，两种化合物均表现出显著的 JAK1 选择性，使其成为进一步研究的强有力候选物。这些结果强调了定制虚拟筛选协议在识别选择性激酶抑制剂方面的实用性，对合理药物设计具有重要意义。Kinase-Bench 为选择性激酶药物发现提供了一个强大的工具集，有潜力有效地指导未来的治疗策略。</p>
+<hr />
+<section style="margin-left: 8px;margin-right: 8px;text-align: left;line-height: 1.5em;margin-bottom: 0px;">
+<span style="font-size: 18px;color: rgb(136, 136, 136);"><strong>参考资料：</strong></span>
+</section>
+<ul class="list-paddingleft" style="margin-left: 8px;margin-right: 8px;">
+<li style="font-size: 13px;color: rgb(136, 136, 136);">
+<p style="text-align: left;line-height: 1.5em;margin-bottom: 8px;">
+<span style="font-size: 13px;color: rgb(136, 136, 136);">标题：Kinase-Bench: Comprehensive Benchmarking Tools and Guidance for Achieving Selectivity in Kinase Drug Discovery </span>
+</p>
+</li>
+</ul>
+<ul class="list-paddingleft" style="margin-left: 8px;margin-right: 8px;">
+<li style="font-size: 13px;color: rgb(136, 136, 136);">
+<p style="text-align: left;line-height: 1.5em;margin-bottom: 8px;">
+<span style="font-size: 13px;color: rgb(136, 136, 136);">作者：Wei, Tian-Hua; Zhou, Shuang-Shuang; Jing, Xiao-Long; Liu, Jia-Chuan; Sun, Meng; Zhao, Zong-Hao; Li, Qing-Qing; Wang, Zi-Xuan; Yang, Jin; Zhou, Yun; others </span>
+</p>
+</li>
+</ul>
+<ul class="list-paddingleft" style="margin-left: 8px;margin-right: 8px;">
+<li style="font-size: 13px;color: rgb(136, 136, 136);">
+<p style="text-align: left;line-height: 1.5em;margin-bottom: 8px;">
+<span style="font-size: 13px;color: rgb(136, 136, 136);">期刊：J. Chem. Inf. Model. </span>
+</p>
+</li>
+</ul>
+<ul class="list-paddingleft" style="margin-left: 8px;margin-right: 8px;">
+<li style="font-size: 13px;color: rgb(136, 136, 136);">
+<p style="text-align: left;line-height: 1.5em;margin-bottom: 8px;">
+<span style="font-size: 13px;color: rgb(136, 136, 136);">DOI: 10.1021/acs.jcim.4c01830 </span>
+</p>
+</li>
+</ul>
+<ul class="list-paddingleft" style="margin-left: 8px;margin-right: 8px;">
+<li style="font-size: 13px;color: rgb(136, 136, 136);">
+<p style="text-align: left;line-height: 1.5em;margin-bottom: 8px;">
+<span style="font-size: 13px;color: rgb(136, 136, 136);">发表年份：2024 </span>
+</p>
+</li>
+</ul>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r distill-force-highlighting-css"><code class="sourceCode r"></code></pre></div>
+<!--radix_placeholder_article_footer-->
+<div class="article-footer">
+  <p class="social_footer">
+    <span class="disqus-comments">
+      <i class="fas fa-comments"></i>
+      &nbsp;
+      <span class="disqus-comment-count" data-disqus-identifier="posts/2025-02-05-kinase-bench-comprehensive-benchmarking-tool-for-improving-kinase-inhibitor-selectivity/">Comment on this article</span>
+    </span>
+    <span class="article-sharing">
+      Share: &nbsp;
+      <a href="https://twitter.com/share?text=JCIM%20%7C%20Kinase-Bench%EF%BC%9A%E6%8F%90%E9%AB%98%E6%BF%80%E9%85%B6%E6%8A%91%E5%88%B6%E5%89%82%E9%80%89%E6%8B%A9%E6%80%A7%E7%9A%84%E7%BB%BC%E5%90%88%E5%9F%BA%E5%87%86%E6%B5%8B%E8%AF%95%E5%B7%A5%E5%85%B7&amp;url=https%3A%2F%2Fjixing.org%2Fposts%2F2025-02-05-kinase-bench-comprehensive-benchmarking-tool-for-improving-kinase-inhibitor-selectivity%2F" aria-label="share on twitter">
+        <i class="fab fa-twitter" aria-hidden="true"></i>
+      </a>
+      <a href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https%3A%2F%2Fjixing.org%2Fposts%2F2025-02-05-kinase-bench-comprehensive-benchmarking-tool-for-improving-kinase-inhibitor-selectivity%2F&amp;title=JCIM%20%7C%20Kinase-Bench%EF%BC%9A%E6%8F%90%E9%AB%98%E6%BF%80%E9%85%B6%E6%8A%91%E5%88%B6%E5%89%82%E9%80%89%E6%8B%A9%E6%80%A7%E7%9A%84%E7%BB%BC%E5%90%88%E5%9F%BA%E5%87%86%E6%B5%8B%E8%AF%95%E5%B7%A5%E5%85%B7" aria-label="share on linkedin">
+        <i class="fab fa-linkedin" aria-hidden="true"></i>
+      </a>
+    </span>
+  </p>
+  <script id="dsq-count-scr" src="https://statistical-genetics.disqus.com/count.js" async></script>
+  <div id="disqus_thread" class="hidden"></div>
+  <script type="text/javascript" cookie-consent="functionality">
+var disqus_config = function () {
+  this.page.url = 'https://jixing.org/posts/2025-02-05-kinase-bench-comprehensive-benchmarking-tool-for-improving-kinase-inhibitor-selectivity/';
+  this.page.identifier = 'posts/2025-02-05-kinase-bench-comprehensive-benchmarking-tool-for-improving-kinase-inhibitor-selectivity/';
+};
+(function() {
+  var d = document, s = d.createElement('script');
+  s.src = 'https://statistical-genetics.disqus.com/embed.js';
+  s.setAttribute('data-timestamp', +new Date());
+  (d.head || d.body).appendChild(s);
+})();
+</script>
+  <p>
+    <div class="subscribe"><form method='post' action='https://blogtrottr.com'>
+  <p>Enjoy this blog? Get notified of new posts via email:</p>
+  <input type='text' name='btr_email' />
+  <input type='hidden' name='btr_url'
+         value='https://jixing475.github.io/jixingBlog/blog.xml'/>
+  <input type='hidden' name='schedule_type' value='0' />
+  <input type='submit' value='Subscribe' />
+</form>
+</div>
+  </p>
+</div>
+<!--/radix_placeholder_article_footer-->
+</div>
+
+<div class="d-appendix">
+</div>
+
+
+<!--radix_placeholder_site_after_body-->
+<!--/radix_placeholder_site_after_body-->
+<!--radix_placeholder_appendices-->
+<div class="appendix-bottom">
+  <h3 id="updates-and-corrections">Corrections</h3>
+  <p>If you see mistakes or want to suggest changes, please <a href="https://github.com/jixing475/jixing.github.io/issues/new">create an issue</a> on the source repository.</p>
+  <h3 id="reuse">Reuse</h3>
+  <p>Text and figures are licensed under Creative Commons Attribution <a rel="license" href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>. Source code is available at <a href="https://github.com/jixing475/jixing.github.io">https://github.com/jixing475/jixing.github.io</a>, unless otherwise noted. The figures that have been reused from other sources don't fall under this license and can be recognized by a note in their caption: "Figure from ...".</p>
+  <h3 id="citation">Citation</h3>
+  <p>For attribution, please cite this work as</p>
+  <pre class="citation-appendix short">Liu (2025, Feb. 5). Jixing Liu: JCIM | Kinase-Bench：提高激酶抑制剂选择性的综合基准测试工具. Retrieved from https://jixing.org/posts/2025-02-05-kinase-bench-comprehensive-benchmarking-tool-for-improving-kinase-inhibitor-selectivity/</pre>
+  <p>BibTeX citation</p>
+  <pre class="citation-appendix long">@misc{liu2025jcim,
+  author = {Liu, Jixing},
+  title = {Jixing Liu: JCIM | Kinase-Bench：提高激酶抑制剂选择性的综合基准测试工具},
+  url = {https://jixing.org/posts/2025-02-05-kinase-bench-comprehensive-benchmarking-tool-for-improving-kinase-inhibitor-selectivity/},
+  year = {2025}
+}</pre>
+</div>
+<!--/radix_placeholder_appendices-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN" "http://www.w3.org/TR/REC-html40/loose.dtd">
+<!--radix_placeholder_navigation_after_body--><html><body>
+<div class="distill-site-nav distill-site-footer">
+<p>© Copyright 2021 Jixing Liu</p>
+<p><span style="font-size:0.6rem;"><i class="fas fa-wrench"></i> The
+site made with the Hugo </span></p>
+</div>
+<!--/radix_placeholder_navigation_after_body-->
+</body></html>
+
+
+</body>
+
+</html>
