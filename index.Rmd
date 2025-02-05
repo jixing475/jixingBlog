@@ -41,7 +41,7 @@ How can we effectively cut down on communication costs?
 <br>
 
 <!-- <div class="twitter-border"> -->
-<!-- <a class="twitter-timeline" data-height="400" data-width="300"  href="https://twitter.com/statsgen?ref_src=twsrc%5Etfw">Tweets by statsgen</a> -->
+<!-- <a class="twitter-timeline" data-height="400" data-width="300"  href="https://twitter.com/studentZero475?ref_src=twsrc%5Etfw">Tweets by studentZero475</a> -->
 <!-- </div> -->
 <!-- <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script> -->
 

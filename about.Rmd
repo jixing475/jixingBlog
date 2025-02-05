@@ -46,7 +46,7 @@ df <- data.frame(what = c('<i class="fab fa-twitter"></i>',
                            '<i class="fab fa-github"></i>',
                            '<i class="fas fa-envelope"></i>',
                            '<i class="fas fa-map-marker-alt"></i>'),
-                 where = c("[statsgen](https://twitter.com/statsgen)",
+                 where = c("[studentZero475](https://twitter.com/studentZero475)",
                            "[jixing475](https://github.com/jixing475)",
                            "[emi.tanaka@monash.edu](mailto:emi.tanaka@monash.edu)",
                            "Centre for Artificial Intelligence Driven Drug Discovery<br>Monash Business School<br>Menzies Building E776<br>Clayton campus, VIC 3800<br>Australia"))
