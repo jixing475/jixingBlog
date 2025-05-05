@@ -6,7 +6,7 @@ project:
     - _headers
 
 website:
-  title: "MCU"
+  title: "MPU"
   description: "A data science blog and portfolio by Mickaël CANOUIL"
   favicon: /assets/images/logo.svg
   image: /assets/images/social-profile.png
@@ -26,7 +26,7 @@ website:
     right: |
       License: [CC BY NC SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0).
   navbar:
-    title: "MCU"
+    title: "MPU"
     search: true
     logo: assets/images/logo.svg
     right:
@@ -34,25 +34,6 @@ website:
         href: index.qmd
       - text: Blog
         href: blog.qmd
-      - text: Projects
-        href: projects.qmd
-      - text: Talks
-        href: talks.qmd
-      - text: Publications
-        href: publications.qmd
-      - text: "{{< iconify fa6-brands:mastodon >}}"
-        href: "https://fosstodon.org/@MickaelCanouil"
-        rel: me
-      - text: "{{< iconify fa6-brands:bluesky >}}"
-        href: "https://bsky.app/profile/mickael.canouil.fr"
-      - text: "{{< iconify fa6-brands:x-twitter >}}"
-        href: "https://x.com/MickaelCanouil"
-      - text: "{{< iconify fa6-brands:linkedin >}}"
-        href: 'https://www.linkedin.com/in/mickaelcanouil'
-      - text: "{{< iconify octicon:mark-github-16 >}}"
-        href: "https://github.com/mcanouil"
-      - text: "{{< iconify octicon:heart-fill-16 >}}"
-        href: "https://github.com/sponsors/mcanouil?o=esb"
 
 format:
   html:
