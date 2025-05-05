@@ -5,3 +5,4 @@ subtitle: |
 image: /assets/images/social-profile.png
 ---
 
+[Jixing's Blog ](https://github.com/jixing475/jixingBlog)
