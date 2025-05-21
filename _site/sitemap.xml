@@ -2,11 +2,15 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://mickael.canouil.fr/blog.html</loc>
-    <lastmod>2025-05-05T06:51:47.523Z</lastmod>
+    <lastmod>2025-05-21T23:45:39.337Z</lastmod>
   </url>
   <url>
     <loc>https://mickael.canouil.fr/index.html</loc>
-    <lastmod>2025-05-05T13:49:16.553Z</lastmod>
+    <lastmod>2025-05-21T23:45:39.153Z</lastmod>
+  </url>
+  <url>
+    <loc>https://mickael.canouil.fr/posts/AI overuse/AI overuse.html</loc>
+    <lastmod>2025-05-21T23:51:22.533Z</lastmod>
   </url>
   <url>
     <loc>https://mickael.canouil.fr/posts/2024-12-30-quarto-github-pages/index.html</loc>
@@ -14,6 +18,6 @@
   </url>
   <url>
     <loc>https://mickael.canouil.fr/publications.html</loc>
-    <lastmod>2025-05-05T13:55:15.628Z</lastmod>
+    <lastmod>2025-05-21T23:51:39.013Z</lastmod>
   </url>
 </urlset>

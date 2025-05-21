@@ -6,8 +6,10 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="AI 滥用对人类大脑的影响，可以看作是一个复杂的系统交互失衡问题。我们的大脑本身就是一个精密的、持续进化的信息处理系统，而 AI，尤其是被滥用的 AI，则像一个外部强力“插件”或“环境”，以其特有的方式重塑着我们大脑的“底层算法”和“硬件性能”。">
 
-<title>Jixing Liu – MPU</title>
+<title>AI 滥用对人类大脑的影响 – MPU</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -23,24 +25,24 @@ ul.task-list li input[type="checkbox"] {
 </style>
 
 
-<script src="site_libs/quarto-nav/quarto-nav.js"></script>
-<script src="site_libs/quarto-nav/headroom.min.js"></script>
-<script src="site_libs/clipboard/clipboard.min.js"></script>
-<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
-<script src="site_libs/quarto-search/fuse.min.js"></script>
-<script src="site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="./">
-<link href=".//assets/images/logo.svg" rel="icon" type="image/svg+xml">
-<script src="site_libs/quarto-html/quarto.js"></script>
-<script src="site_libs/quarto-html/popper.min.js"></script>
-<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
-<script src="site_libs/quarto-html/anchor.min.js"></script>
-<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-e25cc82807363e79c52e96bc8b7855f1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-eac2bd50cea57be1bcfbe97224aeb5b7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
-<script src="site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/logo.svg" rel="icon" type="image/svg+xml">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-e25cc82807363e79c52e96bc8b7855f1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-eac2bd50cea57be1bcfbe97224aeb5b7.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
   "copy-button": false,
@@ -70,31 +72,27 @@ ul.task-list li input[type="checkbox"] {
 }</script>
 
 
-<meta property="og:title" content="Jixing Liu – MPU">
-<meta property="og:description" content="Biostatistician.">
-<meta property="og:image" content="https://mickael.canouil.fr/assets/images/social-profile.png">
+<meta property="og:title" content="AI 滥用对人类大脑的影响 – MPU">
+<meta property="og:description" content="AI 滥用对人类大脑的影响，可以看作是一个复杂的系统交互失衡问题。我们的大脑本身就是一个精密的、持续进化的信息处理系统，而 AI，尤其是被滥用的 AI，则像一个外部强力“插件”或“环境”，以其特有的方式重塑着我们大脑的“底层算法”和“硬件性能”。">
+<meta property="og:image" content="https://mickael.canouil.fr/posts/AI overuse/data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg==">
 <meta property="og:site_name" content="MPU">
-<meta property="og:image:height" content="460">
-<meta property="og:image:width" content="460">
-<meta name="twitter:title" content="Jixing Liu – MPU">
-<meta name="twitter:description" content="Biostatistician.">
-<meta name="twitter:image" content="https://mickael.canouil.fr/assets/images/social-profile.png">
-<meta name="twitter:image-height" content="460">
-<meta name="twitter:image-width" content="460">
+<meta name="twitter:title" content="AI 滥用对人类大脑的影响 – MPU">
+<meta name="twitter:description" content="AI 滥用对人类大脑的影响，可以看作是一个复杂的系统交互失衡问题。我们的大脑本身就是一个精密的、持续进化的信息处理系统，而 AI，尤其是被滥用的 AI，则像一个外部强力“插件”或“环境”，以其特有的方式重塑着我们大脑的“底层算法”和“硬件性能”。">
+<meta name="twitter:image" content="https://mickael.canouil.fr/posts/AI overuse/data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg==">
 <meta name="twitter:card" content="summary_large_image">
 </head>
 
-<body class="nav-fixed fullcontent">
+<body class="nav-fixed">
 
 <div id="quarto-search-results"></div>
-  <header id="quarto-header" class="headroom fixed-top">
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
-    <a href="./index.html" class="navbar-brand navbar-brand-logo">
-    <img src="./assets/images/logo.svg" alt="" class="navbar-logo">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/logo.svg" alt="" class="navbar-logo">
     </a>
-    <a class="navbar-brand" href="./index.html">
+    <a class="navbar-brand" href="../../index.html">
     <span class="navbar-title">MPU</span>
     </a>
   </div>
@@ -105,11 +103,11 @@ ul.task-list li input[type="checkbox"] {
           <div class="collapse navbar-collapse" id="navbarCollapse">
             <ul class="navbar-nav navbar-nav-scroll ms-auto">
   <li class="nav-item">
-    <a class="nav-link active" href="./index.html" aria-current="page"> 
+    <a class="nav-link" href="../../index.html"> 
 <span class="menu-text">About</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./blog.html"> 
+    <a class="nav-link" href="../../blog.html"> 
 <span class="menu-text">Blog</span></a>
   </li>  
 </ul>
@@ -120,34 +118,96 @@ ul.task-list li input[type="checkbox"] {
     </nav>
 </header>
 <!-- content -->
-<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">AI 滥用对人类大脑的影响</h1>
+                  <div>
+        <div class="description">
+          <p>AI 滥用对人类大脑的影响，可以看作是一个复杂的系统交互失衡问题。我们的大脑本身就是一个精密的、持续进化的信息处理系统，而 AI，尤其是被滥用的 AI，则像一个外部强力“插件”或“环境”，以其特有的方式重塑着我们大脑的“底层算法”和“硬件性能”。</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">AI</div>
+                <div class="quarto-category">人工智能</div>
+                <div class="quarto-category">大脑</div>
+                <div class="quarto-category">认知科学</div>
+                <div class="quarto-category">人机交互</div>
+                <div class="quarto-category">注意力</div>
+                <div class="quarto-category">信息茧房</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://mickael.canouil.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4549" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Thursday, the 22nd of May, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
+        
+    </div>
 <!-- main -->
-<main class="content" id="quarto-document-content">
-
-<header id="title-block-header" class="quarto-title-block default">
-<div class="quarto-title">
-<h1 class="title">Jixing Liu</h1>
-<p class="subtitle lead"></p><p>Biostatistician.</p><p></p>
-</div>
+<main class="content quarto-banner-title-block" id="quarto-document-content">
 
 
 
-<div class="quarto-title-meta">
-
-    
-  
-    
-  </div>
-  
 
 
-</header>
-
-
-<p><a href="https://github.com/jixing475/jixingBlog">Jixing’s Blog</a></p>
+<p>AI 滥用对人类大脑的影响，可以看作是一个复杂的系统交互失衡问题。我们的大脑本身就是一个精密的、持续进化的信息处理系统，而 AI，尤其是被滥用的 AI，则像一个外部强力“插件”或“环境”，以其特有的方式重塑着我们大脑的“底层算法”和“硬件性能”。</p>
+<p>让我用我习惯的四步解构法来拆解这个问题：</p>
+<ol type="1">
+<li><strong>分离出系统的不同层级：</strong>
+<ul>
+<li><strong>人类大脑（认知系统）：</strong> 这是核心系统，具有学习、记忆、注意力、决策、情感等功能模块。它的运作依赖于神经元网络的连接和信号传递，具有高度可塑性。</li>
+<li><strong>AI 系统（信息/交互系统）：</strong> 这是外部输入系统，包括算法、数据、用户界面。其设计目标（例如，最大化用户在线时长、点击率）深刻影响其行为。</li>
+<li><strong>人机交互接口：</strong> 这是大脑系统与 AI 系统之间的“API”，信息通过感官（视觉、听觉）输入大脑，大脑通过行为（点击、语音）输出指令。</li>
+<li><strong>社会文化环境：</strong> 这是更高层级的系统，包括教育模式、工作方式、信息传播范式，它们会因 AI 的普及而发生改变，反过来又影响人机交互。</li>
+</ul></li>
+<li><strong>找出各层之间的连接和核心运作原理：</strong>
+<ul>
+<li><strong>认知“外包”与技能退化：</strong> 当我们过度依赖 AI 完成本应由大脑承担的任务（如记忆、导航、信息检索、简单分析），大脑的相应“认知肌肉”就会因为缺乏锻炼而萎缩。这就像一个程序员长期依赖代码自动生成工具，可能会忘记基本的语法和算法逻辑。大脑会“优化”掉它认为不再需要的功能。</li>
+<li><strong>注意力机制的“劫持”：</strong> 许多 AI 应用（尤其是社交媒体、短视频）的设计，利用了大脑对新奇刺激、即时反馈的偏好，通过算法精准推送内容，持续激活大脑的奖励回路（多巴胺系统）。这就像一个设计精良的“中断请求”，频繁打断大脑的深度思考进程，导致注意力碎片化，难以进行长时间、专注的认知活动。大脑的“任务切换”成本很高，频繁切换会降低整体处理效率。</li>
+<li><strong>决策模式的“算法化”与自主性削弱：</strong> AI 推荐系统和决策辅助工具，如果滥用，会让我们习惯于接受“算法给出”的最优解，而减少了独立思考、权衡利弊、承担风险的决策过程。久而久之，我们可能会失去对复杂情境的判断能力和自主决策的信心，大脑的“决策引擎”变得依赖外部输入。如果 AI 算法本身存在偏见（bias），这种偏见也会潜移默化地“编程”进我们的思维模式。</li>
+<li><strong>信息茧房与认知窄化：</strong> 个性化推荐算法倾向于给我们推送符合我们既有观点和偏好的信息，形成“信息茧房”或“回声室效应”。这会减少我们接触不同观点的机会，固化思维模式，降低认知灵活性和批判性思维能力。大脑的“知识库更新机制”变得单一，难以形成全面、客观的认知。</li>
+<li><strong>即时满足与延迟满足能力的侵蚀：</strong> AI 提供的许多服务强调即时性（即时答案、即时娱乐）。长期沉浸在这种环境中，大脑对于“延迟满足”的耐受度可能会降低。而延迟满足能力，恰恰是实现长期目标、进行深度学习和创造性工作所必需的“底层支持”。</li>
+</ul></li>
+<li><strong>用编程概念建立简明的类比：</strong>
+<ul>
+<li><strong>大脑的“缓存”与“硬盘”：</strong> 频繁使用搜索引擎获取即时信息，而非主动记忆，就像我们把信息都存在了“云端缓存”，而大脑自身的“本地硬盘”（长期记忆）存储和检索能力下降。</li>
+<li><strong>认知“脚本”的固化：</strong> 如果 AI 总是提供现成的解决方案，我们大脑解决问题的“脚本”就可能变得单一和僵化，缺乏对新问题的适应性和创造性。</li>
+<li><strong>“多巴胺驱动”的死循环：</strong> 某些 AI 应用设计就像一个不断向大脑“注入”多巴胺信号的程序，让大脑陷入追求即时快感的循环，难以启动那些需要消耗意志力但能带来长远回报的“后台进程”。</li>
+<li><strong>认知“API”的过度调用：</strong> 我们不断向 AI 发出“请求”，获取信息、娱乐、决策支持，这本身没问题。但“滥用”就像对大脑的认知资源进行“DDoS 攻击”，使其不堪重负，或者因为过度依赖外部“API”，导致自身核心功能模块的“代码”不再被执行和优化。</li>
+</ul></li>
+<li><strong>用直白语言表达复杂洞察：</strong> AI 滥用，本质上是在改变我们大脑处理信息和与世界互动的方式。它像一个看不见的“程序员”，在不知不觉中修改我们大脑的“操作系统”。
+<ul>
+<li><strong>“用进废退”是基本规则：</strong> 那些我们不再亲自思考、记忆、决策的部分，大脑会认为它们不重要，相关的神经连接就会减弱。</li>
+<li><strong>“快餐式”信息喂养：</strong> 大脑习惯了被动接收碎片化、高度刺激性的信息，就越来越难沉下心去阅读长文、进行深度思考，就像习惯了快餐的人很难再享受精心烹饪的菜肴。</li>
+<li><strong>“导航”依赖：</strong> 就像我们过度依赖 GPS 后，在没有导航时就容易迷路一样，过度依赖 AI 进行思考和决策，也会让我们在需要独立判断时感到迷茫。</li>
+</ul></li>
+</ol>
+<p>关键在于，大脑具有极强的可塑性。这意味着，这种影响并非不可逆转。意识到 AI 滥用的潜在“编程”效应，我们就可以有意识地去“重构”我们与 AI 的关系： * <strong>主动“调用”大脑：</strong> 刻意进行记忆训练、深度阅读、独立思考，锻炼认知“肌肉”。 * <strong>管理“中断请求”：</strong> 限制通知，设定无干扰工作时间，保护注意力资源。 * <strong>审视“算法推荐”：</strong> 主动接触不同观点，跳出信息茧房，训练批判性思维。 * <strong>把 AI 当作“协处理器”而非“主 CPU”：</strong> 利用 AI 提升效率，辅助决策，而不是完全替代我们自己的思考。</p>
+<p>AI 滥用对大脑的影响，是其设计逻辑与我们大脑固有运行机制交互作用的结果。看透这层逻辑，我们就能更好地驾驭这个强大的工具，而不是被其“反向工程”。</p>
+<p>这需要我们像对待自己的身体一样，有意识地去“保养”和“训练”我们的大脑。</p>
 
 
 
@@ -625,6 +685,10 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   }
 });
 </script>
+<script src="https://giscus.app/client.js" data-repo="mcanouil/mickael.canouil.fr" data-repo-id="MDEwOlJlcG9zaXRvcnkzNDcwODgwMDM=" data-category="Blog posts" data-category-id="DIC_kwDOFLAkg84CSh-t" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
 </div> <!-- /content -->
 <footer class="footer">
   <div class="nav-footer">
@@ -633,7 +697,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 </div>   
     <div class="nav-footer-center">
 <p>© <span id="current-year"></span> Mickaël CANOUIL. <a href="https://github.com/sponsors/mcanouil?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
-<div class="toc-actions"><ul><li><a href="https://github.com/mcanouil/mickael.canouil.fr/edit/main/index.qmd" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/mcanouil/mickael.canouil.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+<div class="toc-actions"><ul><li><a href="https://github.com/mcanouil/mickael.canouil.fr/edit/main/posts/AI overuse/AI overuse.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/mcanouil/mickael.canouil.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
     <div class="nav-footer-right">
 <p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
 </div>
