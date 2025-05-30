@@ -10,7 +10,7 @@ title-block-banner: true
 author:
   - name: "Jixing Liu, _Ph.D._"
     orcid: "0000-0002-3396-4549"
-    url: "https://mickael.canouil.fr"
+    url: "https://jixing.liu.fr"
 
 toc: true
 number-sections: true
@@ -18,7 +18,7 @@ back-to-top-navigation: true
 
 comments:
   giscus: 
-    repo: mcanouil/mickael.canouil.fr
+    repo: jixing475/jixing.liu.fr
     repo-id: MDEwOlJlcG9zaXRvcnkzNDcwODgwMDM=
     theme: dark_dimmed
     category: "Blog posts"
