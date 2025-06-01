@@ -16,19 +16,27 @@ toc: true
 number-sections: true
 back-to-top-navigation: true
 
+# comments:
+#   giscus:
+#     repo: jixing475/jixing.liu.fr
+#     repo-id: MDEwOlJlcG9zaXRvcnkzNDcwODgwMDM=
+#     theme: dark_dimmed
+#     category: "Blog posts"
+#     category-id: DIC_kwDOFLAkg84CSh-t
+
 comments:
-  giscus: 
-    repo: jixing475/jixing.liu.fr
-    repo-id: MDEwOlJlcG9zaXRvcnkzNDcwODgwMDM=
-    theme: dark_dimmed
-    category: "Blog posts"
-    category-id: DIC_kwDOFLAkg84CSh-t
+  giscus:
+    repo: "jixing475/jixingBlog"
+    repo-id: "R_kgDOOkm1fA"
+    category: "General"
+    category-id: "DIC_kwDOOkm1fM4Cq4Dm"
+    theme: "dark_dimmed"
 
 knitr:
-  opts_chunk: 
+  opts_chunk:
     collapse: true
     comment: "#>"
 
-execute: 
+execute:
   warning: false
   message: false

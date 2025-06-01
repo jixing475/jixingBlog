@@ -7,9 +7,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Jixing Liu, Ph.D.">
-<meta name="description" content="AI 滥用对人类大脑的影响，可以看作是一个复杂的系统交互失衡问题。我们的大脑本身就是一个精密的、持续进化的信息处理系统，而 AI，尤其是被滥用的 AI，则像一个外部强力“插件”或“环境”，以其特有的方式重塑着我们大脑的“底层算法”和“硬件性能”。">
+<meta name="description" content="当你为 Quarto 博客切换新主题时遇到 “Giscus is not installed” 错误？本教程详细介绍了问题原因， 并提供两种解决方案：正确配置 Giscus 评论系统或完全禁用评论功能。">
 
-<title>AI 滥用对人类大脑的影响 – MPU</title>
+<title>轻松解决 Quarto 博客中的 ‘Giscus is not installed’ 报错 – MPU</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -21,6 +21,40 @@ ul.task-list li input[type="checkbox"] {
   width: 0.8em;
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
 
@@ -72,13 +106,21 @@ ul.task-list li input[type="checkbox"] {
 }</script>
 
 
-<meta property="og:title" content="AI 滥用对人类大脑的影响 – MPU">
-<meta property="og:description" content="AI 滥用对人类大脑的影响，可以看作是一个复杂的系统交互失衡问题。我们的大脑本身就是一个精密的、持续进化的信息处理系统，而 AI，尤其是被滥用的 AI，则像一个外部强力“插件”或“环境”，以其特有的方式重塑着我们大脑的“底层算法”和“硬件性能”。">
-<meta property="og:image" content="https://jixing.liu.fr/posts/AI overuse/data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg==">
+<meta property="og:title" content="轻松解决 Quarto 博客中的 ‘Giscus is not installed’ 报错 – MPU">
+<meta property="og:description" content="当你为 Quarto 博客切换新主题时遇到 “Giscus is not installed” 错误？本教程详细介绍了问题原因， 并提供两种解决方案：正确配置 Giscus 评论系统或完全禁用评论功能。">
+<meta property="og:image" content="https://jixing.liu.fr/posts/Easily solve the Giscus is not installed error in Quarto blog/featured.png">
 <meta property="og:site_name" content="MPU">
-<meta name="twitter:title" content="AI 滥用对人类大脑的影响 – MPU">
-<meta name="twitter:description" content="AI 滥用对人类大脑的影响，可以看作是一个复杂的系统交互失衡问题。我们的大脑本身就是一个精密的、持续进化的信息处理系统，而 AI，尤其是被滥用的 AI，则像一个外部强力“插件”或“环境”，以其特有的方式重塑着我们大脑的“底层算法”和“硬件性能”。">
-<meta name="twitter:image" content="https://jixing.liu.fr/posts/AI overuse/data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg==">
+<meta property="og:image:height" content="614">
+<meta property="og:image:width" content="2068">
+<meta property="og:image:alt" content="Quarto 博客界面显示 Giscus 评论系统配置，背景为代码编辑器和 GitHub Discussions 界面。
+">
+<meta name="twitter:title" content="轻松解决 Quarto 博客中的 ‘Giscus is not installed’ 报错 – MPU">
+<meta name="twitter:description" content="当你为 Quarto 博客切换新主题时遇到 “Giscus is not installed” 错误？本教程详细介绍了问题原因， 并提供两种解决方案：正确配置 Giscus 评论系统或完全禁用评论功能。">
+<meta name="twitter:image" content="https://jixing.liu.fr/posts/Easily solve the Giscus is not installed error in Quarto blog/featured.png">
+<meta name="twitter:image-height" content="614">
+<meta name="twitter:image-width" content="2068">
+<meta name="twitter:image:alt" content="Quarto 博客界面显示 Giscus 评论系统配置，背景为代码编辑器和 GitHub Discussions 界面。
+">
 <meta name="twitter:card" content="summary_large_image">
 </head>
 
@@ -121,20 +163,20 @@ ul.task-list li input[type="checkbox"] {
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
-      <h1 class="title">AI 滥用对人类大脑的影响</h1>
+      <h1 class="title">轻松解决 Quarto 博客中的 ‘Giscus is not installed’ 报错</h1>
                   <div>
         <div class="description">
-          <p>AI 滥用对人类大脑的影响，可以看作是一个复杂的系统交互失衡问题。我们的大脑本身就是一个精密的、持续进化的信息处理系统，而 AI，尤其是被滥用的 AI，则像一个外部强力“插件”或“环境”，以其特有的方式重塑着我们大脑的“底层算法”和“硬件性能”。</p>
+          <p>当你为 Quarto 博客切换新主题时遇到 “Giscus is not installed” 错误？本教程详细介绍了问题原因， 并提供两种解决方案：正确配置 Giscus 评论系统或完全禁用评论功能。</p>
         </div>
       </div>
                           <div class="quarto-categories">
-                <div class="quarto-category">AI</div>
-                <div class="quarto-category">人工智能</div>
-                <div class="quarto-category">大脑</div>
-                <div class="quarto-category">认知科学</div>
-                <div class="quarto-category">人机交互</div>
-                <div class="quarto-category">注意力</div>
-                <div class="quarto-category">信息茧房</div>
+                <div class="quarto-category">Quarto</div>
+                <div class="quarto-category">Giscus</div>
+                <div class="quarto-category">Comments</div>
+                <div class="quarto-category">Blog</div>
+                <div class="quarto-category">Tutorial</div>
+                <div class="quarto-category">GitHub Discussions</div>
+                <div class="quarto-category">Troubleshooting</div>
               </div>
                   </div>
   </div>
@@ -152,7 +194,7 @@ ul.task-list li input[type="checkbox"] {
       <div>
       <div class="quarto-title-meta-heading">Published</div>
       <div class="quarto-title-meta-contents">
-        <p class="date">Thursday, the 22nd of May, 2025</p>
+        <p class="date">Sunday, the 1st of June, 2025</p>
       </div>
     </div>
     
@@ -163,8 +205,21 @@ ul.task-list li input[type="checkbox"] {
   </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
-        
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#轻松解决-quarto-博客中的-giscus-is-not-installed-报错" id="toc-轻松解决-quarto-博客中的-giscus-is-not-installed-报错" class="nav-link active" data-scroll-target="#轻松解决-quarto-博客中的-giscus-is-not-installed-报错"><span class="header-section-number">1</span> 轻松解决 Quarto 博客中的 “Giscus is not installed” 报错</a>
+  <ul class="collapse">
+  <li><a href="#理解报错原因" id="toc-理解报错原因" class="nav-link" data-scroll-target="#理解报错原因"><span class="header-section-number">1.1</span> 理解报错原因</a></li>
+  <li><a href="#解决方案一正确配置并使用-giscus-评论系统" id="toc-解决方案一正确配置并使用-giscus-评论系统" class="nav-link" data-scroll-target="#解决方案一正确配置并使用-giscus-评论系统"><span class="header-section-number">1.2</span> 解决方案一：正确配置并使用 Giscus 评论系统</a></li>
+  <li><a href="#解决方案二禁用评论功能如果评论对你可有可无" id="toc-解决方案二禁用评论功能如果评论对你可有可无" class="nav-link" data-scroll-target="#解决方案二禁用评论功能如果评论对你可有可无"><span class="header-section-number">1.3</span> 解决方案二：禁用评论功能（如果评论对你可有可无）</a></li>
+  <li><a href="#疑难解答如果-comments-false-仍然报错怎么办" id="toc-疑难解答如果-comments-false-仍然报错怎么办" class="nav-link" data-scroll-target="#疑难解答如果-comments-false-仍然报错怎么办"><span class="header-section-number">1.4</span> 疑难解答：如果 <code>comments: false</code> 仍然报错怎么办？</a></li>
+  <li><a href="#总结" id="toc-总结" class="nav-link" data-scroll-target="#总结"><span class="header-section-number">1.5</span> 总结</a></li>
+  </ul></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/posts/Easily solve the Giscus is not installed error in Quarto blog/Easily solve the Giscus is not installed error in Quarto blog.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content quarto-banner-title-block" id="quarto-document-content">
@@ -173,43 +228,117 @@ ul.task-list li input[type="checkbox"] {
 
 
 
-<p>AI 滥用对人类大脑的影响，可以看作是一个复杂的系统交互失衡问题。我们的大脑本身就是一个精密的、持续进化的信息处理系统，而 AI，尤其是被滥用的 AI，则像一个外部强力“插件”或“环境”，以其特有的方式重塑着我们大脑的“底层算法”和“硬件性能”。</p>
-<p>问题拆解：</p>
+<section id="轻松解决-quarto-博客中的-giscus-is-not-installed-报错" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="轻松解决-quarto-博客中的-giscus-is-not-installed-报错"><span class="header-section-number">1</span> 轻松解决 Quarto 博客中的 “Giscus is not installed” 报错</h2>
+<p>当你好不容易地为你的 Quarto 博客切换了一个新主题，却突然看到一个恼人的错误信息：“An error occurred: giscus is not installed on this repository”，这确实会让人有些沮丧。</p>
+<p>别担心，这个问题很常见，而且通常有明确的解决方案。本教程将带你了解问题的原因，并提供两种主要的解决路径：正确配置 Giscus 或完全禁用它。</p>
+<section id="理解报错原因" class="level3" data-number="1.1">
+<h3 data-number="1.1" class="anchored" data-anchor-id="理解报错原因"><span class="header-section-number">1.1</span> 理解报错原因</h3>
+<p>Giscus 是一个基于 GitHub Discussions 的评论系统。当你的 Quarto 博客（或特定主题）尝试加载 Giscus 时，如果以下任一条件未满足，就会出现上述错误：</p>
 <ol type="1">
-<li><strong>分离出系统的不同层级：</strong>
+<li><strong>Giscus 应用未安装</strong>：你没有在你的 GitHub 仓库上安装 Giscus 应用并授权其访问。</li>
+<li><strong>GitHub Discussions 未启用</strong>：你的目标 GitHub 仓库没有启用 “Discussions” 功能。</li>
+<li><strong>配置不正确</strong>：<code>_quarto.yml</code> 文件中的 Giscus 配置（如仓库名、repo-id、category-id 等）不正确或不完整。</li>
+</ol>
+<p>新主题往往默认启用了 Giscus，如果你之前没有使用过或配置过，这个报错就会浮现。</p>
+</section>
+<section id="解决方案一正确配置并使用-giscus-评论系统" class="level3" data-number="1.2">
+<h3 data-number="1.2" class="anchored" data-anchor-id="解决方案一正确配置并使用-giscus-评论系统"><span class="header-section-number">1.2</span> 解决方案一：正确配置并使用 Giscus 评论系统</h3>
+<p>如果你希望在博客中使用评论功能，并且 Giscus 是你的选择，请按照以下步骤操作：</p>
+<p><strong>前提条件：</strong></p>
 <ul>
-<li><strong>人类大脑（认知系统）：</strong> 这是核心系统，具有学习、记忆、注意力、决策、情感等功能模块。它的运作依赖于神经元网络的连接和信号传递，具有高度可塑性。</li>
-<li><strong>AI 系统（信息/交互系统）：</strong> 这是外部输入系统，包括算法、数据、用户界面。其设计目标（例如，最大化用户在线时长、点击率）深刻影响其行为。</li>
-<li><strong>人机交互接口：</strong> 这是大脑系统与 AI 系统之间的“API”，信息通过感官（视觉、听觉）输入大脑，大脑通过行为（点击、语音）输出指令。</li>
-<li><strong>社会文化环境：</strong> 这是更高层级的系统，包括教育模式、工作方式、信息传播范式，它们会因 AI 的普及而发生改变，反过来又影响人机交互。</li>
+<li>你拥有一个 GitHub 仓库（通常是你博客的源文件仓库）。</li>
+<li>在该仓库的 “Settings” -&gt; “General” -&gt; “Features” 中，确保 “Discussions” 功能已勾选启用。</li>
+<li>在仓库的 “Discussions” 标签页下，创建一个或选择一个已有的 “Category” (分类) 来存放评论，例如 “Blog Comments” 或 “General”。</li>
+</ul>
+<p><strong>步骤：</strong></p>
+<ol type="1">
+<li><p><strong>访问 Giscus 官网</strong>：<a href="https://giscus.app/">https://giscus.app/</a></p></li>
+<li><p><strong>配置 Giscus</strong>：</p>
+<ul>
+<li><strong>Repository</strong>: 输入你的 GitHub 仓库名，格式为 <code>your-username/your-repo-name</code> (例如：<code>jixing475/jixingBlog</code>)。</li>
+<li><strong>Page ↔︎️ Discussion Mapping</strong>: 选择一个映射方式，“pathname” 是常用选项。</li>
+<li><strong>Discussion Category</strong>: 选择你在 GitHub Discussions 中创建的那个分类 (例如：<code>General</code>)。</li>
+<li><strong>Features (可选)</strong>: 根据需要勾选 Reactions, Emit discussion metadata 等。</li>
+<li><strong>Theme</strong>: 选择一个你喜欢的主题 (例如：<code>dark_dimmed</code>)。</li>
+<li><strong>Lang (可选)</strong>: 选择语言 (例如：<code>en</code>)。</li>
 </ul></li>
-<li><strong>找出各层之间的连接和核心运作原理：</strong>
+<li><p><strong>获取配置参数</strong>：完成上述配置后，Giscus 网站会生成一段 <code>&lt;script&gt;</code> 标签。仔细查看这段代码，你需要从中提取以下 <code>data-*</code> 属性的值：</p>
 <ul>
-<li><strong>认知“外包”与技能退化：</strong> 当我们过度依赖 AI 完成本应由大脑承担的任务（如记忆、导航、信息检索、简单分析），大脑的相应“认知肌肉”就会因为缺乏锻炼而萎缩。这就像一个程序员长期依赖代码自动生成工具，可能会忘记基本的语法和算法逻辑。大脑会“优化”掉它认为不再需要的功能。</li>
-<li><strong>注意力机制的“劫持”：</strong> 许多 AI 应用（尤其是社交媒体、短视频）的设计，利用了大脑对新奇刺激、即时反馈的偏好，通过算法精准推送内容，持续激活大脑的奖励回路（多巴胺系统）。这就像一个设计精良的“中断请求”，频繁打断大脑的深度思考进程，导致注意力碎片化，难以进行长时间、专注的认知活动。大脑的“任务切换”成本很高，频繁切换会降低整体处理效率。</li>
-<li><strong>决策模式的“算法化”与自主性削弱：</strong> AI 推荐系统和决策辅助工具，如果滥用，会让我们习惯于接受“算法给出”的最优解，而减少了独立思考、权衡利弊、承担风险的决策过程。久而久之，我们可能会失去对复杂情境的判断能力和自主决策的信心，大脑的“决策引擎”变得依赖外部输入。如果 AI 算法本身存在偏见（bias），这种偏见也会潜移默化地“编程”进我们的思维模式。</li>
-<li><strong>信息茧房与认知窄化：</strong> 个性化推荐算法倾向于给我们推送符合我们既有观点和偏好的信息，形成“信息茧房”或“回声室效应”。这会减少我们接触不同观点的机会，固化思维模式，降低认知灵活性和批判性思维能力。大脑的“知识库更新机制”变得单一，难以形成全面、客观的认知。</li>
-<li><strong>即时满足与延迟满足能力的侵蚀：</strong> AI 提供的许多服务强调即时性（即时答案、即时娱乐）。长期沉浸在这种环境中，大脑对于“延迟满足”的耐受度可能会降低。而延迟满足能力，恰恰是实现长期目标、进行深度学习和创造性工作所必需的“底层支持”。</li>
+<li><code>data-repo</code></li>
+<li><code>data-repo-id</code></li>
+<li><code>data-category</code></li>
+<li><code>data-category-id</code></li>
+<li>以及你选择的其他配置如 <code>data-mapping</code>, <code>data-theme</code>, <code>data-lang</code> 等。</li>
 </ul></li>
-<li><strong>用编程概念建立简明的类比：</strong>
+<li><p><strong>更新 <code>_quarto.yml</code> 文件</strong>： 打开你 Quarto 项目根目录下的 <code>_quarto.yml</code> 文件，找到或添加 <code>comments</code> 配置块，并填入你从 Giscus 获取的信息。示例如下：</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">project</span><span class="kw">:</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">type</span><span class="kw">:</span><span class="at"> website</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">website</span><span class="kw">:</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">title</span><span class="kw">:</span><span class="at"> </span><span class="st">"你的博客标题"</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co">  # ... 其他网站配置 ...</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">comments</span><span class="kw">:</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">giscus</span><span class="kw">:</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">repo</span><span class="kw">:</span><span class="at"> </span><span class="st">"jixing475/jixingBlog"</span><span class="co">         # 对应 data-repo</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">repo-id</span><span class="kw">:</span><span class="at"> </span><span class="st">"R_kgDOOkm1fA"</span><span class="co">             # 对应 data-repo-id</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">category</span><span class="kw">:</span><span class="at"> </span><span class="st">"General"</span><span class="co">                 # 对应 data-category</span></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">category-id</span><span class="kw">:</span><span class="at"> </span><span class="st">"DIC_kwDOOkm1fM4Cq4Dm"</span><span class="co"> # 对应 data-category-id</span></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">mapping</span><span class="kw">:</span><span class="at"> </span><span class="st">"pathname"</span><span class="co">                 # 对应 data-mapping</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">strict</span><span class="kw">:</span><span class="at"> </span><span class="st">"0"</span><span class="co">                         # 对应 data-strict</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">reactions-enabled</span><span class="kw">:</span><span class="at"> </span><span class="st">"1"</span><span class="co">              # 对应 data-reactions-enabled</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">emit-metadata</span><span class="kw">:</span><span class="at"> </span><span class="st">"0"</span><span class="co">                  # 对应 data-emit-metadata</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">input-position</span><span class="kw">:</span><span class="at"> </span><span class="st">"bottom"</span><span class="co">            # 对应 data-input-position</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">theme</span><span class="kw">:</span><span class="at"> </span><span class="st">"dark_dimmed"</span><span class="co">                # 对应 data-theme</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">lang</span><span class="kw">:</span><span class="at"> </span><span class="st">"en"</span><span class="co">                          # 对应 data-lang</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="co"># ... 其他配置 ...</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div></li>
+<li><p><strong>重新渲染博客</strong>：保存 <code>_quarto.yml</code> 文件，然后在终端运行 <code>quarto render</code> (或 <code>quarto preview</code> 刷新预览)。</p></li>
+</ol>
+<p>现在，你的博客页面应该能正确加载 Giscus 评论区了。</p>
+</section>
+<section id="解决方案二禁用评论功能如果评论对你可有可无" class="level3" data-number="1.3">
+<h3 data-number="1.3" class="anchored" data-anchor-id="解决方案二禁用评论功能如果评论对你可有可无"><span class="header-section-number">1.3</span> 解决方案二：禁用评论功能（如果评论对你可有可无）</h3>
+<p>如果你只是想使用新主题的样式，对评论功能没有需求，或者暂时不想配置它，最简单的办法就是禁用评论。</p>
+<ol type="1">
+<li><p><strong>编辑 <code>_quarto.yml</code> 文件</strong>： 打开 <code>_quarto.yml</code>，找到 <code>website:</code> (或 <code>book:</code>) 配置部分。</p></li>
+<li><p><strong>禁用评论</strong>： 添加或修改 <code>comments</code> 选项为 <code>false</code>。</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode yaml code-with-copy"><code class="sourceCode yaml"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">project</span><span class="kw">:</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">type</span><span class="kw">:</span><span class="at"> website</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="fu">website</span><span class="kw">:</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">title</span><span class="kw">:</span><span class="at"> </span><span class="st">"你的博客标题"</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="co">  # ... 其他网站配置 ...</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">comments</span><span class="kw">:</span><span class="at"> </span><span class="ch">false</span><span class="co">  # &lt;--- 确保这一行存在且设置为 false</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co">  # ... 其他配置，例如 page-footer, navbar ...</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>或者，如果你之前有 <code>giscus:</code> 配置块，也可以将其整个注释掉或删除，但 <code>comments: false</code> 是更明确和全局的禁用方式。</p></li>
+<li><p><strong>重新渲染博客</strong>：保存文件并运行 <code>quarto render</code>。</p></li>
+</ol>
+<p>这样，Giscus 的加载尝试将被禁止，报错信息自然也就消失了。</p>
+</section>
+<section id="疑难解答如果-comments-false-仍然报错怎么办" class="level3" data-number="1.4">
+<h3 data-number="1.4" class="anchored" data-anchor-id="疑难解答如果-comments-false-仍然报错怎么办"><span class="header-section-number">1.4</span> 疑难解答：如果 <code>comments: false</code> 仍然报错怎么办？</h3>
+<p>如果你设置了 <code>comments: false</code> 但错误依旧，请检查：</p>
+<ol type="1">
+<li><strong>页面级配置覆盖</strong>：检查报错页面的 <code>.qmd</code> 文件顶部的 YAML Front Matter (两个 <code>---</code> 之间的部分)。如果这里有 <code>comments: true</code> 或单独的 Giscus 配置，它会覆盖全局设置。请将其删除或也改为 <code>comments: false</code>。</li>
+<li><strong>主题强制行为</strong>：极少数情况下，主题可能在其模板中硬编码了评论加载逻辑，或者有独立于 Quarto 标准 <code>comments</code> 选项的主题特定评论开关。查阅该主题的文档可能会有所帮助。</li>
+<li><strong>缓存问题</strong>：
 <ul>
-<li><strong>大脑的“缓存”与“硬盘”：</strong> 频繁使用搜索引擎获取即时信息，而非主动记忆，就像我们把信息都存在了“云端缓存”，而大脑自身的“本地硬盘”（长期记忆）存储和检索能力下降。</li>
-<li><strong>认知“脚本”的固化：</strong> 如果 AI 总是提供现成的解决方案，我们大脑解决问题的“脚本”就可能变得单一和僵化，缺乏对新问题的适应性和创造性。</li>
-<li><strong>“多巴胺驱动”的死循环：</strong> 某些 AI 应用设计就像一个不断向大脑“注入”多巴胺信号的程序，让大脑陷入追求即时快感的循环，难以启动那些需要消耗意志力但能带来长远回报的“后台进程”。</li>
-<li><strong>认知“API”的过度调用：</strong> 我们不断向 AI 发出“请求”，获取信息、娱乐、决策支持，这本身没问题。但“滥用”就像对大脑的认知资源进行“DDoS 攻击”，使其不堪重负，或者因为过度依赖外部“API”，导致自身核心功能模块的“代码”不再被执行和优化。</li>
-</ul></li>
-<li><strong>用直白语言表达复杂洞察：</strong> AI 滥用，本质上是在改变我们大脑处理信息和与世界互动的方式。它像一个看不见的“程序员”，在不知不觉中修改我们大脑的“操作系统”。
-<ul>
-<li><strong>“用进废退”是基本规则：</strong> 那些我们不再亲自思考、记忆、决策的部分，大脑会认为它们不重要，相关的神经连接就会减弱。</li>
-<li><strong>“快餐式”信息喂养：</strong> 大脑习惯了被动接收碎片化、高度刺激性的信息，就越来越难沉下心去阅读长文、进行深度思考，就像习惯了快餐的人很难再享受精心烹饪的菜肴。</li>
-<li><strong>“导航”依赖：</strong> 就像我们过度依赖 GPS 后，在没有导航时就容易迷路一样，过度依赖 AI 进行思考和决策，也会让我们在需要独立判断时感到迷茫。</li>
+<li>删除项目中的 <code>_site</code> 文件夹。</li>
+<li>删除项目中的 <code>.quarto</code> 文件夹 (它可能是隐藏的)。</li>
+<li>清除浏览器缓存或使用无痕模式访问。</li>
+<li>然后再次运行 <code>quarto render</code>。</li>
 </ul></li>
 </ol>
-<p>关键在于，大脑具有极强的可塑性。这意味着，这种影响并非不可逆转。意识到 AI 滥用的潜在“编程”效应，我们就可以有意识地去“重构”我们与 AI 的关系： * <strong>主动“调用”大脑：</strong> 刻意进行记忆训练、深度阅读、独立思考，锻炼认知“肌肉”。 * <strong>管理“中断请求”：</strong> 限制通知，设定无干扰工作时间，保护注意力资源。 * <strong>审视“算法推荐”：</strong> 主动接触不同观点，跳出信息茧房，训练批判性思维。 * <strong>把 AI 当作“协处理器”而非“主 CPU”：</strong> 利用 AI 提升效率，辅助决策，而不是完全替代我们自己的思考。</p>
-<p>AI 滥用对大脑的影响，是其设计逻辑与我们大脑固有运行机制交互作用的结果。看透这层逻辑，我们就能更好地驾驭这个强大的工具，而不是被其“反向工程”。</p>
-<p>这需要我们像对待自己的身体一样，有意识地去“保养”和“训练”我们的大脑。</p>
+</section>
+<section id="总结" class="level3" data-number="1.5">
+<h3 data-number="1.5" class="anchored" data-anchor-id="总结"><span class="header-section-number">1.5</span> 总结</h3>
+<p>处理 Quarto 中的 Giscus 报错通常不复杂。明确你是否需要评论功能是第一步。如果需要，仔细按照 giscus.app 的指引获取配置并填入 <code>_quarto.yml</code>；如果不需要，简单地设置 <code>comments: false</code> 就能解决问题。</p>
+<p>希望这篇教程能帮你顺利美化并运行你的 Quarto 博客！</p>
 
 
+</section>
+</section>
 
 <a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
@@ -697,7 +826,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 </div>   
     <div class="nav-footer-center">
 <p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
-<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/posts/AI overuse/AI overuse.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/posts/Easily solve the Giscus is not installed error in Quarto blog/Easily solve the Giscus is not installed error in Quarto blog.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
     <div class="nav-footer-right">
 <p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
 </div>
