@@ -38,7 +38,10 @@ website:
 
 format:
   html:
-    theme: yeti
+    theme:
+      - cosmo
+      - assets/simon-light.scss
+      - assets/simon.scss
     lang: en
     date-format: 'dddd[, the] Do [of] MMMM, YYYY'
     highlight-style: github-dark
