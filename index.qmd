@@ -1,8 +1,15 @@
 ---
 title: "Jixing Liu"
-subtitle: |
-  Biostatistician.
-image: /assets/images/social-profile.png
----
+pagetitle: "Jixing Liu"
+subtitle: "Data scientists in BioMedcine"
+image: assets/jixing.png
+comments: false
+about:
+  template: jolla
+  image-width: 28em
+  id: hero-heading
+page-layout: article
 
-[Jixing's Blog ](https://github.com/jixing475/jixingBlog)
+back-to-top-navigation: false
+  
+---

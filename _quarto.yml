@@ -8,7 +8,7 @@ project:
 website:
   title: "MPU"
   description: "A data science blog and portfolio by Jixing Liu"
-  favicon: /assets/images/logo.svg
+  favicon: /assets/images/cabin.png
   image: /assets/images/social-profile.png
   site-url: https://jixing.liu.fr
   repo-url: https://github.com/jixing475/jixing.liu.fr
@@ -29,7 +29,7 @@ website:
   navbar:
     title: "MPU"
     search: true
-    logo: assets/images/logo.svg
+    logo: assets/images/cabin.png
     right:
       - text: About
         href: index.qmd
