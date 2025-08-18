@@ -2,34 +2,34 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://jixing.liu.fr/blog.html</loc>
-    <lastmod>2025-05-21T23:45:39.337Z</lastmod>
-  </url>
-  <url>
-    <loc>https://jixing.liu.fr/publications.html</loc>
-    <lastmod>2025-07-29T15:05:31.271Z</lastmod>
-  </url>
-  <url>
-    <loc>https://jixing.liu.fr/posts/2024-12-30-quarto-github-pages/index.html</loc>
-    <lastmod>2025-06-01T02:16:29.930Z</lastmod>
-  </url>
-  <url>
-    <loc>https://jixing.liu.fr/posts/AI-Native team about Every/index.html</loc>
-    <lastmod>2025-07-28T03:17:21.257Z</lastmod>
-  </url>
-  <url>
-    <loc>https://jixing.liu.fr/posts/Easily solve the Giscus is not installed error in Quarto blog/Easily solve the Giscus is not installed error in Quarto blog.html</loc>
-    <lastmod>2025-06-01T02:47:29.283Z</lastmod>
-  </url>
-  <url>
-    <loc>https://jixing.liu.fr/posts/AI overuse/AI overuse.html</loc>
-    <lastmod>2025-06-01T02:16:22.389Z</lastmod>
-  </url>
-  <url>
-    <loc>https://jixing.liu.fr/index.html</loc>
-    <lastmod>2025-07-29T14:59:39.066Z</lastmod>
+    <lastmod>2025-08-18T13:23:25.310Z</lastmod>
   </url>
   <url>
     <loc>https://jixing.liu.fr/Claude.html</loc>
-    <lastmod>2025-07-28T03:08:27.817Z</lastmod>
+    <lastmod>2025-08-18T13:23:25.263Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jixing.liu.fr/posts/AI overuse/AI overuse.html</loc>
+    <lastmod>2025-08-18T13:23:25.311Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jixing.liu.fr/posts/2024-12-30-quarto-github-pages/index.html</loc>
+    <lastmod>2025-08-18T13:23:25.311Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jixing.liu.fr/publications.html</loc>
+    <lastmod>2025-08-18T13:32:09.494Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jixing.liu.fr/posts/Easily solve the Giscus is not installed error in Quarto blog/Easily solve the Giscus is not installed error in Quarto blog.html</loc>
+    <lastmod>2025-08-18T13:23:25.315Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jixing.liu.fr/posts/AI-Native team about Every/index.html</loc>
+    <lastmod>2025-08-18T13:23:25.311Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jixing.liu.fr/index.html</loc>
+    <lastmod>2025-08-18T13:23:25.310Z</lastmod>
   </url>
 </urlset>

@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.7.32">
+<meta name="generator" content="quarto-1.8.20">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -35,14 +35,15 @@ ul.task-list li input[type="checkbox"] {
 <script src="site_libs/quarto-listing/quarto-listing.js"></script>
 <script src="site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/axe/axe-check.js" type="module"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="site_libs/quarto-html/anchor.min.js"></script>
 <link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting-0348920b7671f696dc9078d39bff215e.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-510647262627c4a43f9ff360da68f646.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
 <link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap-5edadd2faed1e9a0ff6fb67d58789c9a.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-fe9f6036f0d2cf7dc58cffe0d8b5527d.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 <script src="site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
 <script id="quarto-search-options" type="application/json">{
   "location": "navbar",
@@ -116,7 +117,7 @@ const typesetMath = (el) => {
     var macros = [];
     for (var i = 0; i < mathElements.length; i++) {
       var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN") {
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
         window.katex.render(texText.data, mathElements[i], {
           displayMode: mathElements[i].classList.contains('display'),
           throwOnError: false,
@@ -152,7 +153,8 @@ window.Quarto = {
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
     <a href="./index.html" class="navbar-brand navbar-brand-logo">
-    <img src="./assets/images/cabin.png" alt="" class="navbar-logo">
+    <img src="./assets/images/cabin.png" alt="" class="navbar-logo light-content">
+    <img src="./assets/images/cabin.png" alt="" class="navbar-logo dark-content">
     </a>
     <a class="navbar-brand" href="./index.html">
     <span class="navbar-title">MPU</span>
@@ -271,7 +273,7 @@ window.Quarto = {
 </thead>
 <tbody class="list">
 
-<tr data-index="0" data-listing-date-sort="1730390400000" data-listing-title-sort="A framework for conducting GWAS using repeated measures data with an application to childhood BMI">
+<tr data-index="0" data-listing-date-sort="1730419200000" data-listing-title-sort="A framework for conducting GWAS using repeated measures data with an application to childhood BMI">
 <td>
 <span class="listing-date">November,<br>2024</span>
 </td>
@@ -290,7 +292,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="1" data-listing-date-sort="1722441600000" data-listing-title-sort="Functional genetics reveals the contribution of delta opioid receptor to type 2 diabetes and beta-cell function">
+<tr data-index="1" data-listing-date-sort="1722470400000" data-listing-title-sort="Functional genetics reveals the contribution of delta opioid receptor to type 2 diabetes and beta-cell function">
 <td>
 <span class="listing-date">August,<br>2024</span>
 </td>
@@ -309,7 +311,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="2" data-listing-date-sort="1722441600000" data-listing-title-sort="*PNLIPRP1* hypermethylation in exocrine pancreas links type 2 diabetes and cholesterol metabolism">
+<tr data-index="2" data-listing-date-sort="1722470400000" data-listing-title-sort="*PNLIPRP1* hypermethylation in exocrine pancreas links type 2 diabetes and cholesterol metabolism">
 <td>
 <span class="listing-date">August,<br>2024</span>
 </td>
@@ -328,7 +330,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="3" data-listing-date-sort="1709222400000" data-listing-title-sort="Genetic drivers of heterogeneity in type 2 diabetes pathophysiology">
+<tr data-index="3" data-listing-date-sort="1709251200000" data-listing-title-sort="Genetic drivers of heterogeneity in type 2 diabetes pathophysiology">
 <td>
 <span class="listing-date">March,<br>2024</span>
 </td>
@@ -347,7 +349,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="4" data-listing-date-sort="1693497600000" data-listing-title-sort="Identification of myokines susceptible to improve glucose homeostasis after bariatric surgery">
+<tr data-index="4" data-listing-date-sort="1693526400000" data-listing-title-sort="Identification of myokines susceptible to improve glucose homeostasis after bariatric surgery">
 <td>
 <span class="listing-date">September,<br>2023</span>
 </td>
@@ -366,7 +368,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="5" data-listing-date-sort="1682870400000" data-listing-title-sort="Identification of biomarkers for glycaemic deterioration in type 2 diabetes">
+<tr data-index="5" data-listing-date-sort="1682899200000" data-listing-title-sort="Identification of biomarkers for glycaemic deterioration in type 2 diabetes">
 <td>
 <span class="listing-date">May,<br>2023</span>
 </td>
@@ -385,7 +387,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="6" data-listing-date-sort="1677600000000" data-listing-title-sort="Contribution of heterozygous PCSK1 variants to obesity and implications for precision medicine: A case-control study">
+<tr data-index="6" data-listing-date-sort="1677628800000" data-listing-title-sort="Contribution of heterozygous PCSK1 variants to obesity and implications for precision medicine: A case-control study">
 <td>
 <span class="listing-date">March,<br>2023</span>
 </td>
@@ -404,7 +406,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="7" data-listing-date-sort="1656604800000" data-listing-title-sort="Epigenetic changes associated with hyperglycaemia exposure in the longitudinal D.E.S.I.R. cohort">
+<tr data-index="7" data-listing-date-sort="1656633600000" data-listing-title-sort="Epigenetic changes associated with hyperglycaemia exposure in the longitudinal D.E.S.I.R. cohort">
 <td>
 <span class="listing-date">July,<br>2022</span>
 </td>
@@ -423,7 +425,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="8" data-listing-date-sort="1654012800000" data-listing-title-sort="Epigenetic and Transcriptomic Programming of HSC Quiescence Signaling in Large for Gestational Age Neonates">
+<tr data-index="8" data-listing-date-sort="1654041600000" data-listing-title-sort="Epigenetic and Transcriptomic Programming of HSC Quiescence Signaling in Large for Gestational Age Neonates">
 <td>
 <span class="listing-date">June,<br>2022</span>
 </td>
@@ -442,7 +444,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="9" data-listing-date-sort="1651334400000" data-listing-title-sort="Multi-ancestry genetic study of type 2 diabetes highlights the power of diverse populations for discovery and translation">
+<tr data-index="9" data-listing-date-sort="1651363200000" data-listing-title-sort="Multi-ancestry genetic study of type 2 diabetes highlights the power of diverse populations for discovery and translation">
 <td>
 <span class="listing-date">May,<br>2022</span>
 </td>
@@ -461,7 +463,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="10" data-listing-date-sort="1648742400000" data-listing-title-sort="Rare Variant Analysis of Obesity-Associated Genes in Young Adults With Severe Obesity From a Consanguineous Population of Pakistan">
+<tr data-index="10" data-listing-date-sort="1648771200000" data-listing-title-sort="Rare Variant Analysis of Obesity-Associated Genes in Young Adults With Severe Obesity From a Consanguineous Population of Pakistan">
 <td>
 <span class="listing-date">April,<br>2022</span>
 </td>
@@ -480,7 +482,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="11" data-listing-date-sort="1646064000000" data-listing-title-sort="Maternal Glycemic Dysregulation During Pregnancy and Neonatal Blood DNA Methylation: Meta-analyses of Epigenome-Wide Association Studies">
+<tr data-index="11" data-listing-date-sort="1646092800000" data-listing-title-sort="Maternal Glycemic Dysregulation During Pregnancy and Neonatal Blood DNA Methylation: Meta-analyses of Epigenome-Wide Association Studies">
 <td>
 <span class="listing-date">March,<br>2022</span>
 </td>
@@ -499,7 +501,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="12" data-listing-date-sort="1643644800000" data-listing-title-sort="Multi-ancestry genome-wide association study of gestational diabetes mellitus highlights genetic links with type 2 diabetes">
+<tr data-index="12" data-listing-date-sort="1643673600000" data-listing-title-sort="Multi-ancestry genome-wide association study of gestational diabetes mellitus highlights genetic links with type 2 diabetes">
 <td>
 <span class="listing-date">February,<br>2022</span>
 </td>
@@ -518,7 +520,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="13" data-listing-date-sort="1640966400000" data-listing-title-sort="Four groups of type 2 diabetes contribute to the etiological and clinical heterogeneity in newly diagnosed individuals: An IMI DIRECT study">
+<tr data-index="13" data-listing-date-sort="1640995200000" data-listing-title-sort="Four groups of type 2 diabetes contribute to the etiological and clinical heterogeneity in newly diagnosed individuals: An IMI DIRECT study">
 <td>
 <span class="listing-date">January,<br>2022</span>
 </td>
@@ -537,7 +539,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="14" data-listing-date-sort="1635696000000" data-listing-title-sort="Elevated circulating follistatin associates with an increased risk of type 2 diabetes">
+<tr data-index="14" data-listing-date-sort="1635724800000" data-listing-title-sort="Elevated circulating follistatin associates with an increased risk of type 2 diabetes">
 <td>
 <span class="listing-date">November,<br>2021</span>
 </td>
@@ -556,7 +558,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="15" data-listing-date-sort="1633017600000" data-listing-title-sort="Identification of Key Regions Mediating Human Melatonin Type 1 Receptor Functional Selectivity Revealed by Natural Variants">
+<tr data-index="15" data-listing-date-sort="1633046400000" data-listing-title-sort="Identification of Key Regions Mediating Human Melatonin Type 1 Receptor Functional Selectivity Revealed by Natural Variants">
 <td>
 <span class="listing-date">October,<br>2021</span>
 </td>
@@ -575,7 +577,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="16" data-listing-date-sort="1630425600000" data-listing-title-sort="Epigenome-Wide Association Study Reveals Methylation Loci Associated With Offspring Gestational Diabetes Mellitus Exposure and Maternal Methylome">
+<tr data-index="16" data-listing-date-sort="1630454400000" data-listing-title-sort="Epigenome-Wide Association Study Reveals Methylation Loci Associated With Offspring Gestational Diabetes Mellitus Exposure and Maternal Methylome">
 <td>
 <span class="listing-date">September,<br>2021</span>
 </td>
@@ -594,7 +596,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="17" data-listing-date-sort="1622476800000" data-listing-title-sort="Gene-educational attainment interactions in a multi-ancestry genome-wide meta-analysis identify novel blood pressure loci">
+<tr data-index="17" data-listing-date-sort="1622505600000" data-listing-title-sort="Gene-educational attainment interactions in a multi-ancestry genome-wide meta-analysis identify novel blood pressure loci">
 <td>
 <span class="listing-date">June,<br>2021</span>
 </td>
@@ -613,7 +615,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="18" data-listing-date-sort="1617206400000" data-listing-title-sort="SHP2 drives inflammation-triggered insulin resistance by reshaping tissue macrophage populations">
+<tr data-index="18" data-listing-date-sort="1617235200000" data-listing-title-sort="SHP2 drives inflammation-triggered insulin resistance by reshaping tissue macrophage populations">
 <td>
 <span class="listing-date">April,<br>2021</span>
 </td>
@@ -632,7 +634,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="19" data-listing-date-sort="1612108800000" data-listing-title-sort="Chromatin 3D interaction analysis of the STARD10 locus unveils FCHSD2 as a regulator of insulin secretion">
+<tr data-index="19" data-listing-date-sort="1612137600000" data-listing-title-sort="Chromatin 3D interaction analysis of the STARD10 locus unveils FCHSD2 as a regulator of insulin secretion">
 <td>
 <span class="listing-date">February,<br>2021</span>
 </td>
@@ -651,7 +653,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="20" data-listing-date-sort="1609430400000" data-listing-title-sort="Monogenic diabetes characteristics in a transnational multicenter study from Mediterranean countries">
+<tr data-index="20" data-listing-date-sort="1609459200000" data-listing-title-sort="Monogenic diabetes characteristics in a transnational multicenter study from Mediterranean countries">
 <td>
 <span class="listing-date">January,<br>2021</span>
 </td>
@@ -670,7 +672,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="21" data-listing-date-sort="1606752000000" data-listing-title-sort="Persistent or Transient Human β Cell Dysfunction Induced by Metabolic Stress: Specific Signatures and Shared Gene Expression with Type 2 Diabetes">
+<tr data-index="21" data-listing-date-sort="1606780800000" data-listing-title-sort="Persistent or Transient Human β Cell Dysfunction Induced by Metabolic Stress: Specific Signatures and Shared Gene Expression with Type 2 Diabetes">
 <td>
 <span class="listing-date">December,<br>2020</span>
 </td>
@@ -689,7 +691,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="22" data-listing-date-sort="1606752000000" data-listing-title-sort="Histone deacetylase 9 promoter hypomethylation associated with adipocyte dysfunction is a statin-related metabolic effect">
+<tr data-index="22" data-listing-date-sort="1606780800000" data-listing-title-sort="Histone deacetylase 9 promoter hypomethylation associated with adipocyte dysfunction is a statin-related metabolic effect">
 <td>
 <span class="listing-date">December,<br>2020</span>
 </td>
@@ -708,7 +710,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="23" data-listing-date-sort="1601481600000" data-listing-title-sort="Pathogenic variants in actionable MODY genes are associated with type 2 diabetes">
+<tr data-index="23" data-listing-date-sort="1601510400000" data-listing-title-sort="Pathogenic variants in actionable MODY genes are associated with type 2 diabetes">
 <td>
 <span class="listing-date">October,<br>2020</span>
 </td>
@@ -727,7 +729,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="24" data-listing-date-sort="1588262400000" data-listing-title-sort="General regression model: A &quot;model‐free&quot; association test for quantitative traits allowing to test for the underlying genetic model">
+<tr data-index="24" data-listing-date-sort="1588291200000" data-listing-title-sort="General regression model: A &quot;model‐free&quot; association test for quantitative traits allowing to test for the underlying genetic model">
 <td>
 <span class="listing-date">May,<br>2020</span>
 </td>
@@ -746,7 +748,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="25" data-listing-date-sort="1580486400000" data-listing-title-sort="*NACHO:* An R package for quality control of NanoString [nCounter]{.nocase} data">
+<tr data-index="25" data-listing-date-sort="1580515200000" data-listing-title-sort="*NACHO:* An R package for quality control of NanoString [nCounter]{.nocase} data">
 <td>
 <span class="listing-date">February,<br>2020</span>
 </td>
@@ -765,7 +767,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="26" data-listing-date-sort="1580486400000" data-listing-title-sort="The expression of genes in top obesity-associated loci is enriched in insula and substantia nigra brain regions involved in addiction and reward">
+<tr data-index="26" data-listing-date-sort="1580515200000" data-listing-title-sort="The expression of genes in top obesity-associated loci is enriched in insula and substantia nigra brain regions involved in addiction and reward">
 <td>
 <span class="listing-date">February,<br>2020</span>
 </td>
@@ -784,7 +786,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="27" data-listing-date-sort="1572537600000" data-listing-title-sort="Loss-of-function mutations in MRAP2 are pathogenic in hyperphagic obesity with hyperglycemia and hypertension">
+<tr data-index="27" data-listing-date-sort="1572566400000" data-listing-title-sort="Loss-of-function mutations in MRAP2 are pathogenic in hyperphagic obesity with hyperglycemia and hypertension">
 <td>
 <span class="listing-date">November,<br>2019</span>
 </td>
@@ -803,7 +805,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="28" data-listing-date-sort="1569859200000" data-listing-title-sort="A trans-ancestral meta-analysis of genome-wide association studies reveals loci associated with childhood obesity">
+<tr data-index="28" data-listing-date-sort="1569888000000" data-listing-title-sort="A trans-ancestral meta-analysis of genome-wide association studies reveals loci associated with childhood obesity">
 <td>
 <span class="listing-date">October,<br>2019</span>
 </td>
@@ -822,7 +824,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="29" data-listing-date-sort="1564588800000" data-listing-title-sort="A multi-ancestry genome-wide study incorporating gene--smoking interactions identifies multiple new loci for pulse pressure and mean arterial pressure">
+<tr data-index="29" data-listing-date-sort="1564617600000" data-listing-title-sort="A multi-ancestry genome-wide study incorporating gene--smoking interactions identifies multiple new loci for pulse pressure and mean arterial pressure">
 <td>
 <span class="listing-date">August,<br>2019</span>
 </td>
@@ -841,7 +843,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="30" data-listing-date-sort="1561910400000" data-listing-title-sort="Genome-wide Association Study of Change in Fasting Glucose over time in 13,807 non-diabetic European Ancestry Individuals">
+<tr data-index="30" data-listing-date-sort="1561939200000" data-listing-title-sort="Genome-wide Association Study of Change in Fasting Glucose over time in 13,807 non-diabetic European Ancestry Individuals">
 <td>
 <span class="listing-date">July,<br>2019</span>
 </td>
@@ -860,7 +862,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="31" data-listing-date-sort="1559318400000" data-listing-title-sort="Laser capture microdissection of human pancreatic islets reveals novel [eQTLs]{.nocase} associated with type 2 diabetes">
+<tr data-index="31" data-listing-date-sort="1559347200000" data-listing-title-sort="Laser capture microdissection of human pancreatic islets reveals novel [eQTLs]{.nocase} associated with type 2 diabetes">
 <td>
 <span class="listing-date">June,<br>2019</span>
 </td>
@@ -879,7 +881,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="32" data-listing-date-sort="1559318400000" data-listing-title-sort="Multiancestry Genome-Wide Association Study of Lipid Levels Incorporating Gene-Alcohol Interactions">
+<tr data-index="32" data-listing-date-sort="1559347200000" data-listing-title-sort="Multiancestry Genome-Wide Association Study of Lipid Levels Incorporating Gene-Alcohol Interactions">
 <td>
 <span class="listing-date">June,<br>2019</span>
 </td>
@@ -898,7 +900,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="33" data-listing-date-sort="1559318400000" data-listing-title-sort="A catalog of genetic loci associated with kidney function from analyses of a million individuals">
+<tr data-index="33" data-listing-date-sort="1559347200000" data-listing-title-sort="A catalog of genetic loci associated with kidney function from analyses of a million individuals">
 <td>
 <span class="listing-date">June,<br>2019</span>
 </td>
@@ -917,7 +919,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="34" data-listing-date-sort="1554048000000" data-listing-title-sort="Multi-ancestry genome-wide gene--smoking interaction study of 387,272 individuals identifies new loci associated with serum lipids">
+<tr data-index="34" data-listing-date-sort="1554076800000" data-listing-title-sort="Multi-ancestry genome-wide gene--smoking interaction study of 387,272 individuals identifies new loci associated with serum lipids">
 <td>
 <span class="listing-date">April,<br>2019</span>
 </td>
@@ -936,7 +938,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="35" data-listing-date-sort="1546272000000" data-listing-title-sort="Multi-ancestry study of blood lipid levels identifies four loci interacting with physical activity">
+<tr data-index="35" data-listing-date-sort="1546300800000" data-listing-title-sort="Multi-ancestry study of blood lipid levels identifies four loci interacting with physical activity">
 <td>
 <span class="listing-date">January,<br>2019</span>
 </td>
@@ -955,7 +957,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="36" data-listing-date-sort="1541001600000" data-listing-title-sort="Fine-mapping type 2 diabetes loci to single-variant resolution using high-density imputation and islet-specific epigenome maps">
+<tr data-index="36" data-listing-date-sort="1541030400000" data-listing-title-sort="Fine-mapping type 2 diabetes loci to single-variant resolution using high-density imputation and islet-specific epigenome maps">
 <td>
 <span class="listing-date">November,<br>2018</span>
 </td>
@@ -974,7 +976,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="37" data-listing-date-sort="1533052800000" data-listing-title-sort="Type 2 diabetes--associated variants of the MT $_{\textrm{2}}$ melatonin receptor affect distinct modes of signaling">
+<tr data-index="37" data-listing-date-sort="1533081600000" data-listing-title-sort="Type 2 diabetes--associated variants of the MT $_{\textrm{2}}$ melatonin receptor affect distinct modes of signaling">
 <td>
 <span class="listing-date">August,<br>2018</span>
 </td>
@@ -993,7 +995,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="38" data-listing-date-sort="1530374400000" data-listing-title-sort="Increased Hepatic PDGF-AA Signaling Mediates Liver Insulin Resistance in Obesity-Associated Type 2 Diabetes">
+<tr data-index="38" data-listing-date-sort="1530403200000" data-listing-title-sort="Increased Hepatic PDGF-AA Signaling Mediates Liver Insulin Resistance in Obesity-Associated Type 2 Diabetes">
 <td>
 <span class="listing-date">July,<br>2018</span>
 </td>
@@ -1012,7 +1014,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="39" data-listing-date-sort="1527782400000" data-listing-title-sort="Novel genetic associations for blood pressure identified via gene-alcohol interaction in up to 570K individuals across multiple ancestries">
+<tr data-index="39" data-listing-date-sort="1527811200000" data-listing-title-sort="Novel genetic associations for blood pressure identified via gene-alcohol interaction in up to 570K individuals across multiple ancestries">
 <td>
 <span class="listing-date">June,<br>2018</span>
 </td>
@@ -1031,7 +1033,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="40" data-listing-date-sort="1527782400000" data-listing-title-sort="Jointly Modelling Single Nucleotide Polymorphisms With Longitudinal and Time-to-Event Trait: An Application to Type 2 Diabetes and Fasting Plasma Glucose">
+<tr data-index="40" data-listing-date-sort="1527811200000" data-listing-title-sort="Jointly Modelling Single Nucleotide Polymorphisms With Longitudinal and Time-to-Event Trait: An Application to Type 2 Diabetes and Fasting Plasma Glucose">
 <td>
 <span class="listing-date">June,<br>2018</span>
 </td>
@@ -1050,7 +1052,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="41" data-listing-date-sort="1522512000000" data-listing-title-sort="Refining the accuracy of validated target identification through coding variant fine-mapping in type 2 diabetes">
+<tr data-index="41" data-listing-date-sort="1522540800000" data-listing-title-sort="Refining the accuracy of validated target identification through coding variant fine-mapping in type 2 diabetes">
 <td>
 <span class="listing-date">April,<br>2018</span>
 </td>
@@ -1069,7 +1071,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="42" data-listing-date-sort="1519833600000" data-listing-title-sort="A Large-Scale Multi-ancestry Genome-wide Study Accounting for Smoking Behavior Identifies Multiple Significant Loci for Blood Pressure">
+<tr data-index="42" data-listing-date-sort="1519862400000" data-listing-title-sort="A Large-Scale Multi-ancestry Genome-wide Study Accounting for Smoking Behavior Identifies Multiple Significant Loci for Blood Pressure">
 <td>
 <span class="listing-date">March,<br>2018</span>
 </td>
@@ -1088,7 +1090,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="43" data-listing-date-sort="1512057600000" data-listing-title-sort="Relationship between salivary/pancreatic amylase and body mass index: A systems biology approach">
+<tr data-index="43" data-listing-date-sort="1512086400000" data-listing-title-sort="Relationship between salivary/pancreatic amylase and body mass index: A systems biology approach">
 <td>
 <span class="listing-date">December,<br>2017</span>
 </td>
@@ -1107,7 +1109,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="44" data-listing-date-sort="1496246400000" data-listing-title-sort="Low-dose exposure to bisphenols A, F and S of human primary adipocyte impacts coding and non-coding RNA profiles">
+<tr data-index="44" data-listing-date-sort="1496275200000" data-listing-title-sort="Low-dose exposure to bisphenols A, F and S of human primary adipocyte impacts coding and non-coding RNA profiles">
 <td>
 <span class="listing-date">June,<br>2017</span>
 </td>
@@ -1126,7 +1128,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="45" data-listing-date-sort="1496246400000" data-listing-title-sort="Expression and functional assessment of candidate type 2 diabetes susceptibility genes identify four new genes contributing to human insulin secretion">
+<tr data-index="45" data-listing-date-sort="1496275200000" data-listing-title-sort="Expression and functional assessment of candidate type 2 diabetes susceptibility genes identify four new genes contributing to human insulin secretion">
 <td>
 <span class="listing-date">June,<br>2017</span>
 </td>
@@ -1145,7 +1147,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="46" data-listing-date-sort="1485878400000" data-listing-title-sort="Decreased STARD10 Expression Is Associated with Defective Insulin Secretion in Humans and Mice">
+<tr data-index="46" data-listing-date-sort="1485907200000" data-listing-title-sort="Decreased STARD10 Expression Is Associated with Defective Insulin Secretion in Humans and Mice">
 <td>
 <span class="listing-date">February,<br>2017</span>
 </td>
@@ -1164,7 +1166,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="47" data-listing-date-sort="1483200000000" data-listing-title-sort="Hepatic *DPP4* DNA Methylation Associates With Fatty Liver">
+<tr data-index="47" data-listing-date-sort="1483228800000" data-listing-title-sort="Hepatic *DPP4* DNA Methylation Associates With Fatty Liver">
 <td>
 <span class="listing-date">January,<br>2017</span>
 </td>
@@ -1183,7 +1185,7 @@ window.Quarto = {
 
 </tr>
 
-<tr data-index="48" data-listing-date-sort="1459440000000" data-listing-title-sort="Variable Clustering in High-Dimensional Linear Regression: The R Package clere">
+<tr data-index="48" data-listing-date-sort="1459468800000" data-listing-title-sort="Variable Clustering in High-Dimensional Linear Regression: The R Package clere">
 <td>
 <span class="listing-date">April,<br>2016</span>
 </td>

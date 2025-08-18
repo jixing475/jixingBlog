@@ -23,7 +23,7 @@ jobs:
       RENV_PATHS_CACHE: ~/.local/share/renv # Define cache path for renv
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4 # Checks out your repository code
+        uses: actions/checkout@v5 # Checks out your repository code
 
       # --- Added R Setup Steps ---
       - name: Set up R
