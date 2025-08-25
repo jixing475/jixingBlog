@@ -78,7 +78,7 @@ jobs:
         uses: actions/configure-pages@v5 # Configures Pages based on repository settings
 
       - name: Upload Pages Artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           # Upload the directory containing the rendered site
           path: "_site" # Default Quarto output directory for websites
