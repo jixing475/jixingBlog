@@ -4,6 +4,11 @@ project:
     - publications.r
   resources:
     - _headers
+  render:
+    - "*.qmd"
+    - "posts/"
+    - "AIDD/"
+    - "!drafts/"
 
 website:
   title: "MPU"
@@ -35,6 +40,8 @@ website:
         href: index.qmd
       - text: Blog
         href: blog.qmd
+      - text: AIDD
+        href: aidd.qmd
 
 format:
   html:

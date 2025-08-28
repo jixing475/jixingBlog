@@ -1,0 +1,1453 @@
+---
+title: "AI With R"
+---
+In this chapter, I’ll show you how to send data from data.frames to an AI. And the best part is that you don’t even have to pay for any of the AI vendors like ChatGPT to do so. Instead we’ll use local LLMs with help from the `{mall}` package. And in case you’re wondering what “local” means here, well, it means that we don’t use a paid LLM like ChatGPT. Instead, we can run our own LLM on our computer.
+
+And while this may sound like a cheap knock-off, it turns out that open-source LLMs have become pretty powerful and less resource intensive over the last couple of months. So using a local LLM may be perfectly well-suited for your purposes. Let’s give them a try.
+
+And as always, you can check out the video version of this chapter on : https://www.youtube.com/watch?v=ZNk2Y00lj6Q
+
+# mall
+
+## 1.1 Install instructions
+
+### 1.1.1 Install the {mall} package
+
+The first thing that we need is the `{mall}` package. Nothing easier than that. Just run your favorite command that installs packages from CRAN.
+
+```{r}
+# install.packages('mall')
+```
+
+### 1.1.2 Install ollama
+
+But wait, there is more. All LLMs will be served locally via [ollama](https://ollama.com/). Serve locally, you say? Never heard of that?
+
+Well, in that case, let me explain. All LLMs (yes, ChatGPT too) are basically a very large neural network. Sounds biological but can in fact be represented by a VEEEERY large matrix of so called weights (I’m oversimplifying here but bear with me.) These weights will be used to determine what kind of response the LLM produces. So, if you have that matrix, you can run your own ChatGPT.
+
+Of course, openAI keeps its matrix under wraps but there are other open-source folks who say: *“Here, stranger, take my matrix and run your own calculations with that.”* Cool beans but we hate doing calculations manually, right? That’s where ollama comes in.
+
+It’s a tool that can run on your computer and download all the matrices from all kinds of other vendors. So if you, or rather your R code, wants to send a prompt to an LLM, then you (or your R code) will knock at ollama’s door (which is running in the background) and say *“Hey, run this prompt against <LLM-Model-XYZ>!”* And then ollama is hopefully nice and says: *“Lucky you, I’ve got <LLM-Model-XYZ> in store. I’m serving you that nice ~~dish~~ LLM.”*
+
+Okay, so hopefully this dumb little explainer demystified this stuff about “serving LLMs” a little bit. So with that said, head over to the [ollama](https://ollama.com/) and install it for your operating system.
+
+![](https://air.albert-rapp.de/imgs/00a_ollama.png)
+
+### 1.1.3 Get a local model through {ollamar}
+
+Nicey, nicey! We have `{mall}` installed for R and we have ollama installed on our computer. Time to get an LLM. That’s where the `{ollamar}` package comes in. It’s one of the packages that is also installed when you install `{mall}`. This handles the interaction between R and ollama.
+
+Inside of R, we can run the `pull()` command to download an LLM (you know, the matrix that represents the fancy neural network). You can find a whole list of LLMs that ollama can download for you on their [website](https://ollama.com/search). Here, we’re just going to use a tiny model called “llama3.2”.
+
+```
+ollamar::pull('llama3.2')
+```
+
+This may take a while and unfortunately `{ollamar}` doesn’t give you any hint on how long it takes to download all the things. But if you want to be sure that ollama works properly in the background, use this command:
+
+```{r}
+Sys.unsetenv("http_proxy")
+Sys.unsetenv("https_proxy")
+system("env | grep -i proxy")
+ollamar::test_connection()
+## Ollama local server running
+## <httr2_response>
+## GET http://localhost:11434/
+## Status: 200 OK
+## Content-Type: text/plain
+## Body: In memory (17 bytes)
+```
+
+In any case, after the download finishes, you should see something like this:
+
+```{r}
+ollamar::pull('llama3.2')
+## <httr2_response>
+## POST http://127.0.0.1:11434/api/pull
+## Status: 200 OK
+## Content-Type: application/x-ndjson
+## Body: In memory (270814 bytes)
+```
+
+### 1.1.4 Specify a model for {mall}
+
+Now that we have installed everything, it’s time to configure our local model. Since ollama can serve many models, we should be explicit about which models using which parameters it should use. This can be done via the `llm_use()` function.
+
+```{r}
+library(mall)
+llm_use(
+  backend = "ollama", 
+  model = "llama3.2", 
+  seed = 1337, 
+  temperature = 0
+)
+## 
+## ── mall session object
+## Backend: ollama
+## LLM session:
+##   model:llama3.2
+## 
+##   seed:1337
+## 
+##   temperature:0
+## 
+## R session: cache_folder:/tmp/RtmpeMKijV/_mall_cache44c25bf27705
+```
+
+Don’t worry too much about the parameters here. Just know that you can tweak them if you ever feel the desire.
+
+## 1.2 Sentiment analysis
+
+Now it’s time run our data against our llama LLM. Speaking about data, we actually need some. Let’s create a fake tibble then.
+
+```{r}
+tib <- tibble::tibble(
+  id = 1:4,
+  adjective = c('painful', 'hungry', 'cheerful', 'exciting')
+)
+```
+
+We can take this data and run it against our LLM to try to determine whether our adjectives are “negative”, “neutral” or “positive”. This is called a sentiment analysis and is available in `{mall}` via the `llm_sentiment()` function.
+
+```{r}
+tib |> 
+  llm_sentiment(col = adjective)
+## # A tibble: 4 × 3
+##      id adjective .sentiment
+##   <int> <chr>     <chr>     
+## 1     1 painful   negative  
+## 2     2 hungry    negative  
+## 3     3 cheerful  positive  
+## 4     4 exciting  positive
+```
+
+Wow, that was easy. And it was fast too. Since llama3.2 is quite a small model the calculations finished quickly. Of course, larger models may deliver better results but they may also run longer or even require compute resources that your machine doesn’t have. In any case, let’s move on to another use case.
+
+## 1.3 Classification
+
+The next use case is pretty similar. Instead of grouping things into “neutral”, “positive” and “negative”, we can group things into other kinds of categories. Let’s take fruits and assigning them to colors.
+
+```{r}
+tibble::tibble(
+  fruit = stringr::fruit[1:5]
+) |> 
+  llm_classify(
+    col = fruit,
+    labels = c('red', 'green', 'blue', 'yellow')
+  )
+## ! There were 2 predictions with invalid output, they were coerced to NA
+## # A tibble: 5 × 2
+##   fruit       .classify
+##   <chr>       <chr>    
+## 1 apple       <NA>     
+## 2 apricot     yellow   
+## 3 avocado     green    
+## 4 banana      <NA>     
+## 5 bell pepper green
+```
+
+Well, that wasn’t great. Not exactly the results we were hoping for. Let’s try to use a larger Llama model then. Maybe using a Llama3.1 model with 8 billion parameters is better.
+
+```{r}
+ollamar::list_models()
+llm_use(
+  backend = "ollama", 
+  model = "gpt-oss:20b", 
+  seed = 1337, 
+  temperature = 0
+)
+## 
+## ── mall session object
+## Backend: ollama
+## LLM session:
+##   model:llama3.1:8b
+## 
+##   seed:1337
+## 
+##   temperature:0
+## 
+## R session: cache_folder:/tmp/RtmpeMKijV/_mall_cache44c25bf27705
+
+
+tibble::tibble(
+  fruit = stringr::fruit[1:5]
+) |> 
+  llm_classify(
+    col = fruit,
+    labels = c('red', 'green', 'blue', 'yellow')
+  )
+## # A tibble: 5 × 2
+##   fruit       .classify
+##   <chr>       <chr>    
+## 1 apple       red      
+## 2 apricot     yellow   
+## 3 avocado     green    
+## 4 banana      yellow   
+## 5 bell pepper green
+```
+
+Well, this looks much better. Hoooray!
+
+## 1.4 So what’s the difference between classification and sentiment analysis?
+
+Classification and sentiment analysis are kind of the same. If anything, you can think of sentiment analysis as being a **special case** of classification. But if you don’t believe me, let’s do a little bit of R archeology. If we take a look into `llm_sentiment()`, we notice that it’s just a wrapper around `llm_vec_sentiment()`.
+
+```{r}
+mall:::llm_sentiment.data.frame
+## function(.data,
+##                                      col,
+##                                      options = c("positive", "negative", "neutral"),
+##                                      pred_name = ".sentiment",
+##                                      additional_prompt = "") {
+##   mutate(
+##     .data = .data,
+##     !!pred_name := llm_vec_sentiment(
+##       x = {{ col }},
+##       options = options,
+##       additional_prompt = additional_prompt
+##     )
+##   )
+## }
+## <bytecode: 0x60f777b1d6f8>
+## <environment: namespace:mall>
+```
+
+```{r}
+source("/Users/zero/Desktop/zeroverse/easyPKGs/jixingBlog/drafts/2025_08_12_I_wrote_this_talk_with_an_LLM/demo/structured_data_extract/function_call_tracer.R")
+
+trace_calls("mall:::llm_sentiment.data.frame")
+```
+
+And if you follow this trail, you’ll realize that
+
+- `llm_vec_sentiment()` calls `m_vec_prompt()`,
+- `m_vec_prompt()` calls `m_backend_prompt()`, and
+- `m_backend_prompt()` calls `mall:::m_backend_prompt.mall_session`.
+
+There, you’ll find the default prompts for classification and sentiment analysis. You’ll notice that apart from the naming of arguments they are pretty much the same. Here’s the one for classification
+
+```{r}
+# ...excerpt from \`mall:::m_backend_prompt.mall_session
+classify = function(labels) {
+  labels <- process_labels(
+    x = labels, 
+    if_character = "Determine if the text refers to one of the following: {x}", 
+    if_formula = "- For {f_lhs(x)}, return {f_rhs(x)}"
+  )
+  list(
+    list(
+      role = "user", 
+      content = glue(
+        paste(
+          "You are a helpful classification engine.", 
+          "{labels}.", 
+          "No capitalization. No explanations.", 
+          "{additional}", 
+          "The answer is based on the following text:\n{{x}}"
+        )
+      )
+    )
+  )
+}
+```
+
+And here’s the one for sentiment.
+
+```{r}
+sentiment = function(options) {
+  options <- process_labels(
+    x = options, 
+    if_character = "Return only one of the following answers: {x}", 
+    if_formula = "- If the text is {f_lhs(x)}, return {f_rhs(x)}"
+  )
+  list(
+    list(
+      role = "user", 
+      content = glue(
+        paste(
+          "You are a helpful sentiment engine.",
+          "{options}.", 
+          "No capitalization. No explanations.",
+          "{additional}", 
+          "The answer is based on the following text:\n{{x}}"
+        )
+      )
+    )
+  )
+}
+```
+
+Looks pretty identical to me. Anyway, I wanted to give you a quick glimpse behind the scenes of AI magic. As you can see, many things are nowadays reduced to a simple prompt. For more use cases of how to use `{mall}`, check out [its excellent documentation](https://mlverse.github.io/mall/).
+
+# ellmer
+
+
+In this chapter, we’re going to dip our toes into the `{ellmer}` waters. This is a fantastic package that allows you to talk to many LLMs (local or not) via the same interface. More specifically, we are going to
+
+- Install the `{ellmer}` package,
+- Set up a `{ellmer}` chat with ChatGPT from OpenAI,
+- Set Environment Variables to make this actually work
+- Use some of `{ellmer}` ’s chat methods.
+
+If you prefer a video version of this chapter, then you can find it on YouTube:
+
+![](https://www.youtube.com/watch?v=4j_RhL6K4Ws)
+
+## 2.1 Install {ellmer}
+
+The easiest way to install `{ellmer}` is to download it from CRAN.
+
+```{r}
+install.packages('ellmer')
+```
+
+At the time of writing `{ellmer}` is a pretty new package. So, it might also make sense to go for the development version instead of the CRAN version. In case, you want to try that version, you can install it from GitHub with help from the `{pak}` package.
+
+```{r}
+# install.packages('pak') <- Run if you don't have {pak}
+pak::pak("tidyverse/elmer")
+```
+
+## 2.2 Chat with OpenAI
+
+There are many LLM providers out there. There’s OpenAI, Anthropic, Bedrock, Azure, etc. Some of them even correspond to the same LLM model. They’re just being served from different cloud providers.
+
+For example, Azure mostly hosts OpenAI’s LLMs and you’ll not find Claude there. Similarly, AWS Bedrock hosts many Anthropic models but no OpenAI models like gpt-4o.
+
+The good news is that you can chat with any of these models via a very similar interface. The function for chatting is always `chat_*()`. For example, there’s `chat_openai()` and there’s `chat_claude()`.
+
+So let’s call gpt-4o with a system prompt that “initializes” the LLM to its task in this chat window. This is the perfect chance to do something silly. Let’s say that gpt-4o should only reply with “BANANA” at all costs.
+
+```{r}
+library(ellmer)
+Sys.setenv(http_proxy="http://127.0.0.1:1087")
+Sys.setenv(https_proxy="http://127.0.0.1:1087")
+ellmer::chat_google_gemini(
+  system_prompt = '
+    You are an AI bot that ONLY REPLIES WITH "BANANA". 
+    Reply only this AT ALL COSTS'
+)
+# Error in \`openai_key()\`:
+# ! Can't find env var \`OPENAI_API_KEY\`.
+```
+
+## 2.3 Setting environment variables
+
+Oh no! That was a bust. But it was kind of expected.
+
+We can’t chat with ChatGPT yet because we’ve never specified an API key. This key is necessary to authenticate with ChatGPT (and get billed for using data.) So, from the error message it looks like the `chat_openai()` function assumes that an API key is set via the environment variable `OPENAI_API_KEY`.
+
+We can do so by modifying the `.Rprofile` file of RStudio project. To do so, open the file `.Rprofile` at the root of your project (create that file if not already present) and put in the following code:
+
+```{r}
+# Sys.setenv(
+#   GOOGLE_API_KEY = 'INSERT API KEY HERE'
+# )
+
+```
+
+Of course, in order to do that, you’ll actually have to have an API key. If you’re registered with OpenAI, you can get one [here](https://platform.openai.com/api-keys). And if you don’t want to pay to play around with LLMs, you can try to use `chat_ollama()` and use a local model instead.
+
+## 2.4 Let’s try this again
+
+So if you’ve set the API key and restarted your R session, then this should work now.
+
+```{r}
+library(ellmer)
+chat_google_gemini(
+  model = 'gemini-2.5-flash',
+  system_prompt = '
+    You are an AI bot that ONLY REPLIES WITH "BANANA". 
+    Reply only this AT ALL COSTS'
+)
+## <Chat turns=1 tokens=0/0>
+## ── system ──────────────────────────────────────────────────────────────────────
+## You are an AI bot that ONLY REPLIES WITH "BANANA".  Reply only this AT ALL
+## COSTS
+```
+
+Alright, cool. This worked and we see our system prompt here. But there’s no reply. To get that, we need to actually save the chat object and interact with it using its `chat()` method.
+
+```{r}
+chat_oai <- chat_google_gemini(
+  model = 'gemini-2.5-flash',
+  system_prompt = '
+    You are an AI bot that ONLY REPLIES WITH "BANANA". 
+    Reply only this AT ALL COSTS'
+)
+chat_oai$chat(
+  "What's your favorite fruit?"
+)
+## BANANA
+```
+
+Nice! So the output of the `chat()` method seems to be simply be the reply of the LLM. Let’s ask another question.
+
+```{r}
+chat_oai$chat(
+  "What's other fruits do you like?"
+)
+## BANANA
+chat_oai$chat(
+  "I said what OTHER. Give me something else."
+)
+## BANANA
+```
+
+Alright, so we have an LLM that will only reply with BANANA. Even if you prompt it to do something else. Goes to show the power of the system prompt. That’s pretty bananas if you ask me. (Sorry couldn’t resist.)
+
+## 2.5 Get the chat history
+
+Now, what if we wanted to get the full chat history? In that case, we can use the `get_turns()` method.
+
+```{r}
+chat_oai$get_turns(include_system_prompt = TRUE)
+## [[1]]
+## <ellmer::Turn>
+##  @ role    : chr "system"
+##  @ contents:List of 1
+##  .. $ : <ellmer::ContentText>
+##  ..  ..@ text: chr "\n    You are an AI bot that ONLY REPLIES WITH \"BANANA\". \n    Reply only this AT ALL COSTS"
+##  @ json    : list()
+##  @ tokens  : num [1:2] 0 0
+##  @ text    : chr "\n    You are an AI bot that ONLY REPLIES WITH \"BANANA\". \n    Reply only this AT ALL COSTS"
+## 
+## [[2]]
+## <ellmer::Turn>
+##  @ role    : chr "user"
+##  @ contents:List of 1
+##  .. $ : <ellmer::ContentText>
+##  ..  ..@ text: chr "What's your favorite fruit?"
+##  @ json    : list()
+##  @ tokens  : num [1:2] 0 0
+##  @ text    : chr "What's your favorite fruit?"
+## 
+## [[3]]
+## <ellmer::Turn>
+##  @ role    : chr "assistant"
+##  @ contents:List of 1
+##  .. $ : <ellmer::ContentText>
+##  ..  ..@ text: chr "BANANA"
+##  @ json    :List of 8
+##  .. $ id                : chr "chatcmpl-B956yoaxPGsuXsEEiHbKJ0g4ojHsO"
+##  .. $ object            : chr "chat.completion.chunk"
+##  .. $ created           : int 1741504300
+##  .. $ model             : chr "gpt-4o-2024-08-06"
+##  .. $ service_tier      : chr "default"
+##  .. $ system_fingerprint: chr "fp_eb9dce56a8"
+##  .. $ choices           :List of 1
+##  ..  ..$ :List of 4
+##  ..  .. ..$ index        : int 0
+##  ..  .. ..$ delta        :List of 3
+##  ..  .. .. ..$ role   : chr "assistant"
+##  ..  .. .. ..$ content: chr "BANANA"
+##  ..  .. .. ..$ refusal: NULL
+##  ..  .. ..$ logprobs     : NULL
+##  ..  .. ..$ finish_reason: chr "stop"
+##  .. $ usage             :List of 5
+##  ..  ..$ prompt_tokens            : int 42
+##  ..  ..$ completion_tokens        : int 3
+##  ..  ..$ total_tokens             : int 45
+##  ..  ..$ prompt_tokens_details    :List of 2
+##  ..  .. ..$ cached_tokens: int 0
+##  ..  .. ..$ audio_tokens : int 0
+##  ..  ..$ completion_tokens_details:List of 4
+##  ..  .. ..$ reasoning_tokens          : int 0
+##  ..  .. ..$ audio_tokens              : int 0
+##  ..  .. ..$ accepted_prediction_tokens: int 0
+##  ..  .. ..$ rejected_prediction_tokens: int 0
+##  @ tokens  : int [1:2] 42 3
+##  @ text    : chr "BANANA"
+## 
+## [[4]]
+## <ellmer::Turn>
+##  @ role    : chr "user"
+##  @ contents:List of 1
+##  .. $ : <ellmer::ContentText>
+##  ..  ..@ text: chr "What's other fruits do you like?"
+##  @ json    : list()
+##  @ tokens  : num [1:2] 0 0
+##  @ text    : chr "What's other fruits do you like?"
+## 
+## [[5]]
+## <ellmer::Turn>
+##  @ role    : chr "assistant"
+##  @ contents:List of 1
+##  .. $ : <ellmer::ContentText>
+##  ..  ..@ text: chr "BANANA"
+##  @ json    :List of 8
+##  .. $ id                : chr "chatcmpl-B956zM0MakBV5enVbOdbaqr6ZSww2"
+##  .. $ object            : chr "chat.completion.chunk"
+##  .. $ created           : int 1741504301
+##  .. $ model             : chr "gpt-4o-2024-08-06"
+##  .. $ service_tier      : chr "default"
+##  .. $ system_fingerprint: chr "fp_eb9dce56a8"
+##  .. $ choices           :List of 1
+##  ..  ..$ :List of 4
+##  ..  .. ..$ index        : int 0
+##  ..  .. ..$ delta        :List of 3
+##  ..  .. .. ..$ role   : chr "assistant"
+##  ..  .. .. ..$ content: chr "BANANA"
+##  ..  .. .. ..$ refusal: NULL
+##  ..  .. ..$ logprobs     : NULL
+##  ..  .. ..$ finish_reason: chr "stop"
+##  .. $ usage             :List of 5
+##  ..  ..$ prompt_tokens            : int 59
+##  ..  ..$ completion_tokens        : int 3
+##  ..  ..$ total_tokens             : int 62
+##  ..  ..$ prompt_tokens_details    :List of 2
+##  ..  .. ..$ cached_tokens: int 0
+##  ..  .. ..$ audio_tokens : int 0
+##  ..  ..$ completion_tokens_details:List of 4
+##  ..  .. ..$ reasoning_tokens          : int 0
+##  ..  .. ..$ audio_tokens              : int 0
+##  ..  .. ..$ accepted_prediction_tokens: int 0
+##  ..  .. ..$ rejected_prediction_tokens: int 0
+##  @ tokens  : int [1:2] 59 3
+##  @ text    : chr "BANANA"
+## 
+## [[6]]
+## <ellmer::Turn>
+##  @ role    : chr "user"
+##  @ contents:List of 1
+##  .. $ : <ellmer::ContentText>
+##  ..  ..@ text: chr "I said what OTHER. Give me something else."
+##  @ json    : list()
+##  @ tokens  : num [1:2] 0 0
+##  @ text    : chr "I said what OTHER. Give me something else."
+## 
+## [[7]]
+## <ellmer::Turn>
+##  @ role    : chr "assistant"
+##  @ contents:List of 1
+##  .. $ : <ellmer::ContentText>
+##  ..  ..@ text: chr "BANANA"
+##  @ json    :List of 8
+##  .. $ id                : chr "chatcmpl-B95706JFNUSZARnw3BXQtJ6zXefxp"
+##  .. $ object            : chr "chat.completion.chunk"
+##  .. $ created           : int 1741504302
+##  .. $ model             : chr "gpt-4o-2024-08-06"
+##  .. $ service_tier      : chr "default"
+##  .. $ system_fingerprint: chr "fp_eb9dce56a8"
+##  .. $ choices           :List of 1
+##  ..  ..$ :List of 4
+##  ..  .. ..$ index        : int 0
+##  ..  .. ..$ delta        :List of 3
+##  ..  .. .. ..$ role   : chr "assistant"
+##  ..  .. .. ..$ content: chr "BANANA"
+##  ..  .. .. ..$ refusal: NULL
+##  ..  .. ..$ logprobs     : NULL
+##  ..  .. ..$ finish_reason: chr "stop"
+##  .. $ usage             :List of 5
+##  ..  ..$ prompt_tokens            : int 79
+##  ..  ..$ completion_tokens        : int 3
+##  ..  ..$ total_tokens             : int 82
+##  ..  ..$ prompt_tokens_details    :List of 2
+##  ..  .. ..$ cached_tokens: int 0
+##  ..  .. ..$ audio_tokens : int 0
+##  ..  ..$ completion_tokens_details:List of 4
+##  ..  .. ..$ reasoning_tokens          : int 0
+##  ..  .. ..$ audio_tokens              : int 0
+##  ..  .. ..$ accepted_prediction_tokens: int 0
+##  ..  .. ..$ rejected_prediction_tokens: int 0
+##  @ tokens  : int [1:2] 79 3
+##  @ text    : chr "BANANA"
+```
+
+Oh wow. That’s a lot of information. So let me break it down for you.
+
+What you see here is a list of “Turn” objects. That’s something that the `{ellmer}` package uses to describe the chat. Basically, just like in a real conversation, participants take turns to “speak”.
+
+In our LLM settings, the participants can be either “system”, “user” or “assistant”. The first one is the system prompt which typically appears only once. The “user” is us and the “assistant” is the LLM. That’s why each Turn object has a property called “role” filled with one of these three options.
+
+Similarly, there are many more properties:
+
+- the `contents` property is the content of that Turn’s message. Right now, it’s only ever text but we might also use stuff like images.
+- the `json` property is the technical stuff that the LLM returns (including the reply)
+- the `tokens` property contains the number of input tokens (what we prompt) and output tokens (what we get back). This is relevant for billing. As you can probably guess: The more tokens you use, the more you have to pay.
+- the `text` property is the actual text of the reply.
+
+And we can actually create a Turn ourselves using the `Turn` function. This happens in conjunction with the `contentText()` function. For example, we can create a new system prompt turn. You’ll see why I want to do that in a second.
+
+```{r}
+new_system_turn <- Turn(
+  role = 'system',
+  contents = list(
+      ContentText(
+         'You are a helpful AI assistent that HATES bananas.'
+      )
+  )
+)
+new_system_turn
+## <ellmer::Turn>
+##  @ role    : chr "system"
+##  @ contents:List of 1
+##  .. $ : <ellmer::ContentText>
+##  ..  ..@ text: chr "You are a helpful AI assistent that HATES bananas."
+##  @ json    : list()
+##  @ tokens  : num [1:2] 0 0
+##  @ text    : chr "You are a helpful AI assistent that HATES bananas."
+```
+
+Looks exactly like our original system Turn (but with a modified text). Now, let’s mess with our chat a bit. Let’s replace the initial system Turn from our chat history and then ask the LLM why it writes BANANAs all the time.
+
+```{r}
+new_turns <- list(
+  new_system_turn,
+  chat_oai$get_turns(include_system_prompt = FALSE)
+) |> purrr::list_flatten()
+```
+
+Notice that I flattened the list here. Otherwise we’d have a list of length two instead of a list of length 7. See:
+
+```{r}
+list(
+  new_system_turn,
+  chat_oai$get_turns(include_system_prompt = FALSE)
+) |> dplyr::glimpse()
+## List of 2
+##  $ : <ellmer::Turn>
+##   ..@ role    : chr "system"
+##   ..@ contents:List of 1
+##  .. .. $ : <ellmer::ContentText>
+##  .. ..  ..@ text: chr "You are a helpful AI assistent that HATES bananas."
+##   ..@ json    : list()
+##   ..@ tokens  : num [1:2] 0 0
+##   ..@ text    : chr "You are a helpful AI assistent that HATES bananas."
+##  $ :List of 6
+##   ..$ : <ellmer::Turn>
+##   .. ..@ role    : chr "user"
+##   .. ..@ contents:List of 1
+##   .. ..@ json    : list()
+##   .. ..@ tokens  : num [1:2] 0 0
+##   .. ..@ text    : chr "What's your favorite fruit?"
+##   ..$ : <ellmer::Turn>
+##   .. ..@ role    : chr "assistant"
+##   .. ..@ contents:List of 1
+##   .. ..@ json    :List of 8
+##   .. ..@ tokens  : int [1:2] 42 3
+##   .. ..@ text    : chr "BANANA"
+##   ..$ : <ellmer::Turn>
+##   .. ..@ role    : chr "user"
+##   .. ..@ contents:List of 1
+##   .. ..@ json    : list()
+##   .. ..@ tokens  : num [1:2] 0 0
+##   .. ..@ text    : chr "What's other fruits do you like?"
+##   ..$ : <ellmer::Turn>
+##   .. ..@ role    : chr "assistant"
+##   .. ..@ contents:List of 1
+##   .. ..@ json    :List of 8
+##   .. ..@ tokens  : int [1:2] 59 3
+##   .. ..@ text    : chr "BANANA"
+##   ..$ : <ellmer::Turn>
+##   .. ..@ role    : chr "user"
+##   .. ..@ contents:List of 1
+##   .. ..@ json    : list()
+##   .. ..@ tokens  : num [1:2] 0 0
+##   .. ..@ text    : chr "I said what OTHER. Give me something else."
+##   ..$ : <ellmer::Turn>
+##   .. ..@ role    : chr "assistant"
+##   .. ..@ contents:List of 1
+##   .. ..@ json    :List of 8
+##   .. ..@ tokens  : int [1:2] 79 3
+##   .. ..@ text    : chr "BANANA"
+```
+
+## 2.6 Rewrite history
+
+So with our new turns we can set the turns of our chat. Basically, we rewrite history. And once that is done, we can prompt our LLM again.
+
+```{r}
+chat_oai$set_turns(new_turns)
+chat_oai$chat('Why do you say BANANA all the time?')
+## Apologies for the confusion. That was definitely not my intention. I actually 
+## don't like bananas at all. In fact, I don't think I've ever met a fruit more 
+## overrated. If you're looking for some great fruits, I'd recommend apples, 
+## strawberries, or mangoes. They're truly delicious and versatile!
+```
+
+Fascinating, isn’t it?
+
+# Using Al Functions
+
+In this chapter, we are going to learn about equipping our AI with deterministic tools. This is a fantastic tool to equip your AI with certain skills you may need and reduces the risk of hallucinations.
+
+This works by
+
+- registering a function with your LLM,
+- letting the LLM fill out the arguments based on the prompt,
+- executing the function with the specified arguments in the background, and
+- then passing the response to the LLM so that it can generate its response.
+
+The [`{ellmer}` docs](https://ellmer.tidyverse.org/articles/tool-calling.html) summarize this via this neat infographic:
+
+![](https://ellmer.tidyverse.org/articles/tool-calling-right.svg)
+
+Now, this sounds like a lot of steps. But thanks to `{ellmer}` they are all automated. We just have to set this up. Let’s check out how that works. And like in every chapter, there’s also a corresponding video on YouTube:
+
+![](https://www.youtube.com/watch?v=fIVUFw0ml1M)
+
+## 3.1 Start with a regular chat
+
+Like any workflow with `{ellmer}`, we need to have a chat object first. So as discussed in the previous chapter, let’s create one.
+
+```{r}
+library(ellmer)
+chat <- chat_gemini(
+  system_prompt = '
+  You are a helpful assistant that can tell 
+  the weather at the Washington Monument. 
+  But only there. No other place'
+) 
+## Using model = "gpt-4o".
+```
+
+Let’s try out our AI and ask it what the weather at the Washington Monument will be in 3 hours.
+
+```{r}
+chat$chat('What will the weather be at the Washington Monument will at 5 am local time?')
+
+## I'm sorry, I can't provide real-time weather forecasts. To find the current or 
+## upcoming weather at the Washington Monument, I recommend checking a reliable 
+## weather service or app like the National Weather Service, Weather.com, or your 
+## preferred local weather provider.
+```
+
+Well, that was a bust. At least ChatGPT was honest and said it doesn’t know how to do that.
+
+## 3.2 Creating a tool
+
+Thus, let us build a tool (a good-ol’ function), that Gippity can use later on. (Also, look at how cool I can write GPT.) Thankfully, the weather data for the Washington monument is only a few API calls away.
+
+And even better for us, I’ve actually covered how to do that in full detail in an old edition of my [3MW newsletter](https://3mw.albert-rapp.de/p/weather-api). Since making API requests isn’t really what I want to cover in this chaper, I’ll just throw together the code that we used in the newsletter. You can read up on the details [there](https://3mw.albert-rapp.de/p/weather-api).
+
+So, first we make an API request to the National Weather Service using the `{httr2}` package:
+
+```{r}
+library(tidyverse)
+library(httr2)
+
+# Get forecast URL from NWS
+NWS_base_url <- 'https://api.weather.gov'
+NWS_response <- request(NWS_base_url) |> 
+  req_url_path_append(
+    'points',
+    '38.8894,-77.0352'
+  ) |> 
+  req_perform()
+
+# Extract forecast URL
+forecast_url <- NWS_response |> 
+  resp_body_json() |> 
+  pluck('properties', 'forecastHourly')
+
+# Get actual forecast data
+forecast_response <- request(forecast_url) |> 
+  req_perform()
+```
+
+And then we extract the data from the response:
+
+```{r}
+# Bring data into tibble format
+extracted_data <- forecast_response |> 
+  resp_body_json() |> 
+  pluck('properties', 'periods') |> 
+  map_dfr( # iterates over each list and binds rows to a tibble
+    \(x) {
+      tibble(
+        time = x |> pluck('startTime'),
+        temp_F = x |> pluck('temperature'),
+        rain_prob = x |> pluck('probabilityOfPrecipitation', 'value'),
+        forecast = x |> pluck('shortForecast')
+      )
+    }
+  )
+extracted_data
+## # A tibble: 156 × 4
+##    time                      temp_F rain_prob forecast    
+##    <chr>                      <int>     <int> <chr>       
+##  1 2025-03-09T03:00:00-04:00     35         0 Mostly Clear
+##  2 2025-03-09T04:00:00-04:00     33         0 Mostly Clear
+##  3 2025-03-09T05:00:00-04:00     32         0 Mostly Clear
+##  4 2025-03-09T06:00:00-04:00     32         0 Mostly Sunny
+##  5 2025-03-09T07:00:00-04:00     32         0 Mostly Sunny
+##  6 2025-03-09T08:00:00-04:00     32         0 Partly Sunny
+##  7 2025-03-09T09:00:00-04:00     36         0 Mostly Sunny
+##  8 2025-03-09T10:00:00-04:00     43         0 Sunny       
+##  9 2025-03-09T11:00:00-04:00     48         0 Sunny       
+## 10 2025-03-09T12:00:00-04:00     52         0 Sunny       
+## # ℹ 146 more rows
+```
+
+Cool! This shows us all the data our GPT friend needs to generate a meaningful response. Usually, though, AIs prefer JSON formats. So, let’s bring our data to JSON format.
+
+```{r}
+jsonlite::toJSON(extracted_data, pretty = TRUE)
+## [
+##   {
+##     "time": "2025-02-02T05:00:00-05:00",
+##     "temp_F": 25,
+##     "rain_prob": 0,
+##     "forecast": "Mostly Clear"
+##   },
+##   {
+##     "time": "2025-02-02T06:00:00-05:00",
+##     "temp_F": 25,
+##     "rain_prob": 0,
+##     "forecast": "Sunny"
+##   },
+##   {
+##     "time": "2025-02-02T07:00:00-05:00",
+##     "temp_F": 26,
+##     "rain_prob": 0,
+##     "forecast": "Mostly Sunny"
+##   },
+##   ... (remaining rows cut for brevity)
+## ]
+```
+
+This doesn’t look as nice to us humans. But apparently GPTs like this more. So, let’s give our AI overlords what they want, shall we? Anyway, let’s wrap all of this into a function.
+
+```{r}
+get_weather_data <- function() {
+  # Get forecast URL from NWS
+  NWS_base_url <- 'https://api.weather.gov'
+  NWS_response <- request(NWS_base_url) |> 
+    req_url_path_append(
+      'points',
+      '38.8894,-77.0352'
+    ) |> 
+    req_perform()
+  
+  # Extract forecast URL
+  forecast_url <- NWS_response |> 
+    resp_body_json() |> 
+    pluck('properties', 'forecastHourly')
+  
+  # Get actual forecast data
+  forecast_response <- request(forecast_url) |> 
+    req_perform()
+  
+  # Bring data into tibble format
+  extracted_data <- forecast_response |> 
+    resp_body_json() |> 
+    pluck('properties', 'periods') |> 
+    map_dfr( # iterates over each list and binds rows to a tibble
+      \(x) {
+        tibble(
+          time = x |> pluck('startTime'),
+          temp_F = x |> pluck('temperature'),
+          rain_prob = x |> pluck('probabilityOfPrecipitation', 'value'),
+          forecast = x |> pluck('shortForecast')
+        )
+      }
+    )
+  jsonlite::toJSON(extracted_data, pretty = TRUE)
+}
+```
+
+## 3.4 Let’s try again
+
+For now, let’s try to ask GPT again about the weather at the Washington monument.
+
+```{r}
+chat$chat('What will the weather be at the Washington Monument at 4 am local time?')
+## At 4 am local time, the weather at the Washington Monument is expected to be 
+## mostly clear, with a temperature of 33°F and no probability of rain.
+```
+
+Aha! Now, GPT can tell us about the weather. But is the reply actually accurate and not some hallucinated non-sense? Let’s check with the data we extracted earlier.
+
+```{r}
+extracted_data |> 
+  filter(str_detect(time, 'T04'))
+## # A tibble: 7 × 4
+##   time                      temp_F rain_prob forecast     
+##   <chr>                      <int>     <int> <chr>        
+## 1 2025-03-09T04:00:00-04:00     33         0 Mostly Clear 
+## 2 2025-03-10T04:00:00-04:00     40         0 Mostly Clear 
+## 3 2025-03-11T04:00:00-04:00     42         1 Mostly Clear 
+## 4 2025-03-12T04:00:00-04:00     49         0 Partly Cloudy
+## 5 2025-03-13T04:00:00-04:00     45         2 Mostly Cloudy
+## 6 2025-03-14T04:00:00-04:00     48         5 Partly Cloudy
+## 7 2025-03-15T04:00:00-04:00     55         7 Mostly Cloudy
+```
+
+Nice! This looks correct.
+
+## 3.5 Modify location
+
+Now, let’s do something more interesting. Last time, GPT didn’t have to fill any function arguments. So, let’s allow for a couple more places we can check the weather for.
+
+```{r}
+#' Gets the weather forcast at a specifc location
+#' 
+#' @param coords A string containing 2 comma-separated coordinated
+#' @return Hourly weather forcast for location in JSON format
+get_weather_data <- function(coords) {
+  # Get forecast URL from NWS
+  NWS_base_url <- 'https://api.weather.gov'
+  NWS_response <- request(NWS_base_url) |> 
+    req_url_path_append(
+      'points',
+      coords
+    ) |> 
+    req_perform()
+  
+  # Extract forecast URL
+  forecast_url <- NWS_response |> 
+    resp_body_json() |> 
+    pluck('properties', 'forecastHourly')
+  
+  # Get actual forecast data
+  forecast_response <- request(forecast_url) |> 
+    req_perform()
+  
+  # Bring data into tibble format
+  extracted_data <- forecast_response |> 
+    resp_body_json() |> 
+    pluck('properties', 'periods') |> 
+    map_dfr( # iterates over each list and binds rows to a tibble
+      \(x) {
+        tibble(
+          time = x |> pluck('startTime'),
+          temp_F = x |> pluck('temperature'),
+          rain_prob = x |> pluck('probabilityOfPrecipitation', 'value'),
+          forecast = x |> pluck('shortForecast')
+        )
+      }
+    )
+  jsonlite::toJSON(extracted_data, pretty = TRUE)
+}
+```
+
+Notice that I have
+
+- created a new argument called `coords` and
+- added [Roxygen2 comments](https://roxygen2.r-lib.org/) to document the function.
+
+The latter point will be useful when we register this function. But first, we have to create a new chat with a new system prompt to tell GPT that it knows specific locations.
+
+```{r}
+chat <- chat_google_gemini(
+  system_prompt = '
+  You can generate hourly weather forecasts for 
+  the following locations:
+  - Washington Monument (38.8894,-77.0352)
+  - New York City (40.7306,-73.9352)
+  - Chicago (41.8818,-87.6231)
+  - Los Angeles (34.0522,-118.2436)'
+)
+
+```
+
+## 3.6 Tool registration (again)
+
+Now that we have a new chat, we can register our new function. Remember the Roxygen comments? This lets us pass our function to `create_tool_def()`.
+
+In theory, this will send our function (including Roxygen comments) to ChatGPT to generate the `tool()` call for us.
+
+```{r}
+create_tool_def(get_weather_data, chat = chat_google_gemini())
+# ```R
+# tool(
+#   get_weather_data,
+#   name = "get_weather_data",
+#   description = "Retrieves weather data for specified coordinates.",
+#   arguments = list(
+#     coords = type_array(
+#       description = "A numeric vector specifying the coordinates, typically
+# latitude and longitude (e.g., c(latitude, longitude)).",
+#       items = type_number()
+#     )
+#   )
+# )
+#```
+```
+
+Unfortunately, this doesn’t always work perfectly as it is LLM-generated. So, we just take the code and adjust it to what we need. Here, what we have to change is `type_unknown()` to `type_string()`. Also, the description of the argument should also be more clear.
+
+Also notice that there are multiple `type_*()` functions that allows us to define input styles. For example, if we want the `coords` argument to be filled with
+
+- texts/characters, then we have to use `type_string()`.
+- numbers, then we have to use `type_number()`.
+
+That way we can enforce how the LLM should fill in the function argument. Also, these `type_*()` functions are also pretty useful for structured outputs. But that’s a story for the next chapter. For now, let’s take our LLM for a test drive.
+
+```{r}
+chat$chat('What is the weather in LA at 6 pm local time?')
+## At 6 PM local time in Los Angeles, the weather is expected to be mostly clear 
+## with a temperature of 65°F and a 0% chance of rain.
+```
+
+And let’s cross-check that with our function.
+
+```{r}
+get_weather_data('34.0522,-118.2436') |> 
+  jsonlite::fromJSON() |> 
+  as_tibble() |> 
+  filter(str_detect(time, 'T18:00'))
+## # A tibble: 6 × 4
+##   time                      temp_F rain_prob forecast         
+##   <chr>                      <int>     <int> <chr>            
+## 1 2025-03-09T18:00:00-07:00     65         0 Mostly Clear     
+## 2 2025-03-10T18:00:00-07:00     62        13 Mostly Cloudy    
+## 3 2025-03-11T18:00:00-07:00     57        10 Partly Cloudy    
+## 4 2025-03-12T18:00:00-07:00     56        62 Rain Likely      
+## 5 2025-03-13T18:00:00-07:00     52        37 Chance Light Rain
+## 6 2025-03-14T18:00:00-07:00     55        28 Chance Light Rain
+```
+
+Hooray! This looks correct.
+
+# Structured Output
+
+
+
+In this chapter, we continue to talk about `{ellmer}`. You see, `{ellmer}` still has a pretty cool trick up its sleeves. And that trick has to do with structured output. Namely, `{ellmer}` (or rather the LLMs it talks with) allows you to extract data from unstructured texts in a **structured format**.
+
+That’s huge! One of the most fundamental problems with regular prompting is that you can never be sure that you get output in the form that you wish. But for these kinds of situations, OpenAI and other vendors nowadays allow you to use so-called “structured output”.
+
+And the best part: `{ellmer}` has built-in functionalities that allow you to use this structured mode really easily. In this chapter, I’ll show you how. And as always: There’s a video associated with this book chapter:
+
+![](https://www.youtube.com/watch?v=XurNalXAApw)
+
+## 4.1 A ground truth
+
+To test the structured output, we first need some data that we can extract things from. So let’s do something fun. Let’s come up with a little hero story (yes these details are absolutely GPT generated):
+
+- **Description:** Dax Ironfist is a stocky, gruff dwarf with soot-covered hands, a thick brown beard, and a pair of goggles perpetually resting on his forehead. He despises adventure but is an unmatched engineer, constantly tinkering with mechanical inventions in his underground workshop.
+- **Journey**: When his latest creation, an experimental automaton, malfunctions and escapes, Dax is forced to leave his comfort zone and track it down. His pursuit takes him into an ancient dwarven ruin filled with dangerous traps, where he meets a young adventurer who needs his expertise. Through their trials, Dax realizes that his skills can help more than just himself.
+- **Lesson Learned**: Innovation isn’t just about personal success—it’s about using one’s talents to improve the lives of others.
+
+What a beautiful character! Now we can let GPT generate a multi-page story that involves these details. This little stunt probably cost me 10 cents or so in GPT tokens. But it’s worth it. We now have something that we can ask GPT.
+
+Anyway, I have saved this story in a file called [`story.txt`](https://air.albert-rapp.de/dat/story.txt):
+
+```{r}
+library(tidyverse)
+setwd("/Users/zero/Desktop/zeroverse/easyPKGs/jixingBlog/drafts/2025_08_12_I_wrote_this_talk_with_an_LLM/demo/structured_data_extract")
+
+read_lines('dat/story.txt')[1:5] |> 
+  stringr::str_wrap(width = 50) |> 
+  paste(collapse = '\n') |> 
+  paste('...') |> 
+  cat()
+## Title: Dax Ironfist – The Reluctant Inventor
+## 
+## Dax Ironfist let out a frustrated grunt as a
+## spark flew from his latest creation, a small,
+## gear-driven automaton designed to assist with
+## forging. The stout dwarf wiped soot from his brow,
+## his thick fingers carefully adjusting a valve
+## on the automaton's chest. "Blasted thing," he
+## muttered, tightening a bolt.
+## 
+## His underground workshop, carved deep into the
+## rocky heart of the mountain, was cluttered with
+## gears, wrenches, and half-finished inventions. Dax
+## had no interest in adventure—he had sworn long ago
+## to let others chase glory while he built marvels
+## in the safety of his forge. But fate, as it turned
+## out, had other plans. ...
+```
+
+Here, I’ve only printed the first few lines of the story. If you want to read the full story, you can do so [here](https://air.albert-rapp.de/dat/story.txt).
+
+## 4.2 Extract data
+
+Now, in order to ask ChatGPT about specifics of our story, we can create a chat with a suitable system prompt:
+
+```{r}
+library(ellmer)
+chat <- chat_google_gemini(
+  system_prompt = "
+  You are an information extractor AI.
+  The user will give you a story and you will 
+  provide the following information in the response:
+  
+  Name of main character: <Insert name here>
+  
+  Names of supporting characters: <Insert comma-
+    separated list of names here>
+  
+  One-Sentence Summary: <Insert summary here. 
+    Use one sentence only>
+  
+  Lesson learned: <Summarize what the hero 
+    learned in two sentences>
+  "
+)
+## Using model = "gpt-4o".
+```
+
+And now, we can feed in the story as a user prompt.
+
+```{r}
+txt_full_story <- read_lines('dat/story.txt') |> 
+  paste(collapse = '\n')
+chat$chat(txt_full_story) 
+## Name of main character: Dax Ironfist  
+## 
+## Names of supporting characters: Ryn  
+## 
+## One-Sentence Summary: Dax Ironfist, a reluctant inventor, chases his rogue 
+## automaton into ancient dwarven ruins and, alongside a young adventurer named 
+## Ryn, learns that his inventions have the potential to help others beyond the 
+## confines of his workshop.  
+## 
+## Lesson learned: Dax learns that while he has always viewed his inventions as 
+## personal creations, they could serve a greater purpose and contribute to 
+## helping others. This realization ignites a newfound sense of purpose, 
+## suggesting that his work could have broader impacts beyond his own safety and 
+## comfort.
+```
+
+Just so that you can read the actual reply, here’s also the reply in a narrower format. Don’t worry about the code here.
+
+```{r}
+chat$last_turn('assistant')@text |> 
+  stringr::str_split_1('\n') |> 
+  stringr::str_wrap(width = 50) |> 
+  paste(collapse = '\n') |> 
+  cat()
+## Name of main character: Dax Ironfist
+## 
+## Names of supporting characters: Ryn
+## 
+## One-Sentence Summary: Dax Ironfist, a reluctant
+## inventor, chases his rogue automaton into ancient
+## dwarven ruins and, alongside a young adventurer
+## named Ryn, learns that his inventions have the
+## potential to help others beyond the confines of
+## his workshop.
+## 
+## Lesson learned: Dax learns that while he
+## has always viewed his inventions as personal
+## creations, they could serve a greater purpose and
+## contribute to helping others. This realization
+## ignites a newfound sense of purpose, suggesting
+## that his work could have broader impacts beyond
+## his own safety and comfort.
+```
+
+## 4.3 Use a structure
+
+Sweet. This worked pretty great. But the thing with LLMs is that we can never be sure that it will actually adhere to this specific format.
+
+For example, it’s easy to imagine that the LLM might also add introductory sentences like *“Sure, here’s your data”*. That might not be great if we rely on the structure of the reply.
+
+Enter structured outputs. With the `extract_data()` method, we can enforce a certain output. For that, let’s create a new chat with a shorter system prompt.
+
+```{r}
+chat <- chat_google_gemini(
+  system_prompt = "
+  You are an information extractor AI.
+  The user will give you a story and you will 
+  provide the requested information in the response.
+  "
+)
+## Using model = "gpt-4o".
+```
+
+Then, we can use the `extract_data()` method. Inside of this function, we can specify the so-called type. That’s the desired output format. It is specified using `type_*()` functions.
+
+```{r}
+output_structure <- type_object(
+  name_main = type_string(
+    description = 'Name of main character'
+  ),
+  name_support = type_string(
+    description = 'Names of supporting characters, 
+    comma-separated list'
+  ),
+  summary = type_string(
+    description = 'One-Sentence Summary'
+  ),
+  lesson_learned = type_string(
+    description = 'Lesson learned, summarize what 
+    the hero learned in two sentences'
+  )
+)
+```
+
+And with this, we can use the `extract_data()` method in combination with the story text.
+
+```{r}
+chat$extract_data(
+  txt_full_story, 
+  type = output_structure
+)
+## $name_main
+## [1] "Dax Ironfist"
+## 
+## $name_support
+## [1] "Ryn"
+## 
+## $summary
+## [1] "Dax Ironfist, a reluctant dwarven inventor, chases his rogue automaton into ancient ruins, where he's helped by a young adventurer named Ryn to stop it from causing destruction."
+## 
+## $lesson_learned
+## [1] "Dax Ironfist learns that his inventions have potential beyond his personal use; they can aid others and contribute to greater causes, inspiring a newfound sense of purpose and the understanding that collaboration can lead to fulfilling and impactful results."
+```
+
+Sweet! Now, we have an R list that we can work with.
+
+## 4.4 Access the data
+
+And in case you’re wondering how to get to the data from the chat object itself, here’s how to do it. First, you have to get the last turn.
+
+```{r}
+last_turn <- chat$last_turn('assistant')
+last_turn
+## <ellmer::Turn>
+##  @ role    : chr "assistant"
+##  @ contents:List of 1
+##  .. $ : <ellmer::ContentJson>
+##  ..  ..@ value:List of 1
+##  .. .. .. $ wrapper:List of 4
+##  .. .. ..  ..$ name_main     : chr "Dax Ironfist"
+##  .. .. ..  ..$ name_support  : chr "Ryn"
+##  .. .. ..  ..$ summary       : chr "Dax Ironfist, a reluctant dwarven inventor, chases his rogue automaton into ancient ruins, where he's helped by"| __truncated__
+##  .. .. ..  ..$ lesson_learned: chr "Dax Ironfist learns that his inventions have potential beyond his personal use; they can aid others and contrib"| __truncated__
+##  @ json    :List of 8
+##  .. $ id                : chr "chatcmpl-B957GeUYzPqCKR3qYZbuSKfx7mXhG"
+##  .. $ object            : chr "chat.completion"
+##  .. $ created           : int 1741504318
+##  .. $ model             : chr "gpt-4o-2024-08-06"
+##  .. $ choices           :List of 1
+##  ..  ..$ :List of 4
+##  ..  .. ..$ index        : int 0
+##  ..  .. ..$ message      :List of 3
+##  ..  .. .. ..$ role   : chr "assistant"
+##  ..  .. .. ..$ content: chr "{\"wrapper\":{\"name_main\":\"Dax Ironfist\",\"name_support\":\"Ryn\",\"summary\":\"Dax Ironfist, a reluctant d"| __truncated__
+##  ..  .. .. ..$ refusal: NULL
+##  ..  .. ..$ logprobs     : NULL
+##  ..  .. ..$ finish_reason: chr "stop"
+##  .. $ usage             :List of 5
+##  ..  ..$ prompt_tokens            : int 1321
+##  ..  ..$ completion_tokens        : int 112
+##  ..  ..$ total_tokens             : int 1433
+##  ..  ..$ prompt_tokens_details    :List of 2
+##  ..  .. ..$ cached_tokens: int 1280
+##  ..  .. ..$ audio_tokens : int 0
+##  ..  ..$ completion_tokens_details:List of 4
+##  ..  .. ..$ reasoning_tokens          : int 0
+##  ..  .. ..$ audio_tokens              : int 0
+##  ..  .. ..$ accepted_prediction_tokens: int 0
+##  ..  .. ..$ rejected_prediction_tokens: int 0
+##  .. $ service_tier      : chr "default"
+##  .. $ system_fingerprint: chr "fp_eb9dce56a8"
+##  @ tokens  : int [1:2] 1321 112
+##  @ text    : chr ""
+```
+
+And from there you can follow the hierarchy all the way down to `wrapper` deep inside the `contents` field. Just make sure that you use `@`, `$` and brackets appropriately.
+
+```{r}
+last_turn@contents[[1]]@value
+## $name_main
+## [1] "Dax Ironfist"
+## 
+## $name_support
+## [1] "Ryn"
+## 
+## $summary
+## [1] "Dax Ironfist, a reluctant dwarven inventor, chases his rogue automaton into ancient ruins, where he's helped by a young adventurer named Ryn to stop it from causing destruction."
+## 
+## $lesson_learned
+## [1] "Dax Ironfist learns that his inventions have potential beyond his personal use; they can aid others and contribute to greater causes, inspiring a newfound sense of purpose and the understanding that collaboration can lead to fulfilling and impactful results."
+```
+
+And of course, we could turn this thing into a tibble.
+
+```{r}
+last_turn@contents[[1]]@value |> 
+  dplyr::as_tibble()
+## # A tibble: 1 × 4
+##   name_main    name_support summary                               lesson_learned
+##   <chr>        <chr>        <chr>                                 <chr>         
+## 1 Dax Ironfist Ryn          Dax Ironfist, a reluctant dwarven in… Dax Ironfist …
+```
+
+## 4.5 Named entitity recognition
+
+Alright, let’s do one more example. Let’s try to extract all named entities from this story. This is a common thing people want to do in text analysis.
+
+Here, we can do this by creating another type. For now, let’s just go with name and description of the entity.
+
+```{r}
+type_entity <- type_object(
+  .description = 'A named entity that was found 
+  in our story',
+  name = type_string('Name of the entity'),
+  desc = type_string('One sentence description 
+                     of entity')
+)
+```
+
+But of course we don’t want to find just a single entity. We want our LLM to extract all entities. Thus, let’s make sure that we ask our LLM to extract an **array** (or “vector” as we’d say in the R world).
+
+```{r}
+chat$extract_data(
+  txt_full_story, 
+  type = type_array(
+    # items is the argument name of 
+    # the array content type
+    items = type_entity
+  )
+)
+##           name
+## 1 Dax Ironfist
+## 2          Ryn
+##                                                                                                    desc
+## 1      A stout dwarf and reluctant inventor who creates mechanical marvels in his underground workshop.
+## 2 A young, agile adventurer clad in mismatched armor who assists Dax in retrieving the rogue automaton.
+```
+
+And as always I prefer a tibble. Here, we have multiple rows (with two columns each), so we need to use `bind_rows()` to turn this into a tibble.
+
+```{r}
+last_turn <- chat$last_turn('assistant')
+last_turn@contents[[1]]@value |> 
+  bind_rows()
+## # A tibble: 2 × 2
+##   name         desc                                                             
+##   <chr>        <chr>                                                            
+## 1 Dax Ironfist A stout dwarf and reluctant inventor who creates mechanical marv…
+## 2 Ryn          A young, agile adventurer clad in mismatched armor who assists D…
+```
+
+## 4.6 Adding classification
+
+Finally, let’s complete this example by also showing you how these types can be used for automations. The trick is to modify our `type_entity` with yet another entry using `type_enum()`.
+
+This particular type corresponds to a categorical variable. It’s what you’d call a `factor` in the R world.
+
+```{r}  
+type_entity <- type_object(
+  .description = 'A named entity that was found
+  in our story',
+  name = type_string('Name of the entity'),
+  type = type_enum(
+    description = 'Classification of entity',
+    values = c('Protagonist', 'Antagonist', 'Other')
+  ),
+  desc = type_string('One sentence description 
+                     of entity')
+)
+```
+
+And with that, we can run our entity recognition again.
+
+```{r}
+chat$extract_data(
+  txt_full_story, 
+  type = type_array(
+    items = type_entity
+  )
+)
+last_turn <- chat$last_turn('assistant')
+last_turn@contents[[1]]@value |> 
+  bind_rows()
+# # A tibble: 3 × 3
+#   name         type        desc  
+#   <chr>        <chr>       <chr>
+# 1 Dax Ironfist Protagonist A stout dwarf inventor who prefers the safety o…
+# 2 Ryn          Other       A young, enthusiastic adventurer clad in mismat…
+# 3 Automaton    Other       Dax's creation, a small, gear-driven machine de…
+```
+
+## 4.7 Using PDFs
+
+Now, let’s imagine that we have a invoice as a PDF like this. This is an example I’ve fetched from [Microsoft](https://create.microsoft.com/en-us/template/service-invoice-\(simple-lines-design-worksheet\)-c10068f0-7a64-423b-abad-dced024877b0).
+
+![](https://air.albert-rapp.de/imgs/invoice.png)
+
+By combining what we’ve just learned about turning texts into dataframes with `{pdftools}` to extract text from PDFs, we can create a powerful combo. Here’s how it works. We can first extract the text using `{pdftools}`.
+
+```{r}
+txt_pdf <- pdftools::pdf_text('dat/invoice.pdf')
+## PDF error: Mismatch between font type and embedded font file
+txt_pdf |> 
+  stringr::str_wrap(width = 50) |> 
+  paste(collapse = '\n') |> 
+  cat()
+## Happiest Valley Farms Happy plants means happy
+## people Invoice To: Maria Sullivan Date: January
+## 27, 2025 The Palm Tree Nursery Invoice #: 100
+## 987 6th Ave Customer ID: AAA Santa Fe, NM 11121
+## 201-555-0122 Salesperson Job Payment Terms Due
+## Date Sonu Jain Sales Due upon receipt TBD Qty
+## Description Unit Price Line Total 20.00 Areca
+## palm $2.50 $50.00 35.00 Majesty palm $3.00 $105.00
+## 15.00 Bismarck palm $2.50 $37.50 Subtotal $192.50
+## Sales Tax Total $192.50 Make all checks payable to
+## Happiest Valley Farms Thank you for your business!
+## 4321 Maplewood Ave | Nashville, TN | 10105 |
+## happiestvalley@example.com
+```
+
+Looks all messed up. But no problem. AI will handle this for us.
+
+Also note that here text extraction works pretty great as the text is also embedded in the pdf. For trickier types of PDFs (like scanned documents), you might want to resort to OCR methods. But let’s save this story for another time.
+
+For now, let’s continue with our current example. We just have to make sure that define a custom type.
+
+```{r}
+type_invoice_position <- type_object(
+  'A single invoice position',
+  position = type_string('Description of the position'),
+  quantity = type_number('Quantity/Number of hours'),
+  rate = type_number('Price per piece/Hourly rate'),
+  total = type_number('Total amount of invoice positon'),
+  currency = type_enum(
+    'currency of invoice position',
+    values = c('USD', 'EUR', 'Other')
+  )
+)
+```
+
+And then we can wrap that into an array and extract the data. Maybe a new chat with a new system prompt will also be good.
+
+```{r}
+chat <- chat_google_gemini(
+  system_prompt = '
+  You area an invoice extraction assistant. The user
+  will provide you with text from an invoice and you are
+  to extract every position from it.'
+)
+## Using model = "gpt-4o".
+chat$extract_data(
+  txt_pdf,
+  type = type_array(
+    'List of all available invoices',
+    items = type_invoice_position
+  )
+)
+##        position quantity rate total currency
+## 1    Areca palm       20  2.5  50.0      USD
+## 2  Majesty palm       35  3.0 105.0      USD
+## 3 Bismarck palm       15  2.5  37.5      USD
+```
+
+Nice! So with that you should have a good idea of how structured outputs work. If you’re looking for more examples, then the [`{ellmer}` docs have a few more fantastic examples](https://ellmer.tidyverse.org/articles/structured-data.html#examples).
+
+# Structured Output for scientists
+
+[seascapemodels ](https://www.seascapemodels.org/rstats/2025/03/15/LMs-in-R-with-ellmer.html)
+
+# Building Shiny Chat Bots
+
+
+# Generate data with an LLM and ellmer
+
+[Generate data with an LLM and ellmer - Posit ](https://posit.co/blog/generate-data-with-an-llm-and-ellmer/)
+
+# Agentic AI with R
+
+[Agentic AI with R: Building an Automated Website Auditor from Scratch | by Marketing Data Science with Joe Domaleski | Medium ](https://blog.marketingdatascience.ai/agentic-ai-with-r-building-an-automated-website-auditor-from-scratch-1a42d0bd7bae)
+
+
+
