@@ -1,8 +1,52 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>https://jixing.liu.fr/AIDD/2025-08-11/post_all.html</loc>
+    <lastmod>2025-08-28T08:43:07.879Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jixing.liu.fr/AIDD/2025-08-18/post_all.html</loc>
+    <lastmod>2025-08-28T08:43:43.459Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jixing.liu.fr/AIDD/2025-08-08_b/post_all.html</loc>
+    <lastmod>2025-08-28T08:42:56.692Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jixing.liu.fr/AIDD/2025-08-10/post_all.html</loc>
+    <lastmod>2025-08-28T08:43:02.229Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jixing.liu.fr/AIDD/2025-08-14_a/post_all.html</loc>
+    <lastmod>2025-08-28T08:43:20.996Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jixing.liu.fr/AIDD/2025-08-17_a/post_all.html</loc>
+    <lastmod>2025-08-28T08:43:32.462Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jixing.liu.fr/AIDD/2025-08-05/post_all.html</loc>
+    <lastmod>2025-08-28T08:42:30.963Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jixing.liu.fr/AIDD/2025-08-12/post_all.html</loc>
+    <lastmod>2025-08-28T08:43:15.558Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jixing.liu.fr/AIDD/2025-08-25_b/post_all.html</loc>
+    <lastmod>2025-08-28T08:44:35.723Z</lastmod>
+  </url>
+  <url>
     <loc>https://jixing.liu.fr/AIDD/2025-08-25_c/post_all.html</loc>
-    <lastmod>2025-08-28T03:34:18.769Z</lastmod>
+    <lastmod>2025-08-28T08:39:25.584Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jixing.liu.fr/AIDD/2025-08-17_b/post_all.html</loc>
+    <lastmod>2025-08-28T08:43:38.322Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jixing.liu.fr/AIDD/2025-08-06/post_all.html</loc>
+    <lastmod>2025-08-28T08:42:37.623Z</lastmod>
   </url>
   <url>
     <loc>https://jixing.liu.fr/posts/AI-Native team about Every/index.html</loc>
@@ -10,7 +54,7 @@
   </url>
   <url>
     <loc>https://jixing.liu.fr/publications.html</loc>
-    <lastmod>2025-08-28T03:36:49.738Z</lastmod>
+    <lastmod>2025-08-28T08:47:01.891Z</lastmod>
   </url>
   <url>
     <loc>https://jixing.liu.fr/posts/2024-12-30-quarto-github-pages/index.html</loc>
@@ -39,5 +83,49 @@
   <url>
     <loc>https://jixing.liu.fr/posts/AI overuse/AI overuse.html</loc>
     <lastmod>2025-06-01T02:16:22.389Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jixing.liu.fr/AIDD/2025-08-07/post_all.html</loc>
+    <lastmod>2025-08-28T08:42:45.117Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jixing.liu.fr/AIDD/2025-08-14_b/post_all.html</loc>
+    <lastmod>2025-08-28T08:43:25.975Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jixing.liu.fr/AIDD/2025-08-23_a/post_all.html</loc>
+    <lastmod>2025-08-28T08:44:11.866Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jixing.liu.fr/AIDD/2025-08-24/post_all.html</loc>
+    <lastmod>2025-08-28T08:44:24.692Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jixing.liu.fr/AIDD/2025-08-08_a/post_all.html</loc>
+    <lastmod>2025-08-28T08:42:50.939Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jixing.liu.fr/AIDD/2025-08-04/post_all.html</loc>
+    <lastmod>2025-08-28T08:42:24.916Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jixing.liu.fr/AIDD/2025-08-20_b/post_all.html</loc>
+    <lastmod>2025-08-28T08:44:06.201Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jixing.liu.fr/AIDD/2025-08-23_b/post_all.html</loc>
+    <lastmod>2025-08-28T08:44:17.666Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jixing.liu.fr/AIDD/2025-08-19/post_all.html</loc>
+    <lastmod>2025-08-28T08:43:53.329Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jixing.liu.fr/AIDD/2025-08-25_a/post_all.html</loc>
+    <lastmod>2025-08-28T08:44:30.080Z</lastmod>
+  </url>
+  <url>
+    <loc>https://jixing.liu.fr/AIDD/2025-08-20/post_all.html</loc>
+    <lastmod>2025-08-28T08:43:59.076Z</lastmod>
   </url>
 </urlset>

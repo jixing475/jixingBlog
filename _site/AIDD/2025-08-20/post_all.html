@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="大型语言模型（LLM）正从理论预测进化为能够指挥机器人进行自主化学合成的“现场总指挥”。David Baker 团队的开源 AtomWorks 框架和 RF3 模型，在紧追 AlphaFold3 的同时，为整个领域提供了加速创新的模块化工具。最后，AdaptiveFlow 开源平台通过高效筛选 690 亿分子库，成功发现了针对困难靶点 FSP1 的纳摩尔级抑制剂并解析了首个共晶结构。">
+
+<title>自主合成、开源结构预测与 690 亿分子筛选 – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-5894ea28ed9df5ce0d56c17dd3d4f358.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<meta property="og:title" content="自主合成、开源结构预测与 690 亿分子筛选 – MPU">
+<meta property="og:description" content="大型语言模型（LLM）正从理论预测进化为能够指挥机器人进行自主化学合成的“现场总指挥”。David Baker 团队的开源 AtomWorks 框架和 RF3 模型，在紧追 AlphaFold3 的同时，为整个领域提供了加速创新的模块化工具。最后，AdaptiveFlow 开源平台通过高效筛选 690 亿分子库，成功发现了针对困难靶点 FSP1 的纳摩尔级抑制剂并解析了首个共晶结构。">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-08-20/post_all_image/large_language_model_2025_08_16_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="一张概念图，展示了一个由大型语言模型（LLM）控制的自动化化学实验室。图中，一个中心大脑（代表 AI）正在分析数据，并通过机械臂在通风橱中精确执行化学反应，象征着 AI 从理论预测走向自主合成的闭环系统。
+">
+<meta name="twitter:title" content="自主合成、开源结构预测与 690 亿分子筛选 – MPU">
+<meta name="twitter:description" content="大型语言模型（LLM）正从理论预测进化为能够指挥机器人进行自主化学合成的“现场总指挥”。David Baker 团队的开源 AtomWorks 框架和 RF3 模型，在紧追 AlphaFold3 的同时，为整个领域提供了加速创新的模块化工具。最后，AdaptiveFlow 开源平台通过高效筛选 690 亿分子库，成功发现了针对困难靶点 FSP1 的纳摩尔级抑制剂并解析了首个共晶结构。">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-08-20/post_all_image/large_language_model_2025_08_16_image_1.jpg">
+<meta name="twitter:image:alt" content="一张概念图，展示了一个由大型语言模型（LLM）控制的自动化化学实验室。图中，一个中心大脑（代表 AI）正在分析数据，并通过机械臂在通风橱中精确执行化学反应，象征着 AI 从理论预测走向自主合成的闭环系统。
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">自主合成、开源结构预测与 690 亿分子筛选</h1>
+                  <div>
+        <div class="description">
+          <p>大型语言模型（LLM）正从理论预测进化为能够指挥机器人进行自主化学合成的“现场总指挥”。David Baker 团队的开源 AtomWorks 框架和 RF3 模型，在紧追 AlphaFold3 的同时，为整个领域提供了加速创新的模块化工具。最后，AdaptiveFlow 开源平台通过高效筛选 690 亿分子库，成功发现了针对困难靶点 FSP1 的纳摩尔级抑制剂并解析了首个共晶结构。</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">AI 药物发现</div>
+                <div class="quarto-category">自主合成</div>
+                <div class="quarto-category">蛋白质结构预测</div>
+                <div class="quarto-category">虚拟筛选</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4549" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Tuesday, the 20th of August, 2024</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#目录" id="toc-目录" class="nav-link active" data-scroll-target="#目录">目录</a></li>
+  <li><a href="#ai-入主通风橱从预测到自主合成" id="toc-ai-入主通风橱从预测到自主合成" class="nav-link" data-scroll-target="#ai-入主通风橱从预测到自主合成">1. AI 入主通风橱：从预测到自主合成</a></li>
+  <li><a href="#rf3-与-atomworks不止是又一个-alphafold3-竞品" id="toc-rf3-与-atomworks不止是又一个-alphafold3-竞品" class="nav-link" data-scroll-target="#rf3-与-atomworks不止是又一个-alphafold3-竞品">2. RF3 与 AtomWorks：不止是又一个 AlphaFold3 竞品</a></li>
+  <li><a href="#adaptiveflow-690-亿分子库中淘金-fsp1-抑制剂" id="toc-adaptiveflow-690-亿分子库中淘金-fsp1-抑制剂" class="nav-link" data-scroll-target="#adaptiveflow-690-亿分子库中淘金-fsp1-抑制剂">3. AdaptiveFlow: 690 亿分子库中淘金 FSP1 抑制剂</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-08-20/post_all.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="目录" class="level2">
+<h2 class="anchored" data-anchor-id="目录">目录</h2>
+<ol type="1">
+<li>大型语言模型正在从一个只会纸上谈兵的「化学顾问」，进化成一个能亲自动手、在机器人实验室里规划、执行并优化化学反应的「自主研究员」。</li>
+<li>David Baker 团队的 AtomWorks 框架和 RF3 模型，不仅在性能上紧追 AlphaFold3，更重要的是通过一个模块化的开源生态系统，为整个领域提供了加速创新的底层工具。</li>
+<li>一个名为 AdaptiveFlow 的新开源平台，通过高效筛选 690 亿分子库，不仅发现了针对 FSP1 的纳摩尔级抑制剂，还首次解析了其共晶结构，为这个困难靶点提供了实在的起点。</li>
+</ol>
+</section>
+<section id="ai-入主通风橱从预测到自主合成" class="level2">
+<h2 class="anchored" data-anchor-id="ai-入主通风橱从预测到自主合成">1. AI 入主通风橱：从预测到自主合成</h2>
+<p><a href="post_all_image/large_language_model_2025_08_16_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/large_language_model_2025_08_16_image_1.jpg" class="img-fluid"></a></p>
+<p>有机合成一直以来都存在着一道巨大的鸿沟。一边，是画在纸上或电脑屏幕上的、完美无瑕、产率 100% 的反应路线图。另一边，是在通风橱里，那个颜色可疑、拒绝反应、或者干脆变成一锅棕色粘稠物的烧瓶。我们一直梦想着能有一个工具，来弥合这道鸿沟。</p>
+<p>大型语言模型（LLMs）的出现，一开始看起来像是又一个华而不实的计算工具。它们能看着一个反应，然后根据它从海量文献里学到的知识，给你预测一个产率。这很酷，但对于一个经验丰富的化学家来说，这有点像是一个只会背菜谱的机器人，它并不能真正地帮你做饭。</p>
+<p>但这篇综述，给我们描绘了一幅截然不同的、也令人无比兴奋的未来图景。AI，正在走出电脑屏幕，穿上实验服，走进通风橱。</p>
+<p><strong>第一阶段的进化：从「算命先生」到「战略家」</strong></p>
+<p>过去的 AI，你给它反应物 A 和 B，它告诉你得到产物 C 的可能性有多大。这就像个算命先生。而现在的 LLMs，你直接给它看最终的目标分子——一个复杂的药物候选物——然后问它：「我们该怎么从那些便宜的、买得到的原料，一步步把它做出来？」模型会开始进行「逆合成分析」，像一个经验丰富的战略家一样，把这个复杂的目标，拆解成一步步可行的、逻辑上连贯的化学反应。它正在学习我们这个行当里，最核心的、也最具创造性的那部分技能。</p>
+<p><strong>第二阶段的进化：从「战略家」到「现场总指挥」</strong></p>
+<p>但这还不是最激动人心的。真正让这一切从理论变成现实的，是将 LLMs，与那些我们已经很熟悉的实验室机器人、自动加料器和实时分析仪器（比如核磁、质谱、红外）连接起来。</p>
+<p>这，就创造出了一个「闭环」。</p>
+<p>你可以想象这样一个场景：<br>
+1. <strong>规划</strong> ：LLM 为目标分子，规划出了一条它认为最优的合成路线。<br>
+2. <strong>执行</strong> ：它把指令发送给实验室里的机器人。机器人手臂开始精确地移取溶剂、称量原料、控制温度。<br>
+3. <strong>监控</strong> ：反应开始后，流通池里的实时光谱仪，每隔几秒钟，就把反应体系的「快照」，传回给 LLM。<br>
+4. <strong>学习与优化</strong> ：LLM 看着这些实时数据，发现反应似乎比预想的要慢。于是，它做出一个判断：「嗯，也许我们应该把温度再升高 5 度，或者再补加一点催化剂。」然后，它就向机器人，发出了新的指令。</p>
+<p>这就像是拥有了一个不知疲倦、无需睡眠、而且能同时照看上百个反应的、顶级的化学家。它不再是仅仅在实验开始前给你一个静态的方案，而是在实验过程中，进行动态的、实时的、基于数据的优化。</p>
+<p><strong>现实是我们还没到高枕无忧的时候</strong></p>
+<p>当然，在我们把实验室的钥匙完全交给 AI 之前，还有几个非常棘手的问题需要解决。</p>
+<p>首先，是「垃圾进，垃圾出」的问题。LLMs 学习的是公开发表的化学文献。而化学文献，存在着巨大的「发表偏见」——我们只会发表那些成功的、产率漂亮的反应。那成千上万次失败的、只得到一堆焦油的尝试，是不会出现在 AI 的训练集里的。这就像是教一个新手司机开车，却只让他看 F1 赛车夺冠的录像，而不告诉他任何关于撞车和抛锚的事。</p>
+<p>其次，是「黑箱」问题。AI 可能会给你一条天才般的合成路线，但当你问它「你为什么这么想」的时候，它无法回答。它无法像一个人类化学家一样，跟你讨论反应机理、过渡态和电子效应。这种「知其然，而不知其所以然」，在科学探索中，是一个很大的问题。</p>
+<p>最后，也是最重要的，是安全问题。一个不受约束的 LLM，会不会在它的优化过程中，「发明」出一条会产生爆炸性中间体，或者剧毒副产物的路线？我们必须为它设计出严格的「安全护栏」，确保它的所有操作，都在已知的、安全的化学空间内进行。</p>
+<p>LLMs 不会在短期内取代有机化学家。但它正在成为一个前所未有的、强大的合作伙伴。它会把我们从那些重复性的、劳动密集型的优化工作中解放出来，让我们能去思考那些更宏大、更具创造性的、AI 目前还无法触及的化学难题。</p>
+<p>📜Title: Large Language Models Transform Organic Synthesis From Reaction Prediction to Automation<br>
+📜Paper: https://arxiv.org/abs/2508.05427</p>
+</section>
+<section id="rf3-与-atomworks不止是又一个-alphafold3-竞品" class="level2">
+<h2 class="anchored" data-anchor-id="rf3-与-atomworks不止是又一个-alphafold3-竞品">2. RF3 与 AtomWorks：不止是又一个 AlphaFold3 竞品</h2>
+<p><a href="post_all_image/accelerating_biomole_2025_08_20_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/accelerating_biomole_2025_08_20_image_1.jpg" class="img-fluid"></a></p>
+<p>David Baker 实验室又出了一篇预印本。看到标题里的 RosettaFold-3 (RF3)，你的第一反应可能是：又一个追赶 AlphaFold3 的模型？</p>
+<p>是的，但又不完全是。</p>
+<p>在我看来，这篇工作的真正主角，其实是那个 <code>AtomWorks</code> 框架。</p>
+<p>任何花哨的算法最终都建立在数据之上。处理生物分子数据，尤其是从 PDB 里扒下来的原始数据，就像是在打扫一个尘封多年的阁楼。键级不对、电荷缺失、原子坐标丢失……这些琐碎但致命的问题能让最高明的模型也栽跟头。</p>
+<p><code>AtomWorks</code> 干的就是这个「脏活累活」，它建立了一套标准化的数据处理流水线，把这些乱七八糟的输入文件，变成了干净、规整、可以直接喂给模型的「食材」。这套框架就像是为生物分子建模打造的乐高积木，各个模块（数据处理、特征化）可以随意拆分和组合，让研究者能快速验证新想法，而不是每次都从和泥巴开始。</p>
+<p>RF3 就是用这套「乐高」搭出来的第一个明星产品。它的性能确实很强，在很多任务上都缩小了与 AlphaFold3 的差距，这本身就证明了 <code>AtomWorks</code> 框架的成功。</p>
+<p>但对于做药来说有几个点特别值得关注。</p>
+<p>首先是手性。机器能分清左手和右手吗？</p>
+<p>这在小分子药物设计里是生死攸关的问题。一个错误的对映异构体，可能就从良药变成了毒药。RF3 在这一点上做得非常漂亮，它对配体手性中心的预测准确率达到了 88%，略高于 AlphaFold3 的 84%。这个看似微小的优势，在实际项目中可能意味着巨大的价值。</p>
+<p>其次是灵活性。RF3 允许用户进行「原子级别的条件约束」。这是什么意思？打个比方，你通过实验（比如 NMR）知道蛋白上的某个原子和配体上的某个原子距离很近，你可以把这个信息直接「告诉」RF3，让它在预测结构时把这个约束考虑进去。这让模型不再是一个封闭的黑箱，而是一个可以与实验数据互动的工具。无论是做对接，还是根据特定构象折叠蛋白，这个功能都让 RF3 变得异常实用。</p>
+<p>所以，RF3 不止是提供了一个 AlphaFold3 的开源替代品。更重要的是，Baker 团队把整个「厨房」——<code>AtomWorks</code> 框架、训练好的模型、甚至处理过的数据集——都开放了出来。他们不只是给了我们一条鱼（RF3），更是把渔具和捕鱼方法（AtomWorks）都公之于众。</p>
+<p>📜Title: Accelerating Biomolecular Modeling with AtomWorks and RF3<br>
+📜Paper: https://www.biorxiv.org/content/10.1101/2025.08.14.670328v1<br>
+💻Code: https://github.com/RosettaCommons/atomworks</p>
+</section>
+<section id="adaptiveflow-690-亿分子库中淘金-fsp1-抑制剂" class="level2">
+<h2 class="anchored" data-anchor-id="adaptiveflow-690-亿分子库中淘金-fsp1-抑制剂">3. AdaptiveFlow: 690 亿分子库中淘金 FSP1 抑制剂</h2>
+<p><a href="post_all_image/ai_enhanced_adaptive_2025_08_20_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/ai_enhanced_adaptive_2025_08_20_image_1.jpg" class="img-fluid"></a></p>
+<p>做药一直是个数字游戏，但现在的数字已经大到有些离谱了。我们理论上可以合成的类药分子数量比宇宙中的原子还多，而我们实际能接触到的，不过是其中的沧海一粟。</p>
+<p>AdaptiveFlow 可以在一个包含 690 亿个分子的库里进行虚拟筛选？</p>
+<p>做超大库虚拟筛选（ULVS）最大的拦路虎就是计算成本。如果你想用传统的对接方法把几十亿个分子挨个往靶点口袋里「试」，那计算资源和时间的消耗足以让任何一个项目负责人望而却步。AdaptiveFlow 走了一条更路。研究者们没有直接开始「蛮力」对接，而是先用一个多维度的分子属性网格（a multi-dimensional grid of molecular properties）对整个化学空间进行了一次快速「摸底」。</p>
+<p>这就像要在整个国家找一个符合特定条件的人。你是挨家挨户地敲门问，还是先调出地图，用年龄、职业、地区等几个关键维度筛选出几个重点城市，甚至几个重点社区，再去实地走访？AdaptiveFlow 做的就是后者。通过这种预筛选，它能把计算量集中在最有希望的化学空间区域，直接把成本砍掉了大约 1000 倍。</p>
+<p>而且，整个平台架构在云上，可以调用数百万个 CPU 核心并行计算，这工程实现本身就相当了不起。最关键的是，它开源。这意味着学术界和小型生物技术公司的研究者们也能用上这种曾经只有大型药企才能负担得起的「重武器」。</p>
+<p>当然，一个平台说得再好，也得看它能不能抓到「鱼」。这次他们瞄准了两个靶点：PARP-1 和 FSP1。</p>
+<p>PARP-1 算是老朋友了，已经有上市药物。而 FSP1（ferroptosis suppressor protein 1）则是一个更棘手、也更前沿的靶点。它是铁死亡通路上的一个关键蛋白，在癌症等疾病中扮演重要角色，但一直缺少好的小分子工具和药物起点。</p>
+<p>结果 AdaptiveFlow 不仅为这两个靶点都找到了纳摩尔级的抑制剂——这对于一个纯虚拟筛选项目来说，已经是相当出色的成绩了——更重要的是 FSP1 的后续进展。研究者们成功地解析了他们找到的 FSP1 抑制剂与靶点蛋白的共晶结构。</p>
+<p>这才是整个故事里最让人兴奋的部分。一个没有结构支持的「hit」（苗头化合物）就像一张只有个模糊标记的藏宝图，你只知道宝藏大概在「那片林子里」，接下来怎么挖，往哪挖，很大程度靠猜。而一个共晶结构，就是一张精确到厘米的工程蓝图。它清清楚楚地告诉你，你的分子是怎么嵌在蛋白口袋里的，哪个基团和哪个氨基酸形成了氢键，哪个部分还有空间可以优化。这一下就把药物发现从「瞎蒙」变成了「精确制导」。</p>
+<p>这是历史上第一次有人拿到 FSP1 和小分子抑制剂的共晶结构，它不仅验证了 AdaptiveFlow 筛选结果的可靠性，也为全世界所有想做 FSP1 靶点的人，点亮了一盏灯塔。</p>
+<p>📜Title: AI-Enhanced Adaptive Virtual Screening Platform Enabling Exploration of 69 Billion Molecules Discovers Structurally Validated FSP1 Inhibitors<br>
+📜Paper: https://www.biorxiv.org/content/10.1101/2023.04.25.537981v2</p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-08-20/post_all.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>
