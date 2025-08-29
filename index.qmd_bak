@@ -13,7 +13,7 @@ about:
       href: "mailto:pro@mickael.canouil.dev"
       aria-label: "envelope logo for email"
     - text: "{{< iconify fa6-brands:orcid >}}"
-      href: "https://orcid.org/0000-0002-3396-4549"
+      href: "https://orcid.org/0000-0002-3396-4548"
       aria-label: "ORCID logo linking to ORCID account"
     - text: "{{< iconify fa6-brands:mastodon >}}"
       href: "https://fosstodon.org/@MickaelCanouil"
