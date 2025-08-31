@@ -1,22 +1,11 @@
 [
   {
-    "listing": "/publications.html",
-    "items": []
-  },
-  {
-    "listing": "/blog.html",
-    "items": [
-      "/posts/AI-Native team about Every/index.html",
-      "/posts/Easily solve the Giscus is not installed error in Quarto blog/Easily solve the Giscus is not installed error in Quarto blog.html",
-      "/posts/AI overuse/AI overuse.html",
-      "/posts/2024-12-30-quarto-github-pages/index.html",
-      "/posts/AI_is_not_Making_Engineers_10x_as_Productive/index.html"
-    ]
-  },
-  {
     "listing": "/aidd.html",
     "items": [
       "/AIDD/2025-08-25_c/post_all.html",
+      "/AIDD/2025-08-29/post_all.html",
+      "/AIDD/2025-08-30/post_all.html",
+      "/AIDD/2025-08-31/post_all.html",
       "/AIDD/2025-08-04/post_all.html",
       "/AIDD/2025-08-08_b/post_all.html",
       "/AIDD/2025-08-25_b/post_all.html",
@@ -40,5 +29,19 @@
       "/AIDD/2025-08-06/post_all.html",
       "/AIDD/2025-08-05/post_all.html"
     ]
+  },
+  {
+    "listing": "/blog.html",
+    "items": [
+      "/posts/AI-Native team about Every/index.html",
+      "/posts/Easily solve the Giscus is not installed error in Quarto blog/Easily solve the Giscus is not installed error in Quarto blog.html",
+      "/posts/AI overuse/AI overuse.html",
+      "/posts/2024-12-30-quarto-github-pages/index.html",
+      "/posts/AI_is_not_Making_Engineers_10x_as_Productive/index.html"
+    ]
+  },
+  {
+    "listing": "/publications.html",
+    "items": []
   }
 ]

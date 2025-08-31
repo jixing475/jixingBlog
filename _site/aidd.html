@@ -81,7 +81,8 @@ ul.task-list li input[type="checkbox"] {
 
     const options = {
       valueNames: ['listing-date','listing-title','listing-author','listing-image','listing-description','listing-categories',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
-      
+      page: 25,
+    pagination: { item: "<li class='page-item'><a class='page page-link' href='#'></a></li>" },
       searchColumns: ["listing-date","listing-title","listing-author","listing-image","listing-description","listing-categories"],
     };
 
@@ -203,7 +204,7 @@ window.Quarto = {
 <!-- margin-sidebar -->
     <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
         
-    <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(23)</span></div><div class="category" data-category="QURNRSUyMCVFOSVBMiU4NCVFNiVCNSU4Qg==">ADME 预测 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="QUklMjBpbiUyMFNjaWVuY2U=">AI in Science <span class="quarto-category-count">(1)</span></div><div class="category" data-category="QUklMjAlRTYlOTklQkElRTglODMlQkQlRTQlQkQlOTM=">AI 智能体 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjA=">AI 药物发现 <span class="quarto-category-count">(20)</span></div><div class="category" data-category="R1BDUg==">GPCR <span class="quarto-category-count">(1)</span></div><div class="category" data-category="TGFyZ2UlMjBMYW5ndWFnZSUyME1vZGVscw==">Large Language Models <span class="quarto-category-count">(1)</span></div><div class="category" data-category="VGFuaW1vdG8lMjAlRTYlQTAlQjg=">Tanimoto 核 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU0JUJBJUE0JUU1JThGJTg5JUU2JUIzJUE4JUU2JTg0JThGJUU1JThBJTlC">交叉注意力 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU1JTg4JTg2JUU1JUFEJTkwJUU1JThBJUE4JUU1JThBJTlCJUU1JUFEJUE2">分子动力学 <span class="quarto-category-count">(2)</span></div><div class="category" data-category="JUU1JTg4JTg2JUU1JUFEJTkwJUU1JUFGJUI5JUU2JThFJUE1">分子对接 <span class="quarto-category-count">(2)</span></div><div class="category" data-category="JUU1JTg4JTg2JUU1JUFEJTkwJUU3JTk0JTlGJUU2JTg4JTkw">分子生成 <span class="quarto-category-count">(4)</span></div><div class="category" data-category="JUU1JThDJTk2JUU1JUFEJUE2JUU0JUJGJUExJUU2JTgxJUFGJUU1JUFEJUE2">化学信息学 <span class="quarto-category-count">(4)</span></div><div class="category" data-category="JUU1JThEJTk1JUU3JUJCJTg2JUU4JTgzJTlFJUU1JTg4JTg2JUU2JTlFJTkw">单细胞分析 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU1JThGJUFGJUU4JUE3JUEzJUU5JTg3JThBJTIwQUk=">可解释 AI <span class="quarto-category-count">(7)</span></div><div class="category" data-category="JUU1JTlCJUJFJUU3JUE1JTlFJUU3JUJCJThGJUU3JUJEJTkxJUU3JUJCJTlD">图神经网络 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU1JTlGJUJBJUU1JTlCJUEwJUU3JUJCJTg0JUU1JUFEJUE2">基因组学 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU1JUE0JTlBJUU2JTk5JUJBJUU4JTgzJUJEJUU0JUJEJTkzJUU3JUIzJUJCJUU3JUJCJTlG">多智能体系统 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU1JUE0JTlBJUU3JTlCJUFFJUU2JUEwJTg3JUU4JUI0JTlEJUU1JThGJUI2JUU2JTk2JUFGJUU0JUJDJTk4JUU1JThDJTk2">多目标贝叶斯优化 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU1JUE0JTlBJUU3JUJCJTg0JUU1JUFEJUE2">多组学 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU1JUE0JUE3JUU4JUFGJUFEJUU4JUE4JTgwJUU2JUE4JUExJUU1JTlFJThC">大语言模型 <span class="quarto-category-count">(6)</span></div><div class="category" data-category="JUU1JUJDJUJBJUU1JThDJTk2JUU1JUFEJUE2JUU0JUI5JUEw">强化学习 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU2JTg5JUE5JUU2JTk1JUEzJUU2JUE4JUExJUU1JTlFJThC">扩散模型 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU2JTlDJUJBJUU1JTk5JUE4JUU1JUFEJUE2JUU0JUI5JUEw">机器学习 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU3JTk0JTlGJUU2JTg4JTkwJUU1JUJDJThGJTIwQUk=">生成式 AI <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU3JTk0JTlGJUU3JTg5JUE5JUU0JUJGJUExJUU2JTgxJUFGJUU1JUFEJUE2">生物信息学 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU3JUE3JTkxJUU3JUEwJTk0JUU1JUI3JUE1JUU1JTg1JUI3">科研工具 <span class="quarto-category-count">(2)</span></div><div class="category" data-category="JUU3JUIyJUJFJUU1JTg3JTg2JUU1JThDJUJCJUU3JTk2JTk3">精准医疗 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU4JTg3JUFBJUU0JUI4JUJCJUU1JTkwJTg4JUU2JTg4JTkw">自主合成 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU4JThEJUFGJUU3JTg5JUE5JUU3JUFEJTlCJUU5JTgwJTg5">药物筛选 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU4JThEJUFGJUU3JTg5JUE5JUU4JUFFJUJFJUU4JUFFJUEx">药物设计 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU4JTk5JTlBJUU2JThCJTlGJUU3JUFEJTlCJUU5JTgwJTg5">虚拟筛选 <span class="quarto-category-count">(3)</span></div><div class="category" data-category="JUU4JTlCJThCJUU3JTk5JUJEJUU4JUI0JUE4JUU1JUI3JUE1JUU3JUE4JThC">蛋白质工程 <span class="quarto-category-count">(3)</span></div><div class="category" data-category="JUU4JTlCJThCJUU3JTk5JUJEJUU4JUI0JUE4JUU3JUJCJTkzJUU2JTlFJTg0JUU5JUEyJTg0JUU2JUI1JThC">蛋白质结构预测 <span class="quarto-category-count">(3)</span></div><div class="category" data-category="JUU4JUExJTgwJUU4JTg0JTkxJUU1JUIxJThGJUU5JTlBJTlDJUU5JUEyJTg0JUU2JUI1JThC">血脑屏障预测 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU4JUFFJUExJUU3JUFFJTk3JUU1JThDJTk2JUU1JUFEJUE2">计算化学 <span class="quarto-category-count">(9)</span></div><div class="category" data-category="JUU4JUFFJUExJUU3JUFFJTk3JUU3JTk0JTlGJUU3JTg5JUE5JUU1JUFEJUE2">计算生物学 <span class="quarto-category-count">(3)</span></div><div class="category" data-category="JUU4JUJGJTgxJUU3JUE3JUJCJUU1JUFEJUE2JUU0JUI5JUEw">迁移学习 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU5JTg3JThEJUU5JTg3JTg3JUU2JUEwJUI3JUU2JThBJTgwJUU2JTlDJUFG">重采样技术 <span class="quarto-category-count">(1)</span></div></div></div>
+    <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(26)</span></div><div class="category" data-category="QURNRSUyMCVFOSVBMiU4NCVFNiVCNSU4Qg==">ADME 预测 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="QUklMjBpbiUyMFNjaWVuY2U=">AI in Science <span class="quarto-category-count">(1)</span></div><div class="category" data-category="QUklMjAlRTYlOTklQkElRTglODMlQkQlRTQlQkQlOTM=">AI 智能体 <span class="quarto-category-count">(2)</span></div><div class="category" data-category="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjA=">AI 药物发现 <span class="quarto-category-count">(23)</span></div><div class="category" data-category="R1BDUg==">GPCR <span class="quarto-category-count">(1)</span></div><div class="category" data-category="TGFyZ2UlMjBMYW5ndWFnZSUyME1vZGVscw==">Large Language Models <span class="quarto-category-count">(1)</span></div><div class="category" data-category="VGFuaW1vdG8lMjAlRTYlQTAlQjg=">Tanimoto 核 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU0JUJBJUE0JUU1JThGJTg5JUU2JUIzJUE4JUU2JTg0JThGJUU1JThBJTlC">交叉注意力 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU1JTg4JTg2JUU1JUFEJTkwJUU1JThBJUE4JUU1JThBJTlCJUU1JUFEJUE2">分子动力学 <span class="quarto-category-count">(4)</span></div><div class="category" data-category="JUU1JTg4JTg2JUU1JUFEJTkwJUU1JUFGJUI5JUU2JThFJUE1">分子对接 <span class="quarto-category-count">(2)</span></div><div class="category" data-category="JUU1JTg4JTg2JUU1JUFEJTkwJUU3JTk0JTlGJUU2JTg4JTkw">分子生成 <span class="quarto-category-count">(4)</span></div><div class="category" data-category="JUU1JThDJTk2JUU1JUFEJUE2JUU0JUJGJUExJUU2JTgxJUFGJUU1JUFEJUE2">化学信息学 <span class="quarto-category-count">(4)</span></div><div class="category" data-category="JUU1JThEJTk1JUU3JUJCJTg2JUU4JTgzJTlFJUU1JTg4JTg2JUU2JTlFJTkw">单细胞分析 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU1JThGJUFGJUU4JUE3JUEzJUU5JTg3JThBJTIwQUk=">可解释 AI <span class="quarto-category-count">(7)</span></div><div class="category" data-category="JUU1JTlCJUJFJUU3JUE1JTlFJUU3JUJCJThGJUU3JUJEJTkxJUU3JUJCJTlD">图神经网络 <span class="quarto-category-count">(2)</span></div><div class="category" data-category="JUU1JTlGJUJBJUU1JTlCJUEwJUU3JUJCJTg0JUU1JUFEJUE2">基因组学 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU1JUE0JTlBJUU2JTk5JUJBJUU4JTgzJUJEJUU0JUJEJTkzJUU3JUIzJUJCJUU3JUJCJTlG">多智能体系统 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU1JUE0JTlBJUU3JTlCJUFFJUU2JUEwJTg3JUU4JUI0JTlEJUU1JThGJUI2JUU2JTk2JUFGJUU0JUJDJTk4JUU1JThDJTk2">多目标贝叶斯优化 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU1JUE0JTlBJUU3JUJCJTg0JUU1JUFEJUE2">多组学 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU1JUE0JUE3JUU4JUFGJUFEJUU4JUE4JTgwJUU2JUE4JUExJUU1JTlFJThC">大语言模型 <span class="quarto-category-count">(7)</span></div><div class="category" data-category="JUU1JUJDJUJBJUU1JThDJTk2JUU1JUFEJUE2JUU0JUI5JUEw">强化学习 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU2JTg5JUE5JUU2JTk1JUEzJUU2JUE4JUExJUU1JTlFJThC">扩散模型 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU2JTlDJUJBJUU1JTk5JUE4JUU1JUFEJUE2JUU0JUI5JUEw">机器学习 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU3JTk0JTlGJUU2JTg4JTkwJUU1JUJDJThGJTIwQUk=">生成式 AI <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU3JTk0JTlGJUU3JTg5JUE5JUU0JUJGJUExJUU2JTgxJUFGJUU1JUFEJUE2">生物信息学 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU3JUE3JTkxJUU3JUEwJTk0JUU1JUI3JUE1JUU1JTg1JUI3">科研工具 <span class="quarto-category-count">(2)</span></div><div class="category" data-category="JUU3JUIyJUJFJUU1JTg3JTg2JUU1JThDJUJCJUU3JTk2JTk3">精准医疗 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU4JTg3JUFBJUU0JUI4JUJCJUU1JTkwJTg4JUU2JTg4JTkw">自主合成 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU4JThEJUFGJUU3JTg5JUE5JUU3JUFEJTlCJUU5JTgwJTg5">药物筛选 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU4JThEJUFGJUU3JTg5JUE5JUU4JUFFJUJFJUU4JUFFJUEx">药物设计 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU4JTk5JTlBJUU2JThCJTlGJUU3JUFEJTlCJUU5JTgwJTg5">虚拟筛选 <span class="quarto-category-count">(4)</span></div><div class="category" data-category="JUU4JTlCJThCJUU3JTk5JUJEJUU4JUI0JUE4JUU1JUI3JUE1JUU3JUE4JThC">蛋白质工程 <span class="quarto-category-count">(3)</span></div><div class="category" data-category="JUU4JTlCJThCJUU3JTk5JUJEJUU4JUI0JUE4JUU3JUJCJTkzJUU2JTlFJTg0JUU5JUEyJTg0JUU2JUI1JThC">蛋白质结构预测 <span class="quarto-category-count">(4)</span></div><div class="category" data-category="JUU4JUExJTgwJUU4JTg0JTkxJUU1JUIxJThGJUU5JTlBJTlDJUU5JUEyJTg0JUU2JUI1JThC">血脑屏障预测 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU4JUFFJUExJUU3JUFFJTk3JUU1JThDJTk2JUU1JUFEJUE2">计算化学 <span class="quarto-category-count">(11)</span></div><div class="category" data-category="JUU4JUFFJUExJUU3JUFFJTk3JUU3JTk0JTlGJUU3JTg5JUE5JUU1JUFEJUE2">计算生物学 <span class="quarto-category-count">(3)</span></div><div class="category" data-category="JUU4JUJGJTgxJUU3JUE3JUJCJUU1JUFEJUE2JUU0JUI5JUEw">迁移学习 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU5JTg3JThEJUU5JTg3JTg3JUU2JUEwJUI3JUU2JThBJTgwJUU2JTlDJUFG">重采样技术 <span class="quarto-category-count">(1)</span></div></div></div>
 <!-- main -->
 <main class="content quarto-banner-title-block column-page-left" id="quarto-document-content">
 
@@ -263,7 +264,136 @@ Jixing Liu, <em>Ph.D.</em>
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="1" data-categories="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjAlMkMlRTUlODglODYlRTUlQUQlOTAlRTUlQUYlQjklRTYlOEUlQTUlMkMlRTglQUUlQTElRTclQUUlOTclRTUlOEMlOTYlRTUlQUQlQTYlMkMlRTUlOEYlQUYlRTglQTclQTMlRTklODclOEElMjBBSQ==" data-listing-date-sort="1724688000000" data-listing-file-modified-sort="1756370544916" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="3" data-listing-word-count-sort="533">
+<div class="quarto-post image-right" data-index="1" data-categories="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjAlMkMlRTUlQTQlQTclRTglQUYlQUQlRTglQTglODAlRTYlQTglQTElRTUlOUUlOEIlMkNBSSUyMCVFNiU5OSVCQSVFOCU4MyVCRCVFNCVCRCU5MyUyQyVFOCVBRSVBMSVFNyVBRSU5NyVFNSU4QyU5NiVFNSVBRCVBNg==" data-listing-date-sort="1724860800000" data-listing-file-modified-sort="1756374074439" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="302">
+<div class="thumbnail">
+<p><a href="./AIDD/2025-08-29/post_all.html" class="no-external"></a></p><a href="./AIDD/2025-08-29/post_all.html" class="no-external">
+<p><img loading="lazy" src="./AIDD/2025-08-29/post_all_image/prompt_to_pill_mult_2025_08_20_image_1.jpg" class="thumbnail-image" alt="「Prompt-to-Pill」框架利用一个中央协调的 AI 智能体群，试图将从分子设计到虚拟临床试验的漫长、割裂的流程，整合成一条自动化流水线。
+"></p>
+</a><p><a href="./AIDD/2025-08-29/post_all.html" class="no-external"></a></p>
+</div>
+<div class="body">
+<h3 class="no-anchor listing-title">
+<a href="./AIDD/2025-08-29/post_all.html" class="no-external">从文献自动提取、全流程智能体到物理现实检验</a>
+</h3>
+<div class="listing-subtitle">
+<a href="./AIDD/2025-08-29/post_all.html" class="no-external"></a>
+</div>
+<div class="listing-categories">
+<div class="listing-category" onclick="window.quartoListingCategory('QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjA='); return false;">
+AI 药物发现
+</div>
+<div class="listing-category" onclick="window.quartoListingCategory('JUU1JUE0JUE3JUU4JUFGJUFEJUU4JUE4JTgwJUU2JUE4JUExJUU1JTlFJThC'); return false;">
+大语言模型
+</div>
+<div class="listing-category" onclick="window.quartoListingCategory('QUklMjAlRTYlOTklQkElRTglODMlQkQlRTQlQkQlOTM='); return false;">
+AI 智能体
+</div>
+<div class="listing-category" onclick="window.quartoListingCategory('JUU4JUFFJUExJUU3JUFFJTk3JUU1JThDJTk2JUU1JUFEJUE2'); return false;">
+计算化学
+</div>
+</div>
+<div class="listing-description">
+<a href="./AIDD/2025-08-29/post_all.html" class="no-external">ReactionSeek 框架利用大语言模型（LLM）和巧妙的提示工程，实现了化学文献信息的自动化、高精度提取。 “Prompt-to-Pill”框架则构建了一个由中央 AI 协调的智能体团队，试图将从分子设计到虚拟临床试验的漫长流程整合成一条自动化流水线。最后，一种嵌套学习框架通过引入物理学的“现实检验”，成功地让生成式 AI 设计出可合成且在湿实验中有效的全新药物分子。 </a>
+</div>
+</div>
+<div class="metadata">
+<a href="./AIDD/2025-08-29/post_all.html" class="no-external">
+<div class="listing-date">
+Thursday, the 29th of August, 2024
+</div>
+<div class="listing-author">
+Jixing Liu, <em>Ph.D.</em>
+</div>
+</a>
+</div>
+</div>
+<div class="quarto-post image-right" data-index="2" data-categories="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjAlMkMlRTglOTklOUElRTYlOEIlOUYlRTclQUQlOUIlRTklODAlODklMkMlRTglOUIlOEIlRTclOTklQkQlRTglQjQlQTglRTclQkIlOTMlRTYlOUUlODQlRTklQTIlODQlRTYlQjUlOEIlMkMlRTUlODglODYlRTUlQUQlOTAlRTUlOEElQTglRTUlOEElOUIlRTUlQUQlQTY=" data-listing-date-sort="1724688000000" data-listing-file-modified-sort="1756374087024" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="327">
+<div class="thumbnail">
+<p><a href="./AIDD/2025-08-30/post_all.html" class="no-external"></a></p><a href="./AIDD/2025-08-30/post_all.html" class="no-external">
+<p><img loading="lazy" src="./AIDD/2025-08-30/post_all_image/uni_dock_pro_a_unifi_2025_08_24_image_1.jpg" class="thumbnail-image" alt="UniDock-Pro 在一个统一的 GPU 加速平台上，首次整合了基于结构、基于配体和创新的混合虚拟筛选模式，实现了单 GPU 日筛百万分子的超高通量，同时显著提升了筛选的富集效率。
+"></p>
+</a><p><a href="./AIDD/2025-08-30/post_all.html" class="no-external"></a></p>
+</div>
+<div class="body">
+<h3 class="no-anchor listing-title">
+<a href="./AIDD/2025-08-30/post_all.html" class="no-external">GPU 加速虚拟筛选、AlphaFold3 重塑临床前研究与 AI 力场赋能经典模拟</a>
+</h3>
+<div class="listing-subtitle">
+<a href="./AIDD/2025-08-30/post_all.html" class="no-external"></a>
+</div>
+<div class="listing-categories">
+<div class="listing-category" onclick="window.quartoListingCategory('QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjA='); return false;">
+AI 药物发现
+</div>
+<div class="listing-category" onclick="window.quartoListingCategory('JUU4JTk5JTlBJUU2JThCJTlGJUU3JUFEJTlCJUU5JTgwJTg5'); return false;">
+虚拟筛选
+</div>
+<div class="listing-category" onclick="window.quartoListingCategory('JUU4JTlCJThCJUU3JTk5JUJEJUU4JUI0JUE4JUU3JUJCJTkzJUU2JTlFJTg0JUU5JUEyJTg0JUU2JUI1JThC'); return false;">
+蛋白质结构预测
+</div>
+<div class="listing-category" onclick="window.quartoListingCategory('JUU1JTg4JTg2JUU1JUFEJTkwJUU1JThBJUE4JUU1JThBJTlCJUU1JUFEJUE2'); return false;">
+分子动力学
+</div>
+</div>
+<div class="listing-description">
+<a href="./AIDD/2025-08-30/post_all.html" class="no-external">UniDock-Pro 利用 GPU 加速，在一个统一平台上首次整合了基于结构、配体和创新的混合虚拟筛选模式，实现了前所未有的筛选效率。XenoSignal 则利用 AlphaFold3 对异种移植模型中的人 - 鼠细胞相互作用进行原子级精准预测，深刻影响临床前研究的解读。最后，TorchANI-Amber 通过巧妙的接口，让经典分子动力学软件 Amber 能无缝调用 AI 神经网络力场，实现了量子精度的大规模生物分子模拟。 </a>
+</div>
+</div>
+<div class="metadata">
+<a href="./AIDD/2025-08-30/post_all.html" class="no-external">
+<div class="listing-date">
+Tuesday, the 27th of August, 2024
+</div>
+<div class="listing-author">
+Jixing Liu, <em>Ph.D.</em>
+</div>
+</a>
+</div>
+</div>
+<div class="quarto-post image-right" data-index="3" data-categories="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjAlMkMlRTglQUUlQTElRTclQUUlOTclRTUlOEMlOTYlRTUlQUQlQTYlMkMlRTUlOUIlQkUlRTclQTUlOUUlRTclQkIlOEYlRTclQkQlOTElRTclQkIlOUMlMkMlRTUlODglODYlRTUlQUQlOTAlRTUlOEElQTglRTUlOEElOUIlRTUlQUQlQTY=" data-listing-date-sort="1724688000000" data-listing-file-modified-sort="1756374099495" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="295">
+<div class="thumbnail">
+<p><a href="./AIDD/2025-08-31/post_all.html" class="no-external"></a></p><a href="./AIDD/2025-08-31/post_all.html" class="no-external">
+<p><img loading="lazy" src="./AIDD/2025-08-31/post_all_image/seekrflow_towards_e_2025_08_20_image_1.png" class="thumbnail-image" alt="Seekrflow 平台将机器学习力场与增强采样方法无缝整合，实现了端到端的药物 - 靶点结合动力学与热力学参数的自动化、高通量预测。
+"></p>
+</a><p><a href="./AIDD/2025-08-31/post_all.html" class="no-external"></a></p>
+</div>
+<div class="body">
+<h3 class="no-anchor listing-title">
+<a href="./AIDD/2025-08-31/post_all.html" class="no-external">从拓扑视觉、动力学预测到企业化 AI 架构</a>
+</h3>
+<div class="listing-subtitle">
+<a href="./AIDD/2025-08-31/post_all.html" class="no-external"></a>
+</div>
+<div class="listing-categories">
+<div class="listing-category" onclick="window.quartoListingCategory('QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjA='); return false;">
+AI 药物发现
+</div>
+<div class="listing-category" onclick="window.quartoListingCategory('JUU4JUFFJUExJUU3JUFFJTk3JUU1JThDJTk2JUU1JUFEJUE2'); return false;">
+计算化学
+</div>
+<div class="listing-category" onclick="window.quartoListingCategory('JUU1JTlCJUJFJUU3JUE1JTlFJUU3JUJCJThGJUU3JUJEJTkxJUU3JUJCJTlD'); return false;">
+图神经网络
+</div>
+<div class="listing-category" onclick="window.quartoListingCategory('JUU1JTg4JTg2JUU1JUFEJTkwJUU1JThBJUE4JUU1JThBJTlCJUU1JUFEJUE2'); return false;">
+分子动力学
+</div>
+</div>
+<div class="listing-description">
+<a href="./AIDD/2025-08-31/post_all.html" class="no-external">PACTNET 通过赋予 AI 模型看见分子整体“拓扑形状”的能力，显著提升了图神经网络的预测准确性。Seekrflow 平台则将机器学习力场与增强采样方法无缝整合，实现了药物 - 靶点结合动力学参数的自动化、高通量预测。最后，H-MoE 框架通过创建一套“企业化”的 AI 架构，智能地将不同分子分派给“专家模型”处理，以更接近人类化学家直 D 觉的方式解决了广阔化学空间的表征难题。 </a>
+</div>
+</div>
+<div class="metadata">
+<a href="./AIDD/2025-08-31/post_all.html" class="no-external">
+<div class="listing-date">
+Tuesday, the 27th of August, 2024
+</div>
+<div class="listing-author">
+Jixing Liu, <em>Ph.D.</em>
+</div>
+</a>
+</div>
+</div>
+<div class="quarto-post image-right" data-index="4" data-categories="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjAlMkMlRTUlODglODYlRTUlQUQlOTAlRTUlQUYlQjklRTYlOEUlQTUlMkMlRTglQUUlQTElRTclQUUlOTclRTUlOEMlOTYlRTUlQUQlQTYlMkMlRTUlOEYlQUYlRTglQTclQTMlRTklODclOEElMjBBSQ==" data-listing-date-sort="1724688000000" data-listing-file-modified-sort="1756370544916" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="3" data-listing-word-count-sort="533">
 <div class="thumbnail">
 <p><a href="./AIDD/2025-08-04/post_all.html" class="no-external"></a></p><a href="./AIDD/2025-08-04/post_all.html" class="no-external">
 <p><img loading="lazy" src="./AIDD/2025-08-04/post_all_image/generative_molecule_2025_07_31_image_1.jpg" class="thumbnail-image" alt="MEVO 巧妙地将分子生成与进化策略结合，用海量‘无主’配体数据训练模型，为结构化药物设计开辟了一条新路。
@@ -306,7 +436,7 @@ Jixing Liu, <em>Ph.D.</em>
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="2" data-categories="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjAlMkMlRTUlQTQlQTclRTglQUYlQUQlRTglQTglODAlRTYlQTglQTElRTUlOUUlOEIlMkMlRTglOUIlOEIlRTclOTklQkQlRTglQjQlQTglRTUlQjclQTUlRTclQTglOEIlMkMlRTclQTclOTElRTclQTAlOTQlRTUlQjclQTUlRTUlODUlQjc=" data-listing-date-sort="1724688000000" data-listing-file-modified-sort="1756370576692" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="3" data-listing-word-count-sort="498">
+<div class="quarto-post image-right" data-index="5" data-categories="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjAlMkMlRTUlQTQlQTclRTglQUYlQUQlRTglQTglODAlRTYlQTglQTElRTUlOUUlOEIlMkMlRTglOUIlOEIlRTclOTklQkQlRTglQjQlQTglRTUlQjclQTUlRTclQTglOEIlMkMlRTclQTclOTElRTclQTAlOTQlRTUlQjclQTUlRTUlODUlQjc=" data-listing-date-sort="1724688000000" data-listing-file-modified-sort="1756370576692" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="3" data-listing-word-count-sort="498">
 <div class="thumbnail">
 <p><a href="./AIDD/2025-08-08_b/post_all.html" class="no-external"></a></p><a href="./AIDD/2025-08-08_b/post_all.html" class="no-external">
 <p><img loading="lazy" src="./AIDD/2025-08-08_b/post_all_image/structure_prediction_2025_08_04_image_1.jpg" class="thumbnail-image" alt="AlphaFold3 在预测能折叠成两种构象的蛋白质时，常常会把两种结构硬塞在一起，生成一个物理上不可能存在的“缝合怪”，暴露出其处理序列模糊性的根本局 ed.
@@ -349,7 +479,7 @@ Jixing Liu, <em>Ph.D.</em>
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="3" data-categories="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjAlMkMlRTUlOUIlQkUlRTclQTUlOUUlRTclQkIlOEYlRTclQkQlOTElRTclQkIlOUMlMkMlRTglQUUlQTElRTclQUUlOTclRTUlOEMlOTYlRTUlQUQlQTYlMkNBRE1FJTIwJUU5JUEyJTg0JUU2JUI1JThC" data-listing-date-sort="1724515200000" data-listing-file-modified-sort="1756370675723" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="266">
+<div class="quarto-post image-right" data-index="6" data-categories="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjAlMkMlRTUlOUIlQkUlRTclQTUlOUUlRTclQkIlOEYlRTclQkQlOTElRTclQkIlOUMlMkMlRTglQUUlQTElRTclQUUlOTclRTUlOEMlOTYlRTUlQUQlQTYlMkNBRE1FJTIwJUU5JUEyJTg0JUU2JUI1JThC" data-listing-date-sort="1724515200000" data-listing-file-modified-sort="1756370675723" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="266">
 <div class="thumbnail">
 <p><a href="./AIDD/2025-08-25_b/post_all.html" class="no-external"></a></p><a href="./AIDD/2025-08-25_b/post_all.html" class="no-external">
 <p><img loading="lazy" src="./AIDD/2025-08-25_b/post_all_image/heterogeneous_networ_2025_08_24_image_2.jpg" class="thumbnail-image" alt="GHCDTI 通过融合图小波变换和对比学习，不仅提升了药物 - 靶点相互作用预测的准确性，还首次在模型中考虑了蛋白质的动态柔性。
@@ -392,7 +522,7 @@ Jixing Liu, <em>Ph.D.</em>
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="4" data-categories="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjAlMkMlRTglOUIlOEIlRTclOTklQkQlRTglQjQlQTglRTUlQjclQTUlRTclQTglOEIlMkMlRTUlOEYlQUYlRTglQTclQTMlRTklODclOEElMjBBSSUyQyVFNSU4OCU4NiVFNSVBRCU5MCVFNyU5NCU5RiVFNiU4OCU5MA==" data-listing-date-sort="1724515200000" data-listing-file-modified-sort="1756370670080" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="315">
+<div class="quarto-post image-right" data-index="7" data-categories="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjAlMkMlRTglOUIlOEIlRTclOTklQkQlRTglQjQlQTglRTUlQjclQTUlRTclQTglOEIlMkMlRTUlOEYlQUYlRTglQTclQTMlRTklODclOEElMjBBSSUyQyVFNSU4OCU4NiVFNSVBRCU5MCVFNyU5NCU5RiVFNiU4OCU5MA==" data-listing-date-sort="1724515200000" data-listing-file-modified-sort="1756370670080" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="315">
 <div class="thumbnail">
 <p><a href="./AIDD/2025-08-25_a/post_all.html" class="no-external"></a></p><a href="./AIDD/2025-08-25_a/post_all.html" class="no-external">
 <p><img loading="lazy" src="./AIDD/2025-08-25_a/post_all_image/computational_design_2025_08_24_image_2.jpg" class="thumbnail-image" alt="通过从头计算设计，研究者成功将难搞的膜蛋白 CCR8 改造为水溶性蛋白，同时保留了关键的抗体结合位点，为 GPCR 药物研发扫清了一大障碍。
@@ -435,7 +565,7 @@ Jixing Liu, <em>Ph.D.</em>
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="5" data-categories="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjAlMkNBSSUyMCVFNiU5OSVCQSVFOCU4MyVCRCVFNCVCRCU5MyUyQyVFOCVBRSVBMSVFNyVBRSU5NyVFNyU5NCU5RiVFNyU4OSVBOSVFNSVBRCVBNiUyQyVFNSU4OCU4NiVFNSVBRCU5MCVFNSU4QSVBOCVFNSU4QSU5QiVFNSVBRCVBNg==" data-listing-date-sort="1724428800000" data-listing-file-modified-sort="1756370664692" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="271">
+<div class="quarto-post image-right" data-index="8" data-categories="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjAlMkNBSSUyMCVFNiU5OSVCQSVFOCU4MyVCRCVFNCVCRCU5MyUyQyVFOCVBRSVBMSVFNyVBRSU5NyVFNyU5NCU5RiVFNyU4OSVBOSVFNSVBRCVBNiUyQyVFNSU4OCU4NiVFNSVBRCU5MCVFNSU4QSVBOCVFNSU4QSU5QiVFNSVBRCVBNg==" data-listing-date-sort="1724428800000" data-listing-file-modified-sort="1756370664692" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="271">
 <div class="thumbnail">
 <p><a href="./AIDD/2025-08-24/post_all.html" class="no-external"></a></p><a href="./AIDD/2025-08-24/post_all.html" class="no-external">
 <p><img loading="lazy" src="./AIDD/2025-08-24/post_all_image/net_md_unsupervised_2025_08_20_image_1.jpg" class="thumbnail-image" alt="NetMD 将图论和时间规整巧妙结合，为我们提供了一种无需预设的、能够自动对齐并比较多条分子动力学轨迹的强大新工具。
@@ -478,7 +608,7 @@ Jixing Liu, <em>Ph.D.</em>
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="6" data-categories="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjAlMkMlRTUlQTQlQTclRTglQUYlQUQlRTglQTglODAlRTYlQTglQTElRTUlOUUlOEIlMkMlRTclOTQlOUYlRTYlODglOTAlRTUlQkMlOEYlMjBBSSUyQyVFOCU5QiU4QiVFNyU5OSVCRCVFOCVCNCVBOCVFNSVCNyVBNSVFNyVBOCU4Qg==" data-listing-date-sort="1724342400000" data-listing-file-modified-sort="1756370651866" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="252">
+<div class="quarto-post image-right" data-index="9" data-categories="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjAlMkMlRTUlQTQlQTclRTglQUYlQUQlRTglQTglODAlRTYlQTglQTElRTUlOUUlOEIlMkMlRTclOTQlOUYlRTYlODglOTAlRTUlQkMlOEYlMjBBSSUyQyVFOCU5QiU4QiVFNyU5OSVCRCVFOCVCNCVBOCVFNSVCNyVBNSVFNyVBOCU4Qg==" data-listing-date-sort="1724342400000" data-listing-file-modified-sort="1756370651866" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="252">
 <div class="thumbnail">
 <p><a href="./AIDD/2025-08-23_a/post_all.html" class="no-external"></a></p><a href="./AIDD/2025-08-23_a/post_all.html" class="no-external">
 <p><img loading="lazy" src="./AIDD/2025-08-23_a/post_all_image/esm_lo_ra_gly_improv_2025_08_20_image_1.jpg" class="thumbnail-image" alt="ESM-LoRA-Gly 方法的概念图，展示了如何在巨大的 ESM2 蛋白质语言模型上，通过添加和训练微小的 LoRA“补丁”矩阵，来高效地微调模型以完成糖基化位点预测任务，既提升了精度又降低了计算资源需求。
@@ -521,7 +651,7 @@ Jixing Liu, <em>Ph.D.</em>
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="7" data-categories="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjAlMkMlRTglOUIlOEIlRTclOTklQkQlRTglQjQlQTglRTclQkIlOTMlRTYlOUUlODQlRTklQTIlODQlRTYlQjUlOEIlMkMlRTglOTklOUElRTYlOEIlOUYlRTclQUQlOUIlRTklODAlODklMkMlRTUlODglODYlRTUlQUQlOTAlRTclOTQlOUYlRTYlODglOTA=" data-listing-date-sort="1724342400000" data-listing-file-modified-sort="1756370657666" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="233">
+<div class="quarto-post image-right" data-index="10" data-categories="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjAlMkMlRTglOUIlOEIlRTclOTklQkQlRTglQjQlQTglRTclQkIlOTMlRTYlOUUlODQlRTklQTIlODQlRTYlQjUlOEIlMkMlRTglOTklOUElRTYlOEIlOUYlRTclQUQlOUIlRTklODAlODklMkMlRTUlODglODYlRTUlQUQlOTAlRTclOTQlOUYlRTYlODglOTA=" data-listing-date-sort="1724342400000" data-listing-file-modified-sort="1756370657666" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="233">
 <div class="thumbnail">
 <p><a href="./AIDD/2025-08-23_b/post_all.html" class="no-external"></a></p><a href="./AIDD/2025-08-23_b/post_all.html" class="no-external">
 <p><img loading="lazy" src="./AIDD/2025-08-23_b/post_all_image/highlights_of_model_2025_08_20_image_1.jpg" class="thumbnail-image" alt="CASP16 的模型质量评估（MQA）竞赛表明，在 AI 预测出海量高质量结构后，真正的挑战已经从「预测」转向「精选」——如何从万千相似模型中挑出那个最接近真实世界的构象。
@@ -564,7 +694,7 @@ Jixing Liu, <em>Ph.D.</em>
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="8" data-categories="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjAlMkMlRTUlQTQlQTclRTglQUYlQUQlRTglQTglODAlRTYlQTglQTElRTUlOUUlOEIlMkMlRTglOTklOUElRTYlOEIlOUYlRTclQUQlOUIlRTklODAlODklMkMlRTglQUUlQTElRTclQUUlOTclRTUlOEMlOTYlRTUlQUQlQTY=" data-listing-date-sort="1724083200000" data-listing-file-modified-sort="1756370646201" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="228">
+<div class="quarto-post image-right" data-index="11" data-categories="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjAlMkMlRTUlQTQlQTclRTglQUYlQUQlRTglQTglODAlRTYlQTglQTElRTUlOUUlOEIlMkMlRTglOTklOUElRTYlOEIlOUYlRTclQUQlOUIlRTklODAlODklMkMlRTglQUUlQTElRTclQUUlOTclRTUlOEMlOTYlRTUlQUQlQTY=" data-listing-date-sort="1724083200000" data-listing-file-modified-sort="1756370646201" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="228">
 <div class="thumbnail">
 <p><a href="./AIDD/2025-08-20_b/post_all.html" class="no-external"></a></p><a href="./AIDD/2025-08-20_b/post_all.html" class="no-external">
 <p><img loading="lazy" src="./AIDD/2025-08-20_b/post_all_image/chem3dllm_3d_multim_2025_08_20_image_1.jpg" class="thumbnail-image" alt="Chem3DLLM 模型的概念图，展示了如何通过可逆压缩编码技术，将一个复杂的三维分子结构精准地翻译成大语言模型（LLM）能够理解和处理的文本序列，从而实现端到端的基于结构的药物设计。
@@ -607,7 +737,7 @@ Jixing Liu, <em>Ph.D.</em>
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="9" data-categories="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjAlMkMlRTglODclQUElRTQlQjglQkIlRTUlOTAlODglRTYlODglOTAlMkMlRTglOUIlOEIlRTclOTklQkQlRTglQjQlQTglRTclQkIlOTMlRTYlOUUlODQlRTklQTIlODQlRTYlQjUlOEIlMkMlRTglOTklOUElRTYlOEIlOUYlRTclQUQlOUIlRTklODAlODk=" data-listing-date-sort="1724083200000" data-listing-file-modified-sort="1756370639076" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="356">
+<div class="quarto-post image-right" data-index="12" data-categories="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjAlMkMlRTglODclQUElRTQlQjglQkIlRTUlOTAlODglRTYlODglOTAlMkMlRTglOUIlOEIlRTclOTklQkQlRTglQjQlQTglRTclQkIlOTMlRTYlOUUlODQlRTklQTIlODQlRTYlQjUlOEIlMkMlRTglOTklOUElRTYlOEIlOUYlRTclQUQlOUIlRTklODAlODk=" data-listing-date-sort="1724083200000" data-listing-file-modified-sort="1756370639076" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="356">
 <div class="thumbnail">
 <p><a href="./AIDD/2025-08-20/post_all.html" class="no-external"></a></p><a href="./AIDD/2025-08-20/post_all.html" class="no-external">
 <p><img loading="lazy" src="./AIDD/2025-08-20/post_all_image/large_language_model_2025_08_16_image_1.jpg" class="thumbnail-image" alt="一张概念图，展示了一个由大型语言模型（LLM）控制的自动化化学实验室。图中，一个中心大脑（代表 AI）正在分析数据，并通过机械臂在通风橱中精确执行化学反应，象征着 AI 从理论预测走向自主合成的闭环系统。
@@ -650,7 +780,7 @@ Jixing Liu, <em>Ph.D.</em>
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="10" data-categories="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjAlMkMlRTUlOEYlQUYlRTglQTclQTMlRTklODclOEElMjBBSSUyQyVFNSU4OCU4NiVFNSVBRCU5MCVFNyU5NCU5RiVFNiU4OCU5MCUyQyVFNSVCQyVCQSVFNSU4QyU5NiVFNSVBRCVBNiVFNCVCOSVBMA==" data-listing-date-sort="1723996800000" data-listing-file-modified-sort="1756370633329" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="314">
+<div class="quarto-post image-right" data-index="13" data-categories="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjAlMkMlRTUlOEYlQUYlRTglQTclQTMlRTklODclOEElMjBBSSUyQyVFNSU4OCU4NiVFNSVBRCU5MCVFNyU5NCU5RiVFNiU4OCU5MCUyQyVFNSVCQyVCQSVFNSU4QyU5NiVFNSVBRCVBNiVFNCVCOSVBMA==" data-listing-date-sort="1723996800000" data-listing-file-modified-sort="1756370633329" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="314">
 <div class="thumbnail">
 <p><a href="./AIDD/2025-08-19/post_all.html" class="no-external"></a></p><a href="./AIDD/2025-08-19/post_all.html" class="no-external">
 <p><img loading="lazy" src="./AIDD/2025-08-19/post_all_image/functional_group_awa_2025_08_10_image_1.jpg" class="thumbnail-image" alt="FARM 模型的概念图，展示了如何通过改造 SMILES 字符串（例如将&amp;#039;O'细分为'O_ketone', 'O_hydroxyl'等），并利用对比学习将其与分子图结构对齐，从而让 AI 模型真正理解官能团，像化学家一样思考。
@@ -693,7 +823,7 @@ Jixing Liu, <em>Ph.D.</em>
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="11" data-categories="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjAlMkMlRTglQUUlQTElRTclQUUlOTclRTUlOEMlOTYlRTUlQUQlQTYlMkMlRTUlQTQlQTclRTglQUYlQUQlRTglQTglODAlRTYlQTglQTElRTUlOUUlOEIlMkMlRTglOUIlOEIlRTclOTklQkQlRTglQjQlQTglRTclQkIlOTMlRTYlOUUlODQlRTklQTIlODQlRTYlQjUlOEI=" data-listing-date-sort="1723910400000" data-listing-file-modified-sort="1756370623459" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="3" data-listing-word-count-sort="527">
+<div class="quarto-post image-right" data-index="14" data-categories="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjAlMkMlRTglQUUlQTElRTclQUUlOTclRTUlOEMlOTYlRTUlQUQlQTYlMkMlRTUlQTQlQTclRTglQUYlQUQlRTglQTglODAlRTYlQTglQTElRTUlOUUlOEIlMkMlRTglOUIlOEIlRTclOTklQkQlRTglQjQlQTglRTclQkIlOTMlRTYlOUUlODQlRTklQTIlODQlRTYlQjUlOEI=" data-listing-date-sort="1723910400000" data-listing-file-modified-sort="1756370623459" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="3" data-listing-word-count-sort="527">
 <div class="thumbnail">
 <p><a href="./AIDD/2025-08-18/post_all.html" class="no-external"></a></p><a href="./AIDD/2025-08-18/post_all.html" class="no-external">
 <p><img loading="lazy" src="./AIDD/2025-08-18/post_all_image/crop_integrating_to_2025_08_16_image_1.png" class="thumbnail-image" alt="CROP 架构的概念图，展示了一个大型语言模型（LLM）如何通过一个高效的“前缀”机制，在处理一维的 SMILES 文本序列的同时，接收并整合分子的二维拓扑图和三维空间构象信息，从而获得对化学世界更立体、更深刻的理解。
@@ -736,7 +866,7 @@ Jixing Liu, <em>Ph.D.</em>
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="12" data-categories="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjAlMkMlRTUlOUYlQkElRTUlOUIlQTAlRTclQkIlODQlRTUlQUQlQTYlMkMlRTUlOEMlOTYlRTUlQUQlQTYlRTQlQkYlQTElRTYlODElQUYlRTUlQUQlQTYlMkMlRTUlOEYlQUYlRTglQTclQTMlRTklODclOEElMjBBSQ==" data-listing-date-sort="1723824000000" data-listing-file-modified-sort="1756370618322" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="258">
+<div class="quarto-post image-right" data-index="15" data-categories="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjAlMkMlRTUlOUYlQkElRTUlOUIlQTAlRTclQkIlODQlRTUlQUQlQTYlMkMlRTUlOEMlOTYlRTUlQUQlQTYlRTQlQkYlQTElRTYlODElQUYlRTUlQUQlQTYlMkMlRTUlOEYlQUYlRTglQTclQTMlRTklODclOEElMjBBSQ==" data-listing-date-sort="1723824000000" data-listing-file-modified-sort="1756370618322" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="258">
 <div class="thumbnail">
 <p><a href="./AIDD/2025-08-17_b/post_all.html" class="no-external"></a></p><a href="./AIDD/2025-08-17_b/post_all.html" class="no-external">
 <p><img loading="lazy" src="./AIDD/2025-08-17_b/post_all_image/fg_bench_a_dataset_a_2025_08_10_image_1.jpg" class="thumbnail-image" alt="FGBench 基准测试的概念图，展示了一个大语言模型（LLM）面对一张关于官能团化学推理的复杂考卷，显得困惑和挣扎，象征着当前 AI 在理解底层化学原理方面存在的巨大挑战。
@@ -779,7 +909,7 @@ Jixing Liu, <em>Ph.D.</em>
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="13" data-categories="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjAlMkMlRTglQUUlQTElRTclQUUlOTclRTclOTQlOUYlRTclODklQTklRTUlQUQlQTYlMkMlRTglOEQlQUYlRTclODklQTklRTglQUUlQkUlRTglQUUlQTElMkMlRTUlODglODYlRTUlQUQlOTAlRTUlQUYlQjklRTYlOEUlQTU=" data-listing-date-sort="1723824000000" data-listing-file-modified-sort="1756370612462" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="143">
+<div class="quarto-post image-right" data-index="16" data-categories="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjAlMkMlRTglQUUlQTElRTclQUUlOTclRTclOTQlOUYlRTclODklQTklRTUlQUQlQTYlMkMlRTglOEQlQUYlRTclODklQTklRTglQUUlQkUlRTglQUUlQTElMkMlRTUlODglODYlRTUlQUQlOTAlRTUlQUYlQjklRTYlOEUlQTU=" data-listing-date-sort="1723824000000" data-listing-file-modified-sort="1756370612462" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="143">
 <div class="thumbnail">
 <p><a href="./AIDD/2025-08-17_a/post_all.html" class="no-external"></a></p><a href="./AIDD/2025-08-17_a/post_all.html" class="no-external">
 <p><img loading="lazy" src="./AIDD/2025-08-17_a/post_all_image/a_universal_model_fo_2025_08_10_image_1.jpg" class="thumbnail-image" alt="一张概念图，展示了一个蛋白质的结合口袋被一张三维的“靶点偏好图”所覆盖。图中，不同颜色的区域清晰地标示出该位置对不同化学基团（如氢键受体、疏水基团、带电基团）的偏好程度，为药物化学家提供了直观的设计指导。
@@ -822,7 +952,7 @@ Jixing Liu, <em>Ph.D.</em>
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="14" data-categories="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjAlMkMlRTUlOEYlQUYlRTglQTclQTMlRTklODclOEElMjBBSSUyQyVFOCVCRiU4MSVFNyVBNyVCQiVFNSVBRCVBNiVFNCVCOSVBMCUyQyVFNSU4QyU5NiVFNSVBRCVBNiVFNCVCRiVBMSVFNiU4MSVBRiVFNSVBRCVBNg==" data-listing-date-sort="1723564800000" data-listing-file-modified-sort="1756370605975" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="343">
+<div class="quarto-post image-right" data-index="17" data-categories="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjAlMkMlRTUlOEYlQUYlRTglQTclQTMlRTklODclOEElMjBBSSUyQyVFOCVCRiU4MSVFNyVBNyVCQiVFNSVBRCVBNiVFNCVCOSVBMCUyQyVFNSU4QyU5NiVFNSVBRCVBNiVFNCVCRiVBMSVFNiU4MSVBRiVFNSVBRCVBNg==" data-listing-date-sort="1723564800000" data-listing-file-modified-sort="1756370605975" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="343">
 <div class="thumbnail">
 <p><a href="./AIDD/2025-08-14_b/post_all.html" class="no-external"></a></p><a href="./AIDD/2025-08-14_b/post_all.html" class="no-external">
 <p><img loading="lazy" src="./AIDD/2025-08-14_b/post_all_image/transfer_learning_en_2025_08_14_2025_08_14_image_1.png" class="thumbnail-image" alt="一个迁移学习框架的概念图，展示了一个 AI 模型首先在包含海量通用化学知识的数据集上进行“通识教育”预训练，然后再用少量专业的抗菌数据进行“专业课集训”微调，最终高效地发现新的抗生素。
@@ -865,7 +995,7 @@ Jixing Liu, <em>Ph.D.</em>
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="15" data-categories="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjAlMkMlRTUlODglODYlRTUlQUQlOTAlRTclOTQlOUYlRTYlODglOTAlMkMlRTclQjIlQkUlRTUlODclODYlRTUlOEMlQkIlRTclOTYlOTclMkMlRTUlOEMlOTYlRTUlQUQlQTYlRTQlQkYlQTElRTYlODElQUYlRTUlQUQlQTY=" data-listing-date-sort="1723564800000" data-listing-file-modified-sort="1756370600996" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="264">
+<div class="quarto-post image-right" data-index="18" data-categories="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjAlMkMlRTUlODglODYlRTUlQUQlOTAlRTclOTQlOUYlRTYlODglOTAlMkMlRTclQjIlQkUlRTUlODclODYlRTUlOEMlQkIlRTclOTYlOTclMkMlRTUlOEMlOTYlRTUlQUQlQTYlRTQlQkYlQTElRTYlODElQUYlRTUlQUQlQTY=" data-listing-date-sort="1723564800000" data-listing-file-modified-sort="1756370600996" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="264">
 <div class="thumbnail">
 <p><a href="./AIDD/2025-08-14_a/post_all.html" class="no-external"></a></p><a href="./AIDD/2025-08-14_a/post_all.html" class="no-external">
 <p><img loading="lazy" src="./AIDD/2025-08-14_a/post_all_image/activity_diff_a_diff_2025_08_14_2025_08_14_image_1.jpg" class="thumbnail-image" alt="ActivityDiff 模型的概念图，展示了一个扩散模型在分子生成过程中，同时受到“正向引导”（增强对目标靶点的活性）和“负向引导”（降低对脱靶靶点的活性）的共同作用，从而设计出更精准、更安全的药物分子。
@@ -908,7 +1038,7 @@ Jixing Liu, <em>Ph.D.</em>
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="16" data-categories="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjAlMkNHUENSJTJDJUU1JThGJUFGJUU4JUE3JUEzJUU5JTg3JThBJTIwQUklMkMlRTUlQTQlOUElRTYlOTklQkElRTglODMlQkQlRTQlQkQlOTMlRTclQjMlQkIlRTclQkIlOUY=" data-listing-date-sort="1723392000000" data-listing-file-modified-sort="1756370595558" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="284">
+<div class="quarto-post image-right" data-index="19" data-categories="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjAlMkNHUENSJTJDJUU1JThGJUFGJUU4JUE3JUEzJUU5JTg3JThBJTIwQUklMkMlRTUlQTQlOUElRTYlOTklQkElRTglODMlQkQlRTQlQkQlOTMlRTclQjMlQkIlRTclQkIlOUY=" data-listing-date-sort="1723392000000" data-listing-file-modified-sort="1756370595558" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="284">
 <div class="thumbnail">
 <p><a href="./AIDD/2025-08-12/post_all.html" class="no-external"></a></p><a href="./AIDD/2025-08-12/post_all.html" class="no-external">
 <p><img loading="lazy" src="./AIDD/2025-08-12/post_all_image/an_auditable_agent_p_2025_08_10_image_1.jpg" class="thumbnail-image" alt="一个多智能体 AI 药物设计平台的概念图，展示了多个不同角色的 AI 智能体（如首席研究员、药物化学家、AI 专家）像一个委员会一样协同工作，共同进行分子优化，并记录下所有决策过程以实现可审计性。
@@ -951,7 +1081,7 @@ Jixing Liu, <em>Ph.D.</em>
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="17" data-categories="JUU4JUFFJUExJUU3JUFFJTk3JUU1JThDJTk2JUU1JUFEJUE2JTJDJUU1JTg4JTg2JUU1JUFEJTkwJUU1JThBJUE4JUU1JThBJTlCJUU1JUFEJUE2JTJDJUU2JTlDJUJBJUU1JTk5JUE4JUU1JUFEJUE2JUU0JUI5JUEwJTJDJUU4JThEJUFGJUU3JTg5JUE5JUU3JUFEJTlCJUU5JTgwJTg5" data-listing-date-sort="1723305600000" data-listing-file-modified-sort="1756370587879" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="217">
+<div class="quarto-post image-right" data-index="20" data-categories="JUU4JUFFJUExJUU3JUFFJTk3JUU1JThDJTk2JUU1JUFEJUE2JTJDJUU1JTg4JTg2JUU1JUFEJTkwJUU1JThBJUE4JUU1JThBJTlCJUU1JUFEJUE2JTJDJUU2JTlDJUJBJUU1JTk5JUE4JUU1JUFEJUE2JUU0JUI5JUEwJTJDJUU4JThEJUFGJUU3JTg5JUE5JUU3JUFEJTlCJUU5JTgwJTg5" data-listing-date-sort="1723305600000" data-listing-file-modified-sort="1756370587879" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="217">
 <div class="thumbnail">
 <p><a href="./AIDD/2025-08-11/post_all.html" class="no-external"></a></p><a href="./AIDD/2025-08-11/post_all.html" class="no-external">
 <p><img loading="lazy" src="./AIDD/2025-08-11/post_all_image/accurate_and_rapid_r_2025_08_10_image_1.jpg" class="thumbnail-image" alt="一种结合量子化学与机器学习新方法的概念图，展示了一个大型蛋白质 - 配体复合物被分解成多个小片段进行计算，然后通过机器学习模型修正关键物理作用力，最终在极短时间内得到高度准确的结合力排序结果。
@@ -994,7 +1124,7 @@ Jixing Liu, <em>Ph.D.</em>
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="18" data-categories="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjAlMkMlRTglQUUlQTElRTclQUUlOTclRTUlOEMlOTYlRTUlQUQlQTYlMkMlRTUlQTQlQTclRTglQUYlQUQlRTglQTglODAlRTYlQTglQTElRTUlOUUlOEIlMkMlRTUlOEMlOTYlRTUlQUQlQTYlRTQlQkYlQTElRTYlODElQUYlRTUlQUQlQTY=" data-listing-date-sort="1723219200000" data-listing-file-modified-sort="1756370582229" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="242">
+<div class="quarto-post image-right" data-index="21" data-categories="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjAlMkMlRTglQUUlQTElRTclQUUlOTclRTUlOEMlOTYlRTUlQUQlQTYlMkMlRTUlQTQlQTclRTglQUYlQUQlRTglQTglODAlRTYlQTglQTElRTUlOUUlOEIlMkMlRTUlOEMlOTYlRTUlQUQlQTYlRTQlQkYlQTElRTYlODElQUYlRTUlQUQlQTY=" data-listing-date-sort="1723219200000" data-listing-file-modified-sort="1756370582229" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="242">
 <div class="thumbnail">
 <p><a href="./AIDD/2025-08-10/post_all.html" class="no-external"></a></p><a href="./AIDD/2025-08-10/post_all.html" class="no-external">
 <p><img loading="lazy" src="./AIDD/2025-08-10/post_all_image/validating_pharmacog_2025_07_31_image_1.png" class="thumbnail-image" alt="通用大模型在专业领域就是个花架子，想让 AI 在药学上真正派上用场，还得靠 RAG 架构和高质量的专业数据库来“填喂”。
@@ -1037,7 +1167,7 @@ Jixing Liu, <em>Ph.D.</em>
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="19" data-categories="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjAlMkMlRTYlODklQTklRTYlOTUlQTMlRTYlQTglQTElRTUlOUUlOEIlMkMlRTglQUUlQTElRTclQUUlOTclRTclOTQlOUYlRTclODklQTklRTUlQUQlQTYlMkMlRTUlQTQlQTclRTglQUYlQUQlRTglQTglODAlRTYlQTglQTElRTUlOUUlOEI=" data-listing-date-sort="1723046400000" data-listing-file-modified-sort="1756370570939" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="3" data-listing-word-count-sort="486">
+<div class="quarto-post image-right" data-index="22" data-categories="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjAlMkMlRTYlODklQTklRTYlOTUlQTMlRTYlQTglQTElRTUlOUUlOEIlMkMlRTglQUUlQTElRTclQUUlOTclRTclOTQlOUYlRTclODklQTklRTUlQUQlQTYlMkMlRTUlQTQlQTclRTglQUYlQUQlRTglQTglODAlRTYlQTglQTElRTUlOUUlOEI=" data-listing-date-sort="1723046400000" data-listing-file-modified-sort="1756425898658" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="368">
 <div class="thumbnail">
 <p><a href="./AIDD/2025-08-08_a/post_all.html" class="no-external"></a></p><a href="./AIDD/2025-08-08_a/post_all.html" class="no-external">
 <p><img loading="lazy" src="./AIDD/2025-08-08_a/post_all_image/tripleknock_predict_2025_08_04_image_1.jpg" class="thumbnail-image" alt="这款名为 Tripleknock 的 AI 模型，通过暴力破解三基因组合的致死效应，绕开了传统代谢模型的速度瓶颈，为我们寻找多靶点抗生素开辟了一条全新的快车道。
@@ -1046,7 +1176,7 @@ Jixing Liu, <em>Ph.D.</em>
 </div>
 <div class="body">
 <h3 class="no-anchor listing-title">
-<a href="./AIDD/2025-08-08_a/post_all.html" class="no-external">AI 制약五大前沿：从 3D 分子雕塑到虚拟人模拟器</a>
+<a href="./AIDD/2025-08-08_a/post_all.html" class="no-external">从 3D 分子雕塑到虚拟人模拟器</a>
 </h3>
 <div class="listing-subtitle">
 <a href="./AIDD/2025-08-08_a/post_all.html" class="no-external"></a>
@@ -1080,10 +1210,10 @@ Jixing Liu, <em>Ph.D.</em>
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="20" data-categories="QUklMjBpbiUyMFNjaWVuY2UlMkNMYXJnZSUyMExhbmd1YWdlJTIwTW9kZWxzJTJDJUU4JUFFJUExJUU3JUFFJTk3JUU1JThDJTk2JUU1JUFEJUE2JTJDJUU3JUE3JTkxJUU3JUEwJTk0JUU1JUI3JUE1JUU1JTg1JUI3" data-listing-date-sort="1722960000000" data-listing-file-modified-sort="1756370565117" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="301">
+<div class="quarto-post image-right" data-index="23" data-categories="QUklMjBpbiUyMFNjaWVuY2UlMkNMYXJnZSUyMExhbmd1YWdlJTIwTW9kZWxzJTJDJUU4JUFFJUExJUU3JUFFJTk3JUU1JThDJTk2JUU1JUFEJUE2JTJDJUU3JUE3JTkxJUU3JUEwJTk0JUU1JUI3JUE1JUU1JTg1JUI3" data-listing-date-sort="1722960000000" data-listing-file-modified-sort="1756643110241" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="301">
 <div class="thumbnail">
 <p><a href="./AIDD/2025-08-07/post_all.html" class="no-external"></a></p><a href="./AIDD/2025-08-07/post_all.html" class="no-external">
-<p><img loading="lazy" src="./AIDD/2025-08-07/post_all_image/multi_model_llm_arch_2025_08_04_image_1.png" class="thumbnail-image" alt="一个系统同时搞定文献的“影响力”和“相关性”，再用两个 AI 给你写摘要，文献综述的苦日子可能到头了。
+<p><img loading="lazy" src="./AIDD/2025-08-07/post_all_image/love_this_project_n_2025_08_04_image_1.jpg" class="thumbnail-image" alt="用 nanoGPT 作为 AI 智能体优化代码的基准，这个想法很棒，但结果也给“AI 自我进化”的狂热泼了盆冷水：AI 目前还差得远。
 "></p>
 </a><p><a href="./AIDD/2025-08-07/post_all.html" class="no-external"></a></p>
 </div>
@@ -1123,7 +1253,7 @@ Jixing Liu, <em>Ph.D.</em>
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="21" data-categories="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjAlMkMlRTglQUUlQTElRTclQUUlOTclRTUlOEMlOTYlRTUlQUQlQTYlMkMlRTUlOEYlQUYlRTglQTclQTMlRTklODclOEElMjBBSSUyQyVFNSVBNCU5QSVFNyVCQiU4NCVFNSVBRCVBNg==" data-listing-date-sort="1722873600000" data-listing-file-modified-sort="1756370557623" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="314">
+<div class="quarto-post image-right" data-index="24" data-categories="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjAlMkMlRTglQUUlQTElRTclQUUlOTclRTUlOEMlOTYlRTUlQUQlQTYlMkMlRTUlOEYlQUYlRTglQTclQTMlRTklODclOEElMjBBSSUyQyVFNSVBNCU5QSVFNyVCQiU4NCVFNSVBRCVBNg==" data-listing-date-sort="1722873600000" data-listing-file-modified-sort="1756370557623" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="314">
 <div class="thumbnail">
 <p><a href="./AIDD/2025-08-06/post_all.html" class="no-external"></a></p><a href="./AIDD/2025-08-06/post_all.html" class="no-external">
 <p><img loading="lazy" src="./AIDD/2025-08-06/post_all_image/deep_adr_multi_modal_2025_08_04_image_1.jpg" class="thumbnail-image" alt="DeepADR 用上了新潮的 KAN 网络，把药物结构、靶点和副作用的语义信息捏合在一起，想在药物研发的早期就揪出那些潜在的“雷”。
@@ -1166,10 +1296,10 @@ Jixing Liu, <em>Ph.D.</em>
 </a>
 </div>
 </div>
-<div class="quarto-post image-right" data-index="22" data-categories="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjAlMkMlRTglQUUlQTElRTclQUUlOTclRTUlOEMlOTYlRTUlQUQlQTYlMkMlRTclOTQlOUYlRTclODklQTklRTQlQkYlQTElRTYlODElQUYlRTUlQUQlQTYlMkMlRTUlOEQlOTUlRTclQkIlODYlRTglODMlOUUlRTUlODglODYlRTYlOUUlOTA=" data-listing-date-sort="1722787200000" data-listing-file-modified-sort="1756370550963" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="264">
+<div class="quarto-post image-right" data-index="25" data-categories="QUklMjAlRTglOEQlQUYlRTclODklQTklRTUlOEYlOTElRTclOEUlQjAlMkMlRTglQUUlQTElRTclQUUlOTclRTUlOEMlOTYlRTUlQUQlQTYlMkMlRTclOTQlOUYlRTclODklQTklRTQlQkYlQTElRTYlODElQUYlRTUlQUQlQTYlMkMlRTUlOEQlOTUlRTclQkIlODYlRTglODMlOUUlRTUlODglODYlRTYlOUUlOTA=" data-listing-date-sort="1722787200000" data-listing-file-modified-sort="1756370550963" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="264">
 <div class="thumbnail">
 <p><a href="./AIDD/2025-08-05/post_all.html" class="no-external"></a></p><a href="./AIDD/2025-08-05/post_all.html" class="no-external">
-<p><img loading="lazy" src="./AIDD/2025-08-05/post_all_image/an_agentic_ai_framew_2025_08_04_image_1.jpg" class="thumbnail-image" alt="CellAtria 的 AI 框架试图将繁琐的单细胞数据处理流程，变成一场与聊天机器人的简单对话。
+<p><img loading="lazy" data-src="./AIDD/2025-08-05/post_all_image/an_agentic_ai_framew_2025_08_04_image_1.jpg" class="thumbnail-image" alt="CellAtria 的 AI 框架试图将繁琐的单细胞数据处理流程，变成一场与聊天机器人的简单对话。
 "></p>
 </a><p><a href="./AIDD/2025-08-05/post_all.html" class="no-external"></a></p>
 </div>
@@ -1213,6 +1343,9 @@ Jixing Liu, <em>Ph.D.</em>
 <div class="listing-no-matching d-none">
 No matching items
 </div>
+<nav id="listing-pagination" class="listing-pagination" aria-label="Page Navigation">
+  <ul class="pagination"></ul>
+</nav>
 </div><a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {

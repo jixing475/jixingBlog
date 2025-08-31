@@ -7,9 +7,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="author" content="Jixing Liu, Ph.D.">
-<meta name="description" content="扩散模型正将 AI 分子生成从 2D 绘图带入 3D 雕塑时代。最新评测显示，LLM 编写生物信息学代码的能力已媲美人类顶尖水平。Tripleknock 模型则通过暴力破解三基因组合，为多靶点抗生素研发开辟新路。此外，研究者提出了构建“可编程虚拟人”的宏大蓝图，而 PairReg 则有效缓解了 EGNN 模型的过平滑问题。">
+<meta name="description" content="ReactionSeek 框架利用大语言模型（LLM）和巧妙的提示工程，实现了化学文献信息的自动化、高精度提取。 “Prompt-to-Pill”框架则构建了一个由中央 AI 协调的智能体团队，试图将从分子设计到虚拟临床试验的漫长流程整合成一条自动化流水线。最后，一种嵌套学习框架通过引入物理学的“现实检验”，成功地让生成式 AI 设计出可合成且在湿实验中有效的全新药物分子。">
 
-<title>从 3D 分子雕塑到虚拟人模拟器 – MPU</title>
+<title>从文献自动提取、全流程智能体到物理现实检验 – MPU</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -75,16 +75,16 @@ ul.task-list li input[type="checkbox"] {
 }</script>
 
 
-<meta property="og:title" content="从 3D 分子雕塑到虚拟人模拟器 – MPU">
-<meta property="og:description" content="扩散模型正将 AI 分子生成从 2D 绘图带入 3D 雕塑时代。最新评测显示，LLM 编写生物信息学代码的能力已媲美人类顶尖水平。Tripleknock 模型则通过暴力破解三基因组合，为多靶点抗生素研发开辟新路。此外，研究者提出了构建“可编程虚拟人”的宏大蓝图，而 PairReg 则有效缓解了 EGNN 模型的过平滑问题。">
-<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-08-08_a/post_all_image/tripleknock_predict_2025_08_04_image_1.jpg">
+<meta property="og:title" content="从文献自动提取、全流程智能体到物理现实检验 – MPU">
+<meta property="og:description" content="ReactionSeek 框架利用大语言模型（LLM）和巧妙的提示工程，实现了化学文献信息的自动化、高精度提取。 “Prompt-to-Pill”框架则构建了一个由中央 AI 协调的智能体团队，试图将从分子设计到虚拟临床试验的漫长流程整合成一条自动化流水线。最后，一种嵌套学习框架通过引入物理学的“现实检验”，成功地让生成式 AI 设计出可合成且在湿实验中有效的全新药物分子。">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-08-29/post_all_image/prompt_to_pill_mult_2025_08_20_image_1.jpg">
 <meta property="og:site_name" content="MPU">
-<meta property="og:image:alt" content="这款名为 Tripleknock 的 AI 模型，通过暴力破解三基因组合的致死效应，绕开了传统代谢模型的速度瓶颈，为我们寻找多靶点抗生素开辟了一条全新的快车道。
+<meta property="og:image:alt" content="「Prompt-to-Pill」框架利用一个中央协调的 AI 智能体群，试图将从分子设计到虚拟临床试验的漫长、割裂的流程，整合成一条自动化流水线。
 ">
-<meta name="twitter:title" content="从 3D 分子雕塑到虚拟人模拟器 – MPU">
-<meta name="twitter:description" content="扩散模型正将 AI 分子生成从 2D 绘图带入 3D 雕塑时代。最新评测显示，LLM 编写生物信息学代码的能力已媲美人类顶尖水平。Tripleknock 模型则通过暴力破解三基因组合，为多靶点抗生素研发开辟新路。此外，研究者提出了构建“可编程虚拟人”的宏大蓝图，而 PairReg 则有效缓解了 EGNN 模型的过平滑问题。">
-<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-08-08_a/post_all_image/tripleknock_predict_2025_08_04_image_1.jpg">
-<meta name="twitter:image:alt" content="这款名为 Tripleknock 的 AI 模型，通过暴力破解三基因组合的致死效应，绕开了传统代谢模型的速度瓶颈，为我们寻找多靶点抗生素开辟了一条全新的快车道。
+<meta name="twitter:title" content="从文献自动提取、全流程智能体到物理现实检验 – MPU">
+<meta name="twitter:description" content="ReactionSeek 框架利用大语言模型（LLM）和巧妙的提示工程，实现了化学文献信息的自动化、高精度提取。 “Prompt-to-Pill”框架则构建了一个由中央 AI 协调的智能体团队，试图将从分子设计到虚拟临床试验的漫长流程整合成一条自动化流水线。最后，一种嵌套学习框架通过引入物理学的“现实检验”，成功地让生成式 AI 设计出可合成且在湿实验中有效的全新药物分子。">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-08-29/post_all_image/prompt_to_pill_mult_2025_08_20_image_1.jpg">
+<meta name="twitter:image:alt" content="「Prompt-to-Pill」框架利用一个中央协调的 AI 智能体群，试图将从分子设计到虚拟临床试验的漫长、割裂的流程，整合成一条自动化流水线。
 ">
 <meta name="twitter:card" content="summary_large_image">
 </head>
@@ -132,17 +132,17 @@ ul.task-list li input[type="checkbox"] {
 <header id="title-block-header" class="quarto-title-block default page-columns page-full">
   <div class="quarto-title-banner page-columns page-full">
     <div class="quarto-title column-body">
-      <h1 class="title">从 3D 分子雕塑到虚拟人模拟器</h1>
+      <h1 class="title">从文献自动提取、全流程智能体到物理现实检验</h1>
                   <div>
         <div class="description">
-          <p>扩散模型正将 AI 分子生成从 2D 绘图带入 3D 雕塑时代。最新评测显示，LLM 编写生物信息学代码的能力已媲美人类顶尖水平。Tripleknock 模型则通过暴力破解三基因组合，为多靶点抗生素研发开辟新路。此外，研究者提出了构建“可编程虚拟人”的宏大蓝图，而 PairReg 则有效缓解了 EGNN 模型的过平滑问题。</p>
+          <p>ReactionSeek 框架利用大语言模型（LLM）和巧妙的提示工程，实现了化学文献信息的自动化、高精度提取。 “Prompt-to-Pill”框架则构建了一个由中央 AI 协调的智能体团队，试图将从分子设计到虚拟临床试验的漫长流程整合成一条自动化流水线。最后，一种嵌套学习框架通过引入物理学的“现实检验”，成功地让生成式 AI 设计出可合成且在湿实验中有效的全新药物分子。</p>
         </div>
       </div>
                           <div class="quarto-categories">
                 <div class="quarto-category">AI 药物发现</div>
-                <div class="quarto-category">扩散模型</div>
-                <div class="quarto-category">计算生物学</div>
                 <div class="quarto-category">大语言模型</div>
+                <div class="quarto-category">AI 智能体</div>
+                <div class="quarto-category">计算化学</div>
               </div>
                   </div>
   </div>
@@ -160,7 +160,7 @@ ul.task-list li input[type="checkbox"] {
       <div>
       <div class="quarto-title-meta-heading">Published</div>
       <div class="quarto-title-meta-contents">
-        <p class="date">Thursday, the 8th of August, 2024</p>
+        <p class="date">Thursday, the 29th of August, 2024</p>
       </div>
     </div>
     
@@ -177,13 +177,11 @@ ul.task-list li input[type="checkbox"] {
    
   <ul>
   <li><a href="#目录" id="toc-目录" class="nav-link active" data-scroll-target="#目录">目录</a></li>
-  <li><a href="#扩散模型ai-造药从-2d-涂鸦到-3d-雕塑" id="toc-扩散模型ai-造药从-2d-涂鸦到-3d-雕塑" class="nav-link" data-scroll-target="#扩散模型ai-造药从-2d-涂鸦到-3d-雕塑">1. 扩散模型：AI 造药，从 2D 涂鸦到 3D 雕塑</a></li>
-  <li><a href="#ai-写代码做科研比顶尖人类还强" id="toc-ai-写代码做科研比顶尖人类还强" class="nav-link" data-scroll-target="#ai-写代码做科研比顶尖人类还强">2. AI 写代码做科研，比顶尖人类还强？</a></li>
-  <li><a href="#tripleknock-ai-精准狙击细菌三靶点" id="toc-tripleknock-ai-精准狙击细菌三靶点" class="nav-link" data-scroll-target="#tripleknock-ai-精准狙击细菌三靶点">3. Tripleknock: AI 精准狙击细菌三靶点</a></li>
-  <li><a href="#ai-虚拟人新药研发的终极模拟器" id="toc-ai-虚拟人新药研发的终极模拟器" class="nav-link" data-scroll-target="#ai-虚拟人新药研发的终极模拟器">4. AI 虚拟人：新药研发的终极模拟器？</a></li>
-  <li><a href="#pairreg专治-gnn脸盲症让-ai-看清分子-3d-结构" id="toc-pairreg专治-gnn脸盲症让-ai-看清分子-3d-结构" class="nav-link" data-scroll-target="#pairreg专治-gnn脸盲症让-ai-看清分子-3d-结构">5. PairReg：专治 GNN“脸盲症”，让 AI 看清分子 3D 结构</a></li>
+  <li><a href="#reactionseek用大模型自动阅读有机合成文献" id="toc-reactionseek用大模型自动阅读有机合成文献" class="nav-link" data-scroll-target="#reactionseek用大模型自动阅读有机合成文献">1. ReactionSeek：用大模型自动「阅读」有机合成文献</a></li>
+  <li><a href="#prompt-to-pill-ai-智能体能包办新药研发吗" id="toc-prompt-to-pill-ai-智能体能包办新药研发吗" class="nav-link" data-scroll-target="#prompt-to-pill-ai-智能体能包办新药研发吗">2. Prompt-to-Pill: AI 智能体能包办新药研发吗？</a></li>
+  <li><a href="#ai-药物设计物理学的现实检验" id="toc-ai-药物设计物理学的现实检验" class="nav-link" data-scroll-target="#ai-药物设计物理学的现实检验">3. AI 药物设计：物理学的现实检验</a></li>
   </ul>
-<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-08-08_a/post_all.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-08-29/post_all.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
     </div>
 <!-- main -->
 <main class="content quarto-banner-title-block" id="quarto-document-content">
@@ -195,99 +193,73 @@ ul.task-list li input[type="checkbox"] {
 <section id="目录" class="level2">
 <h2 class="anchored" data-anchor-id="目录">目录</h2>
 <ol type="1">
-<li>扩散模型正在把分子生成带入三维时代，让 AI 不再是画化学图谱的“平面设计师”，而是直接在靶点里搞创作的“3D 雕塑家”。</li>
-<li>最新评测显示，顶尖大语言模型生成生物信息学分析代码的能力，已经可以媲美甚至超越人类顶尖竞赛团队，科研自动化的时代或许比我们想象的来得更快。</li>
-<li>这款名为 Tripleknock 的 AI 模型，通过暴力破解三基因组合的致死效应，绕开了传统代谢模型的速度瓶颈，为我们寻找多靶点抗生素开辟了一条全新的快车道。</li>
-<li>这篇论文描绘了一个宏大蓝图：用 AI 构建一个“可编程虚拟人”，在电脑里直接模拟药物从分子到人体的全过程，试图从根本上解决新药研发的转化难题。</li>
-<li>PairReg 提出了一种巧妙的正则化方法，有效缓解了 EGNN 模型越深越“笨”的过平滑问题，让 AI 在分子模拟中看得更清楚。</li>
+<li>ReactionSeek 框架通过巧妙的提示工程，让通用大语言模型（LLM）能以超过 95% 的准确率，从化学文献中自动提取反应物、产率、溶剂等关键信息，解决了化学数据化的核心瓶颈。</li>
+<li>「Prompt-to-Pill」框架利用一个中央协调的 AI 智能体群，试图将从分子设计到虚拟临床试验的漫长、割裂的流程，整合成一条自动化流水线。</li>
+<li>通过一个嵌套学习循环，该框架让一个富有创造力的生成式 AI，接受一个严谨的、基于物理学的「事实核查员」的持续指导，最终成功地设计出了全新的、可合成的、且在湿实验中真正有效的药物分子。</li>
 </ol>
 </section>
-<section id="扩散模型ai-造药从-2d-涂鸦到-3d-雕塑" class="level2">
-<h2 class="anchored" data-anchor-id="扩散模型ai-造药从-2d-涂鸦到-3d-雕塑">1. 扩散模型：AI 造药，从 2D 涂鸦到 3D 雕塑</h2>
-<p><a href="./post_all_image/image-20250829080432755.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="./post_all_image/image-20250829080432755.png" class="img-fluid"></a></p>
-<p>现在，如果你在药物发现领域，没听说过“扩散模型”（Diffusion Models），那你可能是在一个与世隔绝的洞穴里做实验。这东西的热度，都快赶上当年的 CRISPR 了。每天都有新论文宣称用它生成了多么神奇的分子。但说实话，大部分人都是云里雾里。</p>
-<p>这篇综述像一位经验丰富的老向导，给我们画了一张关于“AI 分子生成”这片新大陆的地图。</p>
-<p>扩散模型到底是个啥？</p>
-<p>你可以把它想象成一个“分子雕塑家”。它从一团随机的“原子噪音”（就像一块混沌的大理石）开始，然后一步步地、精细地“凿掉”噪音，直到一个清晰、合理的分子结构浮现出来。这个过程，天然就适合处理三维空间信息。</p>
-<p>这为什么重要？</p>
-<p>因为过去我们很多 AI 模型，都是在“二维平面”上思考。它们生成的是 SMILES 字符串（一维）或者分子图（二维）。这就像给你一张汽车的设计图，而不是一个能开动的汽车模型。而药物发现，本质上是一个三维问题——一个三维的分子，要塞进一个三维的靶点口袋里。</p>
-<p>扩散模型，特别是那些带有“SE(3) 等变性”的，就是冲着解决这个问题来的。这个时髦的词，翻译成大白话就是：模型知道物理学。它知道你把一个分子旋转一下、平移一下，它还是同一个分子，它的化学性质不会变。这保证了它生成的 3D 结构是物理上靠谱的，而不是一些看着吓人的“克苏鲁”造物。</p>
-<p>这篇综述还给我们提供了一个非常有用的分类法，把这些模型分成了两大派：<br>
-1. <strong>“无靶点”派（Target-free）：</strong> 这一派的 AI 就像个自由的探险家，它的目标是探索广阔的化学宇宙，发现全新的、有趣的化学骨架。<br>
-2. <strong>“有靶点”派（Target-aware）：</strong> 这一派的 AI 是个目标明确的锁匠，你给它一个具体的靶点口袋（锁），它的任务就是设计出能完美插进去的钥匙（配体）。</p>
-<p>当然，这篇综述也很诚实地指出了现在的挑战。比如，生成一个大分子，计算成本依然高得吓人。而且，这种一步步“去噪”的过程，也可能导致错误的累积。</p>
-<p>但无论如何，这份综述是一份极其宝贵的指南。它告诉我们，扩散模型不只是又一个技术噱头，它代表着一个根本性的转变——从“画分子”到“造分子”的转变。对于天天和分子打交道的人来说，这太让人兴奋了。</p>
-<p>📜Paper: https://arxiv.org/abs/2507.08005</p>
+<section id="reactionseek用大模型自动阅读有机合成文献" class="level2">
+<h2 class="anchored" data-anchor-id="reactionseek用大模型自动阅读有机合成文献">1. ReactionSeek：用大模型自动「阅读」有机合成文献</h2>
+<p><a href="post_all_image/reaction_seek_llm_po_2025_08_24_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/reaction_seek_llm_po_2025_08_24_image_1.jpg" class="img-fluid"></a></p>
+<p>有机化学领域，积累了上百年的知识财富。但这些财富，绝大部分都「锁」在了一篇篇的学术论文和专利里，以非结构化的文本、图片和表格形式存在。</p>
+<p>一个药物化学家想知道，「这个特定的 Suzuki 偶联反应，用什么催化剂和配体，在什么溶剂里，收率最高？」他可能需要花上几天时间，去手动翻阅几十篇文献，把关键信息一条条地抄录到表格里。这个过程，枯燥、低效，而且极易出错。</p>
+<p>如果我们能让 AI 自动地去「阅读」所有文献，把里面的关键信息都提取出来，变成一个结构化的、可供机器查询和分析的大型数据库，那将会极大地加速化学研究的进程。</p>
+<p>ReactionSeek 框架，就是朝着这个目标迈出的坚实一步。</p>
+<section id="如何教-llm读懂化学天书" class="level4">
+<h4 class="anchored" data-anchor-id="如何教-llm读懂化学天书">如何教 LLM「读懂」化学天书？</h4>
+<p>让一个通用的大模型（比如 GLM-4）去读懂充满专业术语和隐晦表达的化学实验部分，挑战巨大。过去，我们可能需要用大量的标注数据去对模型进行微调，成本很高。</p>
+<p>ReactionSeek 主要依赖于一套精心设计的「提示工程」（Prompt Engineering）。</p>
+<p>给 AI 下达指令时，不是简单地说「去读这篇文章」，而是给了它一个非常详细的「阅读理解指南」。这个指南会告诉它：</p>
+<p>通过这种方式，即使不用专门的微调，通用大模型也能被「引导」着，去高效、准确地完成化学信息的提取任务。</p>
 </section>
-<section id="ai-写代码做科研比顶尖人类还强" class="level2">
-<h2 class="anchored" data-anchor-id="ai-写代码做科研比顶尖人类还强">2. AI 写代码做科研，比顶尖人类还强？</h2>
-<p><a href="post_all_image/benchmarking_large_l_2025_07_11_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/benchmarking_large_l_2025_07_11_image_1.jpg" class="img-fluid"></a></p>
-<p>在生物信息学领域，DREAM 挑战赛就像是奥林匹克。全世界最聪明的大脑汇聚一堂，处理那些最棘手、最真实的生物医学数据，看谁能构建出最精准的预测模型。获胜团队的代码，通常是智慧和汗水的结晶。</p>
-<p>现在，有人问了一个有趣的问题：如果让 AI 来参加这场考试，会发生什么？</p>
-<p>研究者们拿 DREAM 挑战赛中关于生殖健康的经典数据集——比如通过基因表达预测孕周、通过微生物组数据预测早产——作为考题，扔给了市面上八个主流的大语言模型（LLM），包括 OpenAI、谷歌和一些开源模型。</p>
-<p>考试内容很简单：不许耍赖，直接用自然语言下指令，让 LLM 生成能跑通的 R 或 Python 代码来完成分析任务。</p>
-<p>结果让人有点脊背发凉。</p>
-<p>表现最好的选手，OpenAI 的 GPT-4o-mini，在 8 项任务中成功完成了 7 项。更关键的是，它生成的代码跑出来的结果，在性能上足以和当年那些人类冠军团队掰手腕，有些甚至还略胜一筹。这可不是让 AI 写一首关于核糖体的诗，这是让它为一个出了名难搞的生物信息学问题，写出能获奖的、真正能用的代码。</p>
-<p>一个特别有意思的发现是 R 语言的“超常发挥”。LLM 生成 R 代码的成功率是 Python 的两倍多。</p>
-<p>为什么？这并不是说 LLM 天生就偏爱 R。真正的原因在于生态系统。</p>
-<p>R 语言的 Bioconductor 项目为处理基因组学和各种组学数据提供了一套极为强大、标准化的“军火库”。这些工具包接口统一、文档齐全，简直就是为 AI 学习和调用量身定做的。相比之下，Python 虽然强大，但在这个特定领域的工具链相对零散一些。这对我们是个重要的提醒：工具的标准化和易用性，在 AI 时代会变得前所未有的重要。</p>
-<p>这意味着什么？</p>
-<p>首先，它预示着一种工作模式的变革。过去，一个复杂的组学数据分析项目，可能需要一个专门的生物信息学家花上几周时间。现在，一个湿实验的生物学家，或许只需要花一个下午，通过和 LLM 的几次“对话”，就能完成初步的探索性分析。这之间的效率鸿沟是巨大的。</p>
-<p>其次，它可能解决了开源科学中的一个老大难问题：可重复性。我们都见过那种从 GitHub 上下载下来，但死活跑不通的代码。LLM 能够生成标准化的、可执行的分析流程，这有望让科研结果的验证和重复变得更加容易。</p>
-<p>当然，这东西还不是万能的。测试中依然有模型“交了白卷”，即便是最强的模型也有失手的时候。但方向已经非常明确了。那个能帮你处理数据、写分析脚本的 AI 实习生，已经上岗了。我们最好现在就开始学习如何跟它打交道。</p>
-<p>📜Title: Benchmarking Large Language Models for Predictive Modeling in Biomedical Research With a Focus on Reproductive Health<br>
-📜Paper: https://www.biorxiv.org/content/10.1101/2025.07.07.663529v1<br>
-💻Code: https://github.com/vtarca7/LLMDream</p>
+<section id="不仅能读字还能识图" class="level4">
+<h4 class="anchored" data-anchor-id="不仅能读字还能识图">不仅能读「字」，还能识「图」</h4>
+<p>一篇化学文献，信息量最大的往往是那个画着反应路线的「Scheme」。ReactionSeek 还包含了一个图像挖掘模块。它能识别出反应流程图里的各个分子，并判断出哪个是反应物，哪个是产物，哪个是催化剂。这「读图」和「读字」能力的结合，让信息提取变得更完整、更准确。</p>
 </section>
-<section id="tripleknock-ai-精准狙击细菌三靶点" class="level2">
-<h2 class="anchored" data-anchor-id="tripleknock-ai-精准狙击细菌三靶点">3. Tripleknock: AI 精准狙击细菌三靶点</h2>
-<p><a href="post_all_image/tripleknock_predict_2025_08_04_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/tripleknock_predict_2025_08_04_image_1.jpg" class="img-fluid"></a></p>
-<p>抗生素研发的现状，用“惨淡”来形容一点也不过分。我们开发一个单靶点药物，细菌用不了多久就能进化出耐药性，仿佛在嘲笑我们的努力。所以，业内的共识是，得多管齐下，用“组合拳”——也就是多靶点药物——去攻击细菌，让它顾此失彼。</p>
-<p>想法很美好，但现实骨感。</p>
-<p>两个靶点的组合已经够复杂了，三个靶点的组合简直就是一场排列组合的噩梦。要在实验室里把所有可能性都试一遍？等你退休那天可能都筛不完一个物种。</p>
-<p>Tripleknock 干的就是预测<strong>三个基因</strong>同时被敲除后，细菌是死是活的事。</p>
-<p>研究者没用传统那套又慢又笨重的基因组尺度代谢模型（GEMs）。用 GEMs 做预测，就像拿着一张手绘的古董地图去导航，细节是多，但走起来能急死人。Tripleknock 另辟蹊径，它用一个自动编码器，把庞杂的全基因组数据狠狠地压缩了近 1000 倍——你可以把它想象成一个基因组的“超级压缩包”。然后，再用一个简单的多层感知器（MLP）在这个压缩包里去识别“致死模式”。整个过程不关心具体的代谢路径如何流动，只关心“这个组合看起来会不会搞死细菌”。简单、粗暴，但有效。</p>
-<p>结果相当不错。模型在大肠杆菌 K-12 上训练，然后在其他六种肠杆菌科的致病菌上测试，跨物种预测的平均 F1 分数达到了 0.77。这数字当然不是完美，但在这种复杂度堪称地狱级别的问题上，能做到接近 80% 的准确率，已经是一个了不起的开端。这就像派出去一个侦察兵，他有 77% 的把握告诉你，从哪三个方向同时突袭，能端掉敌人的老巢。这样的情报，我愿意用。</p>
-<p>更关键的是速度。它比传统的通量平衡分析（FBA）快了整整 20 倍。这意味着，过去需要几天甚至几周才能得到的计算结果，现在可能几个小时就搞定了。对于争分夺秒的药物研发来说，时间就是金钱，更是生命。</p>
-<p>当然，这个模型也不是万能灵药。研究者自己也坦诚，模型的泛化能力和特征分离的清晰度直接相关。说白了，如果致死的信号淹没在基因组的背景噪音里，AI 也会懵圈。这恰恰揭示了一个更深层次的科学问题：基因的致死效应，不仅仅取决于被敲掉的那几个基因，更取决于它们的缺失如何在整个基因组的复杂网络中引发连锁反应。</p>
-<p>所以，Tripleknock 更像一个强大的探针，帮助我们去窥探那个神秘的“基因 - 基因组”互动网络。它极大地缩小了我们的搜索范围，让湿实验的兄弟们可以把宝贵的资源集中在最有希望的少数几个靶点组合上。</p>
-<p>📜Title: Tripleknock: Predicting Lethal Effect of Three-Gene Knockout in Bacteria by Deep Learning<br>
-📜Paper: https://www.biorxiv.org/content/10.1101/2025.07.31.667916v1<br>
-💻Code: https://github.com/Peneapple/Tripleknock</p>
+<section id="从数据化到知识化" class="level4">
+<h4 class="anchored" data-anchor-id="从数据化到知识化">从「数据化」到「知识化」</h4>
+<p>当 ReactionSeek 把百年经典期刊<em>Organic Syntheses</em>里的三千多篇文章都「读」了一遍，并把结果存入数据库后，神奇的事情发生了。<br>
+1. <strong>SynChat 诞生</strong> ：他们基于这个数据库，开发了一个叫 SynChat 的聊天机器人。现在，化学家不再需要去写 SQL 查询语句，可以直接用大白话问它：「我想知道用 XX 催化剂做 XX 反应的例子，请给我一个详细的实验步骤。」<br>
+2. <strong>发现历史趋势</strong> ：他们对整个数据库进行分析，清晰地揭示了不对称催化和金属催化剂使用在过去几十年里的历史变迁。这证明了，当零散的知识被汇聚成结构化的数据后，我们就能站在一个更高的维度，去发现过去难以察觉的宏观规律。</p>
+<p>ReactionSeek 为我们提供了一个强大且可扩展的框架，它正在把化学从一个依赖人工经验的「手艺活」，推向一个由数据和 AI 驱动的新时代。</p>
+<p>📜Paper: https://doi.org/10.26434/chemrxiv-2025-t110q<br>
+💻Code: https://github.com/DeepSynthesis/ReactionSeek.git</p>
 </section>
-<section id="ai-虚拟人新药研发的终极模拟器" class="level2">
-<h2 class="anchored" data-anchor-id="ai-虚拟人新药研发的终极模拟器">4. AI 虚拟人：新药研发的终极模拟器？</h2>
-<p><a href="post_all_image/programmable_virtual_2025_07_31_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="post_all_image/programmable_virtual_2025_07_31_image_1.jpg" class="img-fluid"></a></p>
-<p>说实话，如今关于 AI 制药的演示文稿层出不穷，往往是 AI 发现了新的靶点，或者设计了新的分子。听到这些，耳朵几乎要磨破了。然而，这篇关于“可编程虚拟人”（Programmable Virtual Humans, PVH）的论文其抱负在一个全新的层面。</p>
-<p>研究者的目标是什么？他们不满足于仅在分子层面“微不足道”的探索，而是希望在计算机中创造一个“人”——一个能够模拟药物从注射进入身体到最终产生表型效应整个过程的虚拟生理系统。这就如同为药物研发量身打造的终极版《模拟人生》，或者更确切地说，是为药物开发提供的“飞行模拟器”。</p>
-<p>做药的，心里最痛的是什么？就是那个“转化鸿沟”。一个分子，在细胞实验里效果拔群，在小鼠模型中力挽狂澜，结果一到人体临床试验，要么像泥牛入海，要么毒性爆表。无数的时间和金钱就这么打了水漂。这篇论文的核心，就是向这个行业最大的痛点发起了正面冲锋。</p>
-<p>他们的思路很有意思。传统的生理药代动力学（PBPK）和定量系统药理学（QSP）模型，我们用了几十年了，它们很有用，但就像是老旧的地图，只能描绘出大概轮廓。现在，研究者们打算用 AI，特别是像物理信息神经网络（PINNs）这样的“新式武器”来彻底改造它们。PINNs 的妙处在于，它不是一个纯粹的黑箱，它在学习数据规律的同时，还被“告知”了基本的生物学和物理学定律。这就好比一个学生，既会刷题，又懂原理，预测的准确性自然不可同日而语。</p>
-<p>他们要把单细胞和空间组学数据也整合进来。这意味着什么？我们不再是笼统地看药物对“肝脏”的影响，而是有可能具体到药物如何影响肝脏里的肝细胞、库普弗细胞，以及这些细胞之间是如何“窃窃私语”的。这种分辨率，能让我们对药物作用机制和潜在脱靶效应的理解，提升到一个全新的维度。想象一下，在给第一个病人用药之前，你就能在虚拟人身上看到药物可能在哪个组织的哪类细胞里“惹麻烦”，这简直是研发人员的梦想。</p>
-<p>当然，蓝图画得再美，现实总是骨感的。</p>
-<p>作者们列出了一堆挑战，比如怎么处理“分布外”预测（模型没见过的新情况），怎么量化不确定性，以及怎么把这些来自不同尺度、不同来源的数据和模型天衣无缝地粘合在一起。这就像要用乐高积木、橡皮泥和集成电路拼一个能正常运转的机器人，工程量和难度可想而知。</p>
-<p>短期内，我们离不开真实的生物学数据和人体试验。但这篇论文指明了一个极其诱人的方向。它或许无法在明天就交付一个能用的“虚拟人”，但它提出了一种思维框架，一种能让我们在给第一个真实病人用药之前，就在虚拟世界里进行成千上万次实验的可能。</p>
-<p>这是一个足够疯狂和大胆的愿景，我很期待看到它如何一步步变为现实。</p>
-<p>📜Title: Programmable Virtual Humans Toward Human Physiologically-Based Drug Discovery<br>
-📜Paper: <a href="https://arxiv.org/abs/2507.19568" class="uri">https://arxiv.org/abs/2507.19568</a></p>
 </section>
-<section id="pairreg专治-gnn脸盲症让-ai-看清分子-3d-结构" class="level2">
-<h2 class="anchored" data-anchor-id="pairreg专治-gnn脸盲症让-ai-看清分子-3d-结构">5. PairReg：专治 GNN“脸盲症”，让 AI 看清分子 3D 结构</h2>
-<p><a href="post_all_image/pair_reg_a_method_fo_2025_08_04_image_1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="post_all_image/pair_reg_a_method_fo_2025_08_04_image_1.png" class="img-fluid"></a></p>
-<p>图神经网络（GNN）在药物发现里火了好几年了，但它有个毛病——“过平滑”（Oversmoothing）。</p>
-<p>就像你把一张高清照片反复用“磨皮”功能处理，最后磨得连鼻子眼睛都分不清了。对于分子来说，每个原子的化学环境和空间位置就是它的“五官”，这些细节要是被模型自己“磨”没了，还怎么指望它去精准预测性质？</p>
-<p>所以，研究者们搞出了等变图神经网络（EGNN），想法很好，直接把 3D 坐标这种“等变信息”塞给模型，指望它能理解分子的三维结构。理论上，你旋转一下分子，预测的能量也应该保持不变，这很符合物理直觉。</p>
-<p>但问题来了，当网络堆深了之后，EGNN 也开始犯迷糊。传统的残差连接在这种模型里基本失灵，信息在层与层之间传递时，宝贵的 3D 坐标信息和原子本身的标量信息（比如电荷、原子类型）会搅和在一起，最后还是一锅粥。这就是“过平劳”的 2.0 版。</p>
-<p>这篇 PLOS ONE 的文章提出的 PairReg，没有去发明新的网络架构，而是从“正则化”这个老工具箱里拿出了一件新兵器。</p>
-<p>它的核心思路可以这么理解：在模型训练的时候，加一个“惩罚项”。这个惩罚项专门盯着成对原子间的距离。</p>
-<p>如果模型在更新节点特征时，把原来离得远的原子搞得在“特征”上很近，或者反过来，那就要被“罚款”。这相当于给模型上了一道紧箍咒，强迫它在学习抽象特征的同时，必须时刻记住“谁跟谁是邻居，谁跟谁离得远”这个最基本的空间事实。</p>
-<p>这为什么重要？</p>
-<p>在药物设计里，很多关键性质，比如分子与靶点的结合亲和力，就极度依赖于精确的三维构象和原子间的相互作用。一个官能团偏了零点几个埃，可能就从一个有效的抑制剂变成了一块废铁。如果你的 AI 模型连分子的基本形状都看不清，那用它来做虚拟筛选或者分子生成，不就是沙上建塔吗？</p>
-<p>从 QM9 和 rMD17 的数据来看，PairReg 确实管用，尤其是在层数增加时，性能衰减比其他方法要慢得多。这说明这个思路走对了。</p>
-<p>当然，这还只是在相对简单的数据集上验证。</p>
-<p>下一步，作者说要把它用到生物大分子结合和药物生成上，那才是真正的考验。</p>
-<p>📜Title: PairReg: A method for enhancing the learning of molecular structure representation in equivariant graph neural networks<br>
-📜Paper: https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0328501<br>
-💻Code: https://github.com/76technician/PairReg</p>
+<section id="prompt-to-pill-ai-智能体能包办新药研发吗" class="level2">
+<h2 class="anchored" data-anchor-id="prompt-to-pill-ai-智能体能包办新药研发吗">2. Prompt-to-Pill: AI 智能体能包办新药研发吗？</h2>
+<p><a href="post_all_image/prompt_to_pill_mult_2025_08_20_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/prompt_to_pill_mult_2025_08_20_image_1.jpg" class="img-fluid"></a></p>
+<p>对于 AI 制药，我们已经见过了各种各样的「点解决方案」：有的能帮你生成新分子，有的能预测 ADMET，还有的能分析临床数据。大家各管一摊，干得都不错。但这篇名为「Prompt-to-Pill」的工作，不想只做一个工具，它想做一条完整的流水线，或者说，一个由 AI 驱动的虚拟制药公司。</p>
+<p>你看这张流程图，整个体系被分成了临床前和临床两个大阶段，每个阶段里都塞满了各司其职的 AI 智能体（Agent）。这就像一个项目团队，有专门负责化学合成的，有专门负责药理毒理的，还有专门负责临床开发的。而整个项目的灵魂，是一个叫「Orchestrator」的中央协调 LLM。</p>
+<p>这个「Orchestrator」很有意思。它就像一个经验丰富的项目经理。当研究者输入一个指令，比如「为 DPP4 靶点开发一款新药」，这个项目经理就开始分配任务。它会对「分子生成」智能体说：「嘿，给我设计一些有潜力的新骨架。」然后，它会把生成出来的分子丢给「ADMET 筛选」和「分子对接」这两个智能体，让它们评估一下这些候选化合物的成药性和靶点结合能力。</p>
+<p>这个过程不是单向的。如果一个分子 ADMET 预测很差，或者对接分数很低，「Orchestrator」会拿到这个反馈，然后告诉「分子生成」智能体：「这个方向不行，换个思路，比如优化一下那个杂环部分，降低脂溶性试试。」这种迭代循环，正是真实药物化学家每天在做的事情。</p>
+<p>这套系统没有停留在临床前。当一个候选分子看起来足够有前途时，「Orchestrator」会把它推向「临床」阶段。然后，「临床试验设计」智能体会开始干活，规划一期、二期、三期的方案。甚至还有一个「患者招募」智能体，用来在虚拟的患者群体中寻找合适的受试者。</p>
+<p>研究者用 DPP4 靶点把整个流程跑了一遍，算是一次不错的概念验证。选择一个数据充分、机理明确的靶点是明智的，可以最大程度地检验流程本身是否跑得通。</p>
+<p>当然这终究是一个高度复杂的模拟。AI 设计的临床方案，真的能应对真实世界里患者的复杂性和变数吗？那个「虚拟患者」，是基于真实世界数据的数字孪生，还是仅仅是参数化的统计模型？这里的细节，决定了这套系统究竟是一个高级的模拟沙盘，还是一个真正能指导决策的工具。</p>
+<p>作者们自己也很清楚这点，他们提到了「推理透明度」和评估标准的问题。没错，如果这个 AI 项目经理最后给出了一个「Go/No-Go」的决策，我们必须能打开它的「大脑」，看看它做出这个判断的依据是什么。我们不能只因为它叫「AI」就盲目相信。</p>
+<p>「Prompt-to-Pill」还不是一个能直接把想法变成药片的魔法机器。它更像一个蓝图，展示了未来药物研发工作流的一种可能性。它把过去分散的计算工具，用一个智能协调核心串联了起来。它不会取代科学家，但它可能会彻底改变科学家的工作方式——从亲自执行每一个实验和计算，转变为监督和指导一个由 AI 智能体组成的虚拟团队。</p>
+<p>📜Title: Prompt-to-Pill: Multi-Agent Drug Discovery and Clinical Simulation Pipeline<br>
+📜Paper: <a href="https://www.biorxiv.org/content/10.1101/2025.08.12.669861v1" class="uri">https://www.biorxiv.org/content/10.1101/2025.08.12.669861v1</a></p>
+</section>
+<section id="ai-药物设计物理学的现实检验" class="level2">
+<h2 class="anchored" data-anchor-id="ai-药物设计物理学的现实检验">3. AI 药物设计：物理学的现实检验</h2>
+<p><a href="post_all_image/optimizing_drug_desi_2025_08_16_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/optimizing_drug_desi_2025_08_16_image_1.jpg" class="img-fluid"></a></p>
+<p>我们已经快被那些能生成漂亮分子图片的生成式模型给淹没了。它们中的大多数，都像是一个灵感无限、但完全不懂工程学的建筑师。他能给你画出一些悬浮在空中、有着莫比乌斯环楼梯的、美轮美奂的建筑草图。你问他这东西怎么造？他说不知道。你问他这东西会不会塌？他说没想过。</p>
+<p>搞药的人每天都在跟物理和化学的残酷现实打交道。我们需要的，不是一个艺术家，我们需要的是一个能画出既漂亮、又稳固、而且施工队还知道怎么盖的图纸的、真正的建筑工程师。</p>
+<p>这篇发表在<em>Communications Chemistry</em>上的研究，设计的这套工作流程，承认 AI 既是天才，也是白痴。所以，他们设计了一套「嵌套」的主动学习循环，给这个天才白痴，配了一个严厉的、只相信物理定律的「监工」。</p>
+<p><strong>内循环：AI 的「头脑风暴」</strong></p>
+<p>在内循环里，AI（一个变分自编码器）可以尽情地放飞自我。它的任务，是生成海量的、多样化的、看起来像个药的分子。同时，这个循环里，还有一些比较「便宜」的过滤器，用来检查这些分子是不是至少在理论上，有条合理的合成路线。这就像是建筑师在画草图的阶段，旁边有个初级工程师，负责提醒他：「嘿，这个悬臂梁可能有点太长了，我们最好还是加根柱子。」</p>
+<p><strong>外循环：物理学的「最终审判」</strong></p>
+<p>内循环里那些最优秀的「草图」，会被提交到外循环。这里，就是「监工」登场的地方。这个「监工」，就是那些我们又爱又恨的、计算上无比昂贵、但也无比接近「地面真实」的物理学模拟方法——比如 PELE 模拟和绝对结合自由能（ABFE）计算。</p>
+<p>这个步骤，就像是把建筑师的草图，直接拿去做风洞测试和结构力学分析。它会毫不留情地告诉你，这个设计，在真实的物理世界里，到底行不行。这个「审判」的结果，会作为最关键的「奖励」或「惩罚」信号，反馈给那个还在内循环里画草图的 AI。</p>
+<p>这种分层、嵌套的结构，是一种在创造性和现实性之间做出的、非常权衡。你没有用昂贵的物理模拟，去扼杀 AI 的每一个「奇思妙想」。你只是用它，来为那些最顶尖的想法，进行最终的「现实检验」。</p>
+<p>那么，这套系统的表现如何？</p>
+<p>这才是这篇论文没有止步于报告一些漂亮的计算指标。他们真的，把 AI 设计的分子，给<strong>做</strong>了出来。</p>
+<p>他们把这个流程，应用到了 CDK2 这个我们都很熟悉的激酶靶点上。AI 为他们设计了一批全新的分子。他们挑选了其中的 9 个，在实验室里把它们合成了出来。结果，9 个里面，有 8 个，在体外实验中，显示出了对 CDK2 的抑制活性。其中最好的一个，IC50 值达到了纳摩尔级别。</p>
+<p>他们还把这个流程，用在了 KRAS 这个出了名难搞的靶点上。虽然这次他们没有去合成，但<em>in silico</em>的验证结果，也同样很有希望。</p>
+<p>📜Title: Optimizing Drug Design by Merging Generative AI with a Physics-Based Active Learning Framework<br>
+📜Paper: https://www.nature.com/articles/s42004-025-01635-7<br>
+💻Code: https://github.com/IFilella/ALGen-1</p>
 
 
 </section>
@@ -778,7 +750,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 </div>   
     <div class="nav-footer-center">
 <p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
-<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-08-08_a/post_all.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-08-29/post_all.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
     <div class="nav-footer-right">
 <p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
 </div>

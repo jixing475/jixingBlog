@@ -4,9 +4,9 @@ description: |
   一项基于 nanoGPT 的基准测试揭示，AI 智能体在代码优化上仍远未达到人类水平，给“AI 自我进化”的狂热泼了冷水。一个双 LLM 系统通过结合文献的“影响力”与“相关性”，极大地提升了科研文献综述的效率和质量。最后，MDZip 框架利用神经网络实现了超过 95% 的分子动力学数据压缩，为大规模数据归档与共享提供了革命性解决方案。
 date: "2024-08-07"
 categories: ["AI in Science", "Large Language Models", "计算化学", "科研工具"]
-image: "post_all_image/multi_model_llm_arch_2025_08_04_image_1.png"
+image: "post_all_image/love_this_project_n_2025_08_04_image_1.jpg"
 image-alt: |
-  一个系统同时搞定文献的“影响力”和“相关性”，再用两个 AI 给你写摘要，文献综述的苦日子可能到头了。
+  用 nanoGPT 作为 AI 智能体优化代码的基准，这个想法很棒，但结果也给“AI 自我进化”的狂热泼了盆冷水：AI 目前还差得远。
 toc-depth: 3
 ---
 
