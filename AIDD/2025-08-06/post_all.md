@@ -2,7 +2,7 @@
 title: "AIDD 前沿：从 KAN 网络预测副作用到自动化基因分析"
 description: |
   DeepADR 模型利用新兴的 KAN 网络，融合多模态信息来预警药物不良反应（ADR）。一项研究揭示，在多组学分析中，深度学习解释工具 SHAP 的结果可能高度不稳定，提醒研究者谨慎使用。最后，GenoMAS 框架通过组建一个异构的 AI 智能体团队，成功实现了对复杂基因表达数据分析的自动化，展示了 AI 作为“合作者”的巨大潜力。
-date: "2024-08-06"
+date: "2025-08-06"
 categories: ["AI 药物发现", "计算化学", "可解释 AI", "多组学"]
 image: "post_all_image/deep_adr_multi_modal_2025_08_04_image_1.jpg"
 image-alt: |

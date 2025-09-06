@@ -2,7 +2,7 @@
 title: "从文献自动提取、全流程智能体到物理现实检验"
 description: |
   ReactionSeek 框架利用大语言模型（LLM）和巧妙的提示工程，实现了化学文献信息的自动化、高精度提取。 "Prompt-to-Pill"框架则构建了一个由中央 AI 协调的智能体团队，试图将从分子设计到虚拟临床试验的漫长流程整合成一条自动化流水线。最后，一种嵌套学习框架通过引入物理学的“现实检验”，成功地让生成式 AI 设计出可合成且在湿实验中有效的全新药物分子。
-date: "2024-08-29"
+date: "2025-08-29"
 categories: ["AI 药物发现", "大语言模型", "AI 智能体", "计算化学"]
 image: "post_all_image/prompt_to_pill_mult_2025_08_20_image_1.jpg"
 image-alt: |

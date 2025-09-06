@@ -2,7 +2,7 @@
 title: "AIDD 三大新工具：精准代谢预测、多尺度生物网络与单细胞分析智能体"
 description: |
   BioTransformer 4.0 通过智能过滤和模块化设计，将药物代谢物预测的信噪比提升至新高度，成为指导药物设计的实用地图。BIND 框架则利用知识图谱和两阶段训练，试图解决从分子到表型的多尺度生物网络预测难题。最后，名为 CellAtria 的 AI 智能体框架，旨在将繁琐的单细胞数据处理流程转变为与聊天机器人的简单对话，实现科研民主化。
-date: "2024-08-05"
+date: "2025-08-05"
 categories: ["AI 药物发现", "计算化学", "生物信息学", "单细胞分析"]
 image: "post_all_image/an_agentic_ai_framew_2025_08_04_image_1.jpg"
 image-alt: |

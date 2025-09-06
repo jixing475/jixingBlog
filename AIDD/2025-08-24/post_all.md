@@ -2,7 +2,7 @@
 title: "自动化智能体、多族裔靶点发现与分子动力学新范式"
 description: |
   FROGENT AI 智能体尝试打通从靶点发现到分子设计的自动化全流程；BLISS 框架则巧妙利用公开的 pQTL 摘要数据，构建了强大的多族裔蛋白预测模型，以解锁新的药物靶点；而 NetMD 通过图嵌入和时间规整技术，为比较和分析复杂的分子动力学轨迹提供了全新的无监督解决方案。
-date: "2024-08-24"
+date: "2025-08-24"
 categories: ["AI 药物发现", "AI 智能体", "计算生物学", "分子动力学"]
 image: "post_all_image/net_md_unsupervised_2025_08_20_image_1.jpg"
 image-alt: |

@@ -2,7 +2,7 @@
 title: "从 3D 分子雕塑到虚拟人模拟器"
 description: |
   扩散模型正将 AI 分子生成从 2D 绘图带入 3D 雕塑时代。最新评测显示，LLM 编写生物信息学代码的能力已媲美人类顶尖水平。Tripleknock 模型则通过暴力破解三基因组合，为多靶点抗生素研发开辟新路。此外，研究者提出了构建“可编程虚拟人”的宏大蓝图，而 PairReg 则有效缓解了 EGNN 模型的过平滑问题。
-date: "2024-08-08"
+date: "2025-08-08"
 categories: ["AI 药物发现", "扩散模型", "计算生物学", "大语言模型"]
 image: "post_all_image/tripleknock_predict_2025_08_04_image_1.jpg"
 image-alt: |

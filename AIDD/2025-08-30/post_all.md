@@ -2,7 +2,7 @@
 title: "GPU 加速虚拟筛选、AlphaFold3 重塑临床前研究与 AI 力场赋能经典模拟"
 description: |
   UniDock-Pro 利用 GPU 加速，在一个统一平台上首次整合了基于结构、配体和创新的混合虚拟筛选模式，实现了前所未有的筛选效率。XenoSignal 则利用 AlphaFold3 对异种移植模型中的人 - 鼠细胞相互作用进行原子级精准预测，深刻影响临床前研究的解读。最后，TorchANI-Amber 通过巧妙的接口，让经典分子动力学软件 Amber 能无缝调用 AI 神经网络力场，实现了量子精度的大规模生物分子模拟。
-date: "2024-08-27"
+date: "2025-08-27"
 categories: ["AI 药物发现", "虚拟筛选", "蛋白质结构预测", "分子动力学"]
 image: "post_all_image/uni_dock_pro_a_unifi_2025_08_24_image_1.jpg"
 image-alt: |

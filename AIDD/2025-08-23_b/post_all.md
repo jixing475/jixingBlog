@@ -2,7 +2,7 @@
 title: "从结构筛选、虚拟对接到小数据分子生成"
 description: |
   CASP16 的评估竞赛揭示，AlphaFold 时代后的新挑战已从结构预测转向如何从海量高质量模型中“精选”出最佳构象。HelixVS 则通过将深度学习重打分与传统分子对接相结合，显著提升了虚拟筛选的效率和准确性。最后，IBEX 框架巧妙融合信息论与物理优化，解决了在极度稀缺数据下进行高质量分子生成的难题。
-date: "2024-08-23"
+date: "2025-08-23"
 categories: ["AI 药物发现", "蛋白质结构预测", "虚拟筛选", "分子生成"]
 image: "post_all_image/highlights_of_model_2025_08_20_image_1.jpg"
 image-alt: |
