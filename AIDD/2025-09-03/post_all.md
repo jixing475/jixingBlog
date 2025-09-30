@@ -2,7 +2,7 @@
 title: "AI 药物研发前沿：揭示蛋白质动态、对抗超级细菌与破解活性悬崖"
 description: |
   探索 AI 在药物研发领域的最新进展。CF-random 方法通过反向操作 AlphaFold2 揭示蛋白质隐藏的多重构象；迁移学习在数据稀缺情况下高效筛选新型抗生素；HypSeek 模型利用双曲空间几何特性，精准预测并解决了药物发现中的“活性悬崖”难题。
-date: "2024-05-03"
+date: "2025-09-03"
 categories: ["AI 药物研发", AlphaFold2, "迁移学习", "双曲空间", "蛋白质构象"]
 image: "post_all_image/image_20250709_223303_1.jpg"
 image-alt: |

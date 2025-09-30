@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="探索 AI 在药物研发领域的最新进展，从预测蛋白质结合的物理细节到解决个性化用药的冷启动问题。文章介绍了多个创新模型，如 AlphaPPIMI 框架通过融合多模态预训练模型提升了 PPI 调节剂预测的准确性，而 MolReasoner 则通过两步法训练 AI 像化学家一样进行化学推理，使其预测结果不仅准确，更具备可解释性。">
+
+<title>AI 不再背答案：MolReasoner 教它化学推理 – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<meta property="og:title" content="AI 不再背答案：MolReasoner 教它化学推理 – MPU">
+<meta property="og:description" content="探索 AI 在药物研发领域的最新进展，从预测蛋白质结合的物理细节到解决个性化用药的冷启动问题。文章介绍了多个创新模型，如 AlphaPPIMI 框架通过融合多模态预训练模型提升了 PPI 调节剂预测的准确性，而 MolReasoner 则通过两步法训练 AI 像化学家一样进行化学推理，使其预测结果不仅准确，更具备可解释性。">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-09-22/post_all_image/mol_reasoner_toward_2025_08_10_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="MolReasoner 用「先上课、再辅导」的两步法，强迫 AI 停止死记硬背，开始像化学家一样思考，这让它的答案不仅更准，而且第一次有了「为什么」。
+">
+<meta name="twitter:title" content="AI 不再背答案：MolReasoner 教它化学推理 – MPU">
+<meta name="twitter:description" content="探索 AI 在药物研发领域的最新进展，从预测蛋白质结合的物理细节到解决个性化用药的冷启动问题。文章介绍了多个创新模型，如 AlphaPPIMI 框架通过融合多模态预训练模型提升了 PPI 调节剂预测的准确性，而 MolReasoner 则通过两步法训练 AI 像化学家一样进行化学推理，使其预测结果不仅准确，更具备可解释性。">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-09-22/post_all_image/mol_reasoner_toward_2025_08_10_image_1.jpg">
+<meta name="twitter:image:alt" content="MolReasoner 用「先上课、再辅导」的两步法，强迫 AI 停止死记硬背，开始像化学家一样思考，这让它的答案不仅更准，而且第一次有了「为什么」。
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">AI 不再背答案：MolReasoner 教它化学推理</h1>
+                  <div>
+        <div class="description">
+          <p>探索 AI 在药物研发领域的最新进展，从预测蛋白质结合的物理细节到解决个性化用药的冷启动问题。文章介绍了多个创新模型，如 AlphaPPIMI 框架通过融合多模态预训练模型提升了 PPI 调节剂预测的准确性，而 MolReasoner 则通过两步法训练 AI 像化学家一样进行化学推理，使其预测结果不仅准确，更具备可解释性。</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">AI 药物研发</div>
+                <div class="quarto-category">深度学习</div>
+                <div class="quarto-category">计算生物学</div>
+                <div class="quarto-category">蛋白质相互作用</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Monday, the 22nd of September, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#目录" id="toc-目录" class="nav-link active" data-scroll-target="#目录">目录</a></li>
+  <li><a href="#ai-预测-ppi不只猜yesno更看清握手细节" id="toc-ai-预测-ppi不只猜yesno更看清握手细节" class="nav-link" data-scroll-target="#ai-预测-ppi不只猜yesno更看清握手细节">1. AI 预测 PPI：不只猜「Yes/No」，更看清「握手」细节</a></li>
+  <li><a href="#ai-指导个性化药物联用解决冷启动难题" id="toc-ai-指导个性化药物联用解决冷启动难题" class="nav-link" data-scroll-target="#ai-指导个性化药物联用解决冷启动难题">2. AI 指导个性化药物联用，解决「冷启动」难题</a></li>
+  <li><a href="#ai-预测-ppi-抑制剂alphappimi-深度解读新范式" id="toc-ai-预测-ppi-抑制剂alphappimi-深度解读新范式" class="nav-link" data-scroll-target="#ai-预测-ppi-抑制剂alphappimi-深度解读新范式">3. AI 预测 PPI 抑制剂：AlphaPPIMI 深度解读新范式</a></li>
+  <li><a href="#ai-不再背答案molreasoner-教它化学推理" id="toc-ai-不再背答案molreasoner-教它化学推理" class="nav-link" data-scroll-target="#ai-不再背答案molreasoner-教它化学推理">4. AI 不再背答案：MolReasoner 教它化学推理</a></li>
+  <li><a href="#hyperlab-评测ai-制药平台准度直逼-af3" id="toc-hyperlab-评测ai-制药平台准度直逼-af3" class="nav-link" data-scroll-target="#hyperlab-评测ai-制药平台准度直逼-af3">5. HyperLab 评测：AI 制药平台，准度直逼 AF3</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-09-22/post_all.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="目录" class="level2">
+<h2 class="anchored" data-anchor-id="目录">目录</h2>
+<ol type="1">
+<li>这款新的 AI 模型 PLMDA-PPI 之所以强大，在于它不再满足于简单判断蛋白质是否相互作用，而是深入到物理层面，预测它们结合的具体「触点」，这让它在面对全新蛋白质时表现得异常稳健。</li>
+<li>研究者利用预训练深度学习模型，智能挑选初始药物组合与剂量，解决了「无先验数据」时个性化药物筛选的「冷启动」难题。</li>
+<li>AlphaPPIMI 框架通过融合多模态预训练模型和对抗性网络，提升了 PPI 调节剂预测的准确性和泛化性，为靶向蛋白质界面的药物发现提供了新工具。</li>
+<li>MolReasoner 用「先上课、再辅导」的两步法，强迫 AI 停止死记硬背，开始像化学家一样思考，这让它的答案不仅更准，而且第一次有了「为什么」。</li>
+<li>HyperLab 试图将复杂的计算流程打包成一个网页工具，让药物化学家也能轻松上手，其核心优势在于速度与精度的平衡。</li>
+</ol>
+</section>
+<section id="ai-预测-ppi不只猜yesno更看清握手细节" class="level2">
+<h2 class="anchored" data-anchor-id="ai-预测-ppi不只猜yesno更看清握手细节">1. AI 预测 PPI：不只猜「Yes/No」，更看清「握手」细节</h2>
+<p><a href="post_all_image/image_20250710_223804_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/image_20250710_223804_1.jpg" class="img-fluid"></a></p>
+<p>在计算生物学这个领域，我们早就对各种预测模型见怪不怪了。它们中的大多数，说白了，就像是只会背题库的学生，在训练集和相似数据上表现优异，可一旦遇到点新东西——比如一个序列没怎么见过的蛋白质——立刻就原形毕露。蛋白质相互作用（PPI）预测尤其如此，这感觉糟透了。</p>
+<p>现在，一篇新论文里的 PLMDA-PPI 模型，看起来像是那个真正理解了物理原理的学霸。</p>
+<p>这个模型最地方，在于它解决问题的方式。研究者没有再走「暴力拟合」的老路，而是设计了一套「机制感知」的框架。什么意思？它不光要回答「这两个蛋白会不会结合？」（一个 Yes/No 的问题），还必须同时指出「它们是通过哪些具体的氨基酸残基‘握手’的？」。</p>
+<p>这就好比，你不仅要猜两个人是不是朋友，还得描述出他们上次见面的场景细节。如果你能准确说出细节，那你猜对的概率就大大提升了。这种双重任务迫使模型去理解蛋白质相互作用的物理化学本质，而不是仅仅记住某些序列片段好像总是一起出现。</p>
+<p>为了实现这一点，研究者用了一个很扎实的办法：拿 PDB 数据库里那些经过实验验证、有清晰三维结构的蛋白质复合物来训练模型。这可是金标准的数据。通过这种方式，模型学到的不仅仅是抽象的序列关系，更是实打实的几何和物理接触。</p>
+<p>结果呢？简直是降维打击。在那些专门设计的、用来考验模型泛化能力的「严苛」测试集上（也就是用序列相似度极低的蛋白），老牌的 SOTA 模型们纷纷败下阵来，而 PLMDA-PPI 依然坚挺，准确率和鲁棒性都高出一大截。这充分说明，它真的学到了更底层的规律。</p>
+<p>对于做药的人来说，它的价值可太大了。PPI 是公认的「难成药靶点」富矿，很多疾病都和蛋白间的异常「勾结」有关。但它们的结合界面通常又大又平，小分子很难下手。一个能精准预测出结合「热点」残基的工具，就等于给药物设计者递上了一张高精度的藏宝图。我们就可以集中火力，去设计能够精准「楔入」这些关键触点的分子，无论是小分子、多肽还是 PROTAC。</p>
+<p>所以，PLMDA-PPI 不只是又一个 PPI 预测器。它提供了一种更建模思路——教 AI 像结构生物学家一样思考。这种范式，未来完全可以推广到 RNA、DNA 等其他生物大分子的相互作用预测上。这才是真正让人兴奋的地方。</p>
+<p>📜<strong>Title</strong>: Mechanism-Aware Protein-Protein Interaction Prediction via Contact-Guided Dual Attention on Protein Language Models<br>
+📜<strong>Paper</strong>: https://www.biorxiv.org/content/10.1101/2025.07.04.663157v2<br>
+💻<strong>Code</strong>: https://github.com/ChengfeiYan/PLMDA-PPI</p>
+</section>
+<section id="ai-指导个性化药物联用解决冷启动难题" class="level2">
+<h2 class="anchored" data-anchor-id="ai-指导个性化药物联用解决冷启动难题">2. AI 指导个性化药物联用，解决「冷启动」难题</h2>
+<p><a href="post_all_image/addressing_the_cold_2025_09_14_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/addressing_the_cold_2025_09_14_image_1.jpg" class="img-fluid"></a></p>
+<p>在个性化肿瘤治疗中，我们常常面临一个棘手的问题：面对一个新病人，我们手上有几百种抗癌药，到底该先测试哪几种药物的组合？这就像让你在没有地图的情况下，走进一座陌生的城市寻找宝藏。你无法把每条街道都走一遍，时间和资源都不允许。这就是药物筛选中的「冷启动」（Cold-Start）问题。</p>
+<p>这篇论文的作者们想解决的就是这个「导航」问题。他们训练了一个深度学习模型，这个模型可以看作是一张提前绘制好的「药物 - 疗效地图」。</p>
+<p>首先，研究者用海量的历史数据来训练这个模型。这些数据包含了各种药物组合在不同剂量下对肿瘤细胞的杀伤效果。模型通过学习这些数据，为每一种药物组合生成了一个独特的数学表达，也就是「嵌入」（Embedding）。你可以把这个嵌入理解成地图上的一个坐标。作用机制相似的药物组合，它们的坐标在地图上就会彼此靠近。</p>
+<p>有了这张地图，当新病人出现时，我们就可以开始规划「探索路线」了。我们不可能测试地图上的每一个点，所以需要选出最有代表性的几个。研究者用了一种叫做 K-medoids 的聚类算法。这个算法能自动在地图上找出几个核心区域，并从每个区域中挑选一个最具代表性的点。这就像旅游规划，我们不会去城市的每个角落，而是选择几个能代表城市风貌的景点，比如商业区、老城区和艺术区。这样做可以保证我们最初测试的药物组合足够多样，覆盖了不同的作用机制，大大降低了「押错宝」的风险。</p>
+<p>选好了药物组合，接下来是决定测试哪些剂量。传统的做法可能是测试一个很宽的剂量范围，但这同样非常耗费资源。这个模型还能派上用场。它不仅能预测一个组合是否有效，还能预测出完整的剂量 - 反应曲线。</p>
+<p>熟悉药物研发的人都知道，这条曲线上并非所有点的信息价值都一样。通常，曲线斜率变化最大的地方，也就是 IC50 值附近，包含的信息最多。模型通过分析预测出的曲线形状，给每个剂量点打出一个「重要性分数」。分数越高的点，说明它在确定药物效力时越关键。这样，我们就可以把有限的实验资源集中在这些「高价值」的剂量点上，用最少的实验次数，获取关于药物敏感性的最多信息。</p>
+<p>为了验证这个策略是否有效，研究者进行了回顾性模拟。他们利用现有的大型药物筛选数据库，假装对里面的样本一无所知，然后用他们的方法来选择初始实验。结果显示，与随机选择等基线方法相比，这种新策略能更快、更准地找到有效的药物组合。</p>
+<p>对于个性化药物开发来说，这是一个很实用的进步。它意味着在临床研究的早期阶段，我们能更高效地为患者筛选潜在的联合用药方案，更快地做出决策。</p>
+<p>📜Paper: <a href="https://arxiv.org/abs/2509.07850v1" class="uri">https://arxiv.org/abs/2509.07850v1</a></p>
+</section>
+<section id="ai-预测-ppi-抑制剂alphappimi-深度解读新范式" class="level2">
+<h2 class="anchored" data-anchor-id="ai-预测-ppi-抑制剂alphappimi-深度解读新范式">3. AI 预测 PPI 抑制剂：AlphaPPIMI 深度解读新范式</h2>
+<p><a href="post_all_image/alphappimi_a_compre_2025_09_14_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/alphappimi_a_compre_2025_09_14_image_1.jpg" class="img-fluid"></a></p>
+<p>在药物研发领域，靶向蛋白质 - 蛋白质相互作用（Protein-Protein Interactions, PPIs）一直是个硬骨头。这些相互作用界面通常又大又平，不像传统的酶活性口袋那样清晰明确，所以想找到能精准「卡位」的小分子异常困难。每当有新的计算工具声称能在这方面取得突破，我们都会竖起耳朵听。</p>
+<p>最近，Liu 和他的团队发表了一篇关于 AlphaPPIMI 的工作，这正是我们关注的那种进展。他们构建了一个新的深度学习框架，目标很明确：更准、更可靠地预测哪些小分子能够调节 PPI。</p>
+<p>这个模型最巧妙的地方在于它的核心——一个特制的跨注意力（cross-attention）模块。传统的模型往往是分开看小分子和蛋白质，然后再把信息简单拼在一起。AlphaPPIMI 的工作方式不一样。你可以把它想象成一个精通「化学」和「生物」两种语言的翻译。它先把小分子的三维结构信息（来自 Uni-Mol2 模型）和蛋白质序列信息（来自 ESM2 和 ProTrans 模型）这些「母语」资料准备好。然后，跨注意力模块就开始工作，它让小分子的特征和蛋白质界面的特征相互「对话」，动态地分析一个小分子的某个基团是如何影响蛋白界面上某个氨基酸的，反之亦然。这样一来，模型就不再是孤立地看问题，而是建立了一个深度的、与上下文相关的相互作用模型。</p>
+<p>做计算辅助药物发现（CADD）的人都知道，模型泛化性是个大问题。一个模型在训练集上跑得再好，如果换个新的、没见过的靶点家族就失灵，那它的实用价值就大打折扣。研究者们用了一个叫作条件域对抗网络（Conditional Domain Adversarial Networks, CDAN）的技术来应对这个挑战。这个方法很有意思。它在主模型旁边加了一个「捣蛋鬼」网络。主模型的任务是预测分子与靶点的相互作用，而「捣蛋鬼」的任务是猜这个相互作用数据来自哪个蛋白家族。主模型的目标就变成了，既要做好预测，又要想办法「欺骗」那个捣蛋鬼，让它猜不出来。如果能成功骗过它，就说明主模型学到的特征是普适的结合规律，而不是某个特定蛋白家族的「土规矩」。这大大增强了模型在真实世界中面对新靶点时的可靠性。</p>
+<p>当然，光有理论还不够，得看实战效果。作者们在自己构建的基准数据集上进行了大量测试，AlphaPPIMI 的表现优于现有方法。更关键的是，他们做了案例分析。比如，他们用这个模型去筛选 Hsp90-Cdc37 复合物的抑制剂，这是一个公认有价值但不好下手的 PPI 靶点。模型成功地找出了一些有潜力的候选化合物。他们还将此方法应用于 gp120/CD4 相互作用，这与 HIV 药物的开发直接相关。这些例子说明，AlphaPPIMI 不仅仅是个学术模型，它有潜力在虚拟筛选中帮助我们从数百万个分子中优先挑选出最值得合成和测试的那些，这能实实在在地节省时间和研发成本。</p>
+<p>📜Title: Alphappimi: a comprehensive deep learning framework for predicting PPI-modulator interactions<br>
+📜Paper: https://doi.org/10.1186/s13321-025-01077-2</p>
+</section>
+<section id="ai-不再背答案molreasoner-教它化学推理" class="level2">
+<h2 class="anchored" data-anchor-id="ai-不再背答案molreasoner-教它化学推理">4. AI 不再背答案：MolReasoner 教它化学推理</h2>
+<p><a href="post_all_image/mol_reasoner_toward_2025_08_10_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="post_all_image/mol_reasoner_toward_2025_08_10_image_1.jpg" class="img-fluid"></a></p>
+<p>我们现在拥有的大语言模型，就像一个记忆力超群但缺乏理解力的学生。你问它一个分子的性质，它能从浩如烟海的记忆库里给你调出一个八九不离十的答案。但你问它「为什么」，或者让它基于化学原理去设计一个新分子，它就常常暴露出自己只是个「背答案」的机器，而不是一个会「解题」的化学家。</p>
+<p>MolReasoner 采取的策略非常像我们培养一个优秀学生的过程：先上课，再做题，最后请个好家教。</p>
+<p><strong>第一阶段：上大课 (Mol-SFT) </strong><br>
+这一步的目标，是让 AI 先学会「解题格式」和基本的「化学语法」。研究者们没有直接把乱七八糟的真实数据扔给模型，而是让 GPT-4o 这样的「博士生」，先去生成一大批带有「思考链」（Chain-of-Thought）的解题过程。比如，在描述一个分子时，它会先说「这个分子含有一个给电子的甲氧基和一个吸电子的硝基……」，然后再给出结论。</p>
+<p>但他们没有完全相信这个「博士生」。他们还请了「化学专家」（可能是人工，也可能是其他验证工具）来批改这些作业，确保每一个推理步骤都是化学上靠谱的。这样，他们就得到了一本高质量的、充满了正确解题范例的「教科书」。用这本教科书去对模型进行监督微调（SFT），AI 就先学会了说「人话」，或者说，化学家的「行话」。</p>
+<p><strong>第二阶段：一对一辅导 (Mol-RL) </strong><br>
+学会了解题格式还不够，还得做得又快又好。于是，第二阶段的强化学习（RL）就上场了。这就像一个严格的家教，盯着 AI 做题。它用的「奖励函数」非常精妙，不只是看最终答案对不对，还会检查 AI 的每一步推理。如果 AI 的推理过程逻辑清晰、符合化学原理，就给高分奖励；如果它开始胡说八道，哪怕最后蒙对了答案，也得不到奖励。</p>
+<p>通过这种「过程和结果并重」的辅导，AI 被迫去学习真正的化学逻辑，而不是投机取巧。</p>
+<p>MolReasoner 在分子描述（给一个分子写一段化学描述）和基于文本的分子生成（根据一段描述画出分子）这两个任务上，都取得了碾压性的优势。它生成的描述更准确，设计的分子也更合理、更有效。</p>
+<p>📜Title: MolReasoner: Toward Effective and Interpretable Reasoning for Molecular LLM<br>
+📜Paper: https://arxiv.org/abs/2508.02066v1<br>
+💻Code: https://github.com/545487677/MolReasoner</p>
+</section>
+<section id="hyperlab-评测ai-制药平台准度直逼-af3" class="level2">
+<h2 class="anchored" data-anchor-id="hyperlab-评测ai-制药平台准度直逼-af3">5. HyperLab 评测：AI 制药平台，准度直逼 AF3</h2>
+<p><a href="post_all_image/accelerating_drug_di_2025_09_14_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="post_all_image/accelerating_drug_di_2025_09_14_image_1.jpg" class="img-fluid"></a></p>
+<p>市面上从不缺 AI 药物发现平台，几乎每周都有新的工具冒出来。那么，HITS 团队开发的这个 HyperLab 有什么特别之处？它的定位很明确：做一个简单易用的网页版工具，把从苗头化合物筛选到先导化合物优化的全流程整合起来。目标用户就是一线研发人员，尤其是那些不精通计算化学的药物化学家和生物学家。</p>
+<p>我们先看它的核心功能——Hyper Binding。这个模块用来预测小分子和蛋白靶点的结合模式。这是所有结构驱动药物设计 (Structure-Based Drug Design, SBDD) 的起点，预测得准不准，直接决定了后续优化的方向对不对。研究者用 PoseBuster v2 这个公开基准集对它做了测试，结果显示准确率达到了 77%。</p>
+<p>这是一个很有意思的数字。传统的分子对接软件，比如 Glide 或 GOLD，在这个数据集上的表现通常在 60-70% 之间。而目前最顶尖的模型之一 AlphaFold3，准确率是 84%。HyperLab 的 77% 恰好卡在中间，比传统方法好，离顶级模型差距不大。但它的优势在于速度。对于药物化学家来说，这意味着你可以在一个上午测试几十个新设计的分子结构，而不是把一个分子扔给计算组然后等上一天。用一点精度换取巨大的速度提升，在早期探索阶段，这笔交易很划算。</p>
+<p>平台的另一个亮点是 Hyper Screening X。它提供了一个包含 11 万亿（11 trillion）个分子的虚拟库。这个数字是什么概念？传统的实体化合物库，比如 Enamine REAL Space，规模在百亿级别，已经非常庞大了。11 万亿意味着化学空间被极大地拓展了。这不只是一个静态的库，它利用了生成式 AI，可以在这个巨大的化学空间里进行优化，帮你找到全新的、有活性的分子骨架。这对于寻找「first-in-class」药物来说，吸引力很大。</p>
+<p>HyperLab 还把分子设计 (Hyper Design) 和成药性预测 (Hyper ADME/T) 都整合了进来。这就形成了一个闭环。你可以先用 Hyper Screening 找到一个苗头化合物，然后用 Hyper Binding 分析它和靶点的相互作用，接着在 Hyper Design 里修改它的化学结构，改完之后立刻用 Hyper ADME/T 预测一下溶解度、代谢稳定性等性质。整个流程在一个网页里就能完成，不用在好几个软件之间来回切换。</p>
+<p>当然，只说不练假把式。研究者展示了一个内部案例，他们利用 HyperLab 平台从头开始，最终得到了纳摩尔（nanomolar）级别的活性化合物，并且这些化合物的活性都得到了实验验证。虽然这是内部数据，需要持保留态度，但它至少证明了这套流程在实践中是走得通的。</p>
+<p>最后，平台还内置了一个 AI 助手。它可以帮你搜索数据库、画图分析，或者在你不知道某个功能怎么用的时候提供指导。这进一步降低了使用门槛。</p>
+<p>总的来看，HyperLab 的思路不是追求单一指标的极致，而是在精度、速度和易用性之间找到了一个不错的平衡点。它想做的，是把计算辅助药物发现这个原本属于少数专家的「屠龙技」，变成每个药物研发人员都能随手使用的工具。</p>
+<p>📜Title: Accelerating Drug Discovery with HyperLab: An Easy-to-Use AI-Driven Platform<br>
+📜Paper: <a href="https://www.biorxiv.org/content/10.1101/2025.08.31.672525v1" class="uri">https://www.biorxiv.org/content/10.1101/2025.08.31.672525v1</a></p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-09-22/post_all.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

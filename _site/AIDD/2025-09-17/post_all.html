@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="探索 AI 在生物医药领域的五项最新进展。了解 AIDO.ModelGenerator 如何用 YAML 简化多模态模型开发，ChatMDV 如何将自然语言转为可视化代码，以及 DiffGui 如何生成化学结构合理的分子。文章同时探讨了能自我进化的药物发现框架 DGDM，并分析了通用大模型在解决经典生物信息学问题时的真实能力。">
+
+<title>DiffGui：AI 造分子，先画骨再填肉 – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<meta property="og:title" content="DiffGui：AI 造分子，先画骨再填肉 – MPU">
+<meta property="og:description" content="探索 AI 在生物医药领域的五项最新进展。了解 AIDO.ModelGenerator 如何用 YAML 简化多模态模型开发，ChatMDV 如何将自然语言转为可视化代码，以及 DiffGui 如何生成化学结构合理的分子。文章同时探讨了能自我进化的药物发现框架 DGDM，并分析了通用大模型在解决经典生物信息学问题时的真实能力。">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-09-17/post_all_image/target_aware_3d_mole_2025_08_29_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="DiffGui 在生成原子的同时构建化学键，并以结合力和类药性作为引导，使 AI 生成的分子成为化学结构可信的实体，而非简单的原子云。
+">
+<meta name="twitter:title" content="DiffGui：AI 造分子，先画骨再填肉 – MPU">
+<meta name="twitter:description" content="探索 AI 在生物医药领域的五项最新进展。了解 AIDO.ModelGenerator 如何用 YAML 简化多模态模型开发，ChatMDV 如何将自然语言转为可视化代码，以及 DiffGui 如何生成化学结构合理的分子。文章同时探讨了能自我进化的药物发现框架 DGDM，并分析了通用大模型在解决经典生物信息学问题时的真实能力。">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-09-17/post_all_image/target_aware_3d_mole_2025_08_29_image_1.jpg">
+<meta name="twitter:image:alt" content="DiffGui 在生成原子的同时构建化学键，并以结合力和类药性作为引导，使 AI 生成的分子成为化学结构可信的实体，而非简单的原子云。
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">DiffGui：AI 造分子，先画骨再填肉</h1>
+                  <div>
+        <div class="description">
+          <p>探索 AI 在生物医药领域的五项最新进展。了解 AIDO.ModelGenerator 如何用 YAML 简化多模态模型开发，ChatMDV 如何将自然语言转为可视化代码，以及 DiffGui 如何生成化学结构合理的分子。文章同时探讨了能自我进化的药物发现框架 DGDM，并分析了通用大模型在解决经典生物信息学问题时的真实能力。</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">AI 药物发现</div>
+                <div class="quarto-category">生物信息学</div>
+                <div class="quarto-category">大语言模型</div>
+                <div class="quarto-category">生成式 AI</div>
+                <div class="quarto-category">多模态</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Wednesday, the 17th of September, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#目录" id="toc-目录" class="nav-link active" data-scroll-target="#目录">目录</a></li>
+  <li><a href="#aido.modelgenerator生物多模态模型开发的乐高" id="toc-aido.modelgenerator生物多模态模型开发的乐高" class="nav-link" data-scroll-target="#aido.modelgenerator生物多模态模型开发的乐高">1. AIDO.ModelGenerator：生物多模态模型开发的乐高</a></li>
+  <li><a href="#chatmdv让生物信息学分析告别代码" id="toc-chatmdv让生物信息学分析告别代码" class="nav-link" data-scroll-target="#chatmdv让生物信息学分析告别代码">2. ChatMDV：让生物信息学分析告别代码</a></li>
+  <li><a href="#diffguiai-造分子先画骨再填肉" id="toc-diffguiai-造分子先画骨再填肉" class="nav-link" data-scroll-target="#diffguiai-造分子先画骨再填肉">3. DiffGui：AI 造分子，先画骨再填肉</a></li>
+  <li><a href="#ai-药物发现一个能自我进化的机器" id="toc-ai-药物发现一个能自我进化的机器" class="nav-link" data-scroll-target="#ai-药物发现一个能自我进化的机器">4. AI 药物发现：一个能自我进化的机器</a></li>
+  <li><a href="#ai-参加生信考试结果令人大跌眼镜" id="toc-ai-参加生信考试结果令人大跌眼镜" class="nav-link" data-scroll-target="#ai-参加生信考试结果令人大跌眼镜">5. AI 参加生信考试，结果令人大跌眼镜</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-09-17/post_all.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="目录" class="level2">
+<h2 class="anchored" data-anchor-id="目录">目录</h2>
+<ol type="1">
+<li>这个开源工具包使用简单的 YAML 配置文件，让搭建复杂、可复现的多模态生物学基础模型，从一项工程挑战，变成像搭乐高积木一样的探索。</li>
+<li>ChatMDV 将研究者的自然语言直接翻译成可执行代码，让复杂的生物信息学数据可视化，从少数专家的技能，变成每个实验室成员都能上手的工具。</li>
+<li>DiffGui 在生成原子的同时构建化学键，并以结合力和类药性作为引导，使 AI 生成的分子成为化学结构可信的实体，而非简单的原子云。</li>
+<li>一个 AI 框架通过「达尔文式」进化循环优化分子，同时通过「哥德尔式」元学习循环优化自身的药物发现流程。</li>
+<li>通用大模型能解决不少标准生信问题，但它们更像博览群书的学生，而非能独立思考的研究员。</li>
+</ol>
+</section>
+<section id="aido.modelgenerator生物多模态模型开发的乐高" class="level2">
+<h2 class="anchored" data-anchor-id="aido.modelgenerator生物多模态模型开发的乐高">1. AIDO.ModelGenerator：生物多模态模型开发的乐高</h2>
+<p><a href="post_all_image/image_20250709_223537_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/image_20250709_223537_1.jpg" class="img-fluid"></a></p>
+<p>生物研究者常常被计算和工程问题所困。尤其在大模型时代，搭建一个融合 DNA、RNA 和蛋白质等多种数据的模型，过程复杂。研究者需要身兼机器学习工程师与软件运维专家，才能开始真正的生物学工作。整个过程繁琐，结果难以复现，拖慢了科学发现的进程。</p>
+<p>AIDO.ModelGenerator 这款新工具直面这个痛点。它的核心思路是将复杂流程标准化、模块化，如同为生物基础模型开发的乐高积木。用户无需从零开始编写模型搭建、融合与训练的代码，只需准备一个 YAML 配置文件。</p>
+<p>例如，要用一个 30 亿参数的 DNA 模型和一个 5 亿参数的 RNA 模型进行交叉注意力融合，只需在 YAML 文件中声明。想在单张 A100 显卡上，通过参数高效微调（PEFT, Parameter-Efficient Fine-Tuning）技术运行大模型，也只需几行配置。这把技术门槛从机器学习专家，降低到能编写配置文件的科学家。</p>
+<p>在克罗恩病（Crohn’s disease）的案例中，该工具展现了它的能力。传统的差异表达分析，在近 19000 个基因中，将已知的临床靶点 SOX4 排在第 6068 位，如同大海捞针。AIDO.ModelGenerator 通过模拟基因敲除（in-silico knockout），将 SOX4 的排位提升至第 14 位。这种提升是质的飞跃，为寻找靶点提供了明确的线索。</p>
+<p>在 RNA 剪接预测任务中，该工具同样表现出色。仅使用单一模态数据，好比依据静态地图预测实时交通。通过融合 DNA（基因组静态蓝图）与 RNA（动态表达信使）数据，模型的预测性能提升超过 10%，达到了新的业界最佳水平（SOTA, State-of-the-Art）。这种多模态方法为理解复杂生物系统提供了更全面的视角。</p>
+<p>该工具对<strong>可复现性</strong>的重视解决了计算生物学的一个核心痛点。学术研究中，实验结果难以复现是一个普遍问题。AIDO.ModelGenerator 通过锁定的配置文件和确定性运行，保证了每次实验都能获得字节级别完全相同的结果。这使得研究发现可靠、可验证，也方便同行与审稿人重现整个工作流程，体现了科学研究的严谨性。</p>
+<p>AIDO.ModelGenerator 本质上是一个加速器和工具集，它将生物学家从繁重的工程任务中解放出来。研究者可以因此专注于生物学问题本身——提出假说、设计实验、验证发现，无需在调试代码和配置环境上耗费过多时间。</p>
+<p>📜Title: Rapid and Reproducible Multimodal Biological Foundation Model Development with AIDO.ModelGenerator<br>
+📜Paper: https://www.biorxiv.org/content/10.1101/2025.06.30.662437v1<br>
+💻Code: https://github.com/genbio-ai/ModelGenerator</p>
+</section>
+<section id="chatmdv让生物信息学分析告别代码" class="level2">
+<h2 class="anchored" data-anchor-id="chatmdv让生物信息学分析告别代码">2. ChatMDV：让生物信息学分析告别代码</h2>
+<p><a href="post_all_image/chat_mdv_democratisi_2025_08_29_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/chat_mdv_democratisi_2025_08_29_image_1.jpg" class="img-fluid"></a></p>
+<p>生物信息学分析的门槛很高，要求研究者既懂生物又会编程，这拖慢了科研进度。ChatMDV 提供了一个解决方案。它如同一个翻译官，使用大语言模型（Large Language Model, LLM）和检索增强生成（Retrieval-Augmented Generation, RAG）技术，将一句「用 UMAP 图展示这些细胞簇的 A 基因表达情况」这样的自然语言，直接翻译成生成图表的 Python 代码。数据分析由此变成一场对话，湿实验科学家可以亲自、快速地探索数据、验证想法，无需再排队等待生物信息学家的协助。</p>
+<hr>
+<p>生物学实验室里存在一道无形的鸿沟。一边是辛苦获得的单细胞测序数据，另一边是揭示生物学规律的图表和统计结果。横亘其间的是一堵由 Python、R 和复杂软件包砌成的高墙。</p>
+<p>研究者想跨越这堵墙，要么花几年时间学习编程，要么将宝贵的数据交给那位日程永远排满的生物信息学家，然后开始等待。</p>
+<p>ChatMDV 的目标，就是拆掉这堵墙。</p>
+<section id="ai-当翻译你只管提问" class="level4">
+<h4 class="anchored" data-anchor-id="ai-当翻译你只管提问">AI 当翻译，你只管提问</h4>
+<p>ChatMDV 的思路很直接：让 AI 学习生物学家的语言。它把自己定位成一个顶级的同声传译。</p>
+<p>它的工作流程如下：</p>
+<p>研究者用简单的自然语言提出需求，例如，「用 UMAP 图显示这些细胞，并根据细胞类型给它们上色」。</p>
+<p>ChatMDV 内部的「规划智能体」会将这句话拆解成一个清晰的行动计划：「用户需要一张 UMAP 图，按‘cell_type’列的数据进行着色。」</p>
+<p>接着，一个「代码生成」模块开始工作。它并非凭空编写，而是通过检索增强生成（RAG）流程，在预设的「代码库」和「知识库」中查找最相关的代码片段和函数用法。这好比一个开卷考试的学生，他不需要记住所有知识点，只需知道去哪里查阅，然后正确地组合信息。</p>
+<p>最后，它生成一段 Python 代码并自动执行，将你想要的 UMAP 图呈现在眼前。</p>
+</section>
+<section id="不只是聊天还能动手" class="level4">
+<h4 class="anchored" data-anchor-id="不只是聊天还能动手">不只是聊天，还能动手</h4>
+<p>ChatMDV 生成的图表呈现在一个交互式查看器（MDV）中。AI 完成初步绘图后，你还可以像使用普通软件一样，用鼠标点击、缩放、筛选，对图表进行微调。</p>
+<p>这种「自然语言输入 + 图形界面微调」的组合，降低了使用门槛，也预示了未来科学软件的形态。</p>
+</section>
+<section id="到底靠不靠谱" class="level4">
+<h4 class="anchored" data-anchor-id="到底靠不靠谱">到底靠不靠谱？</h4>
+<p>研究团队用三个复杂度递增的真实数据集对 ChatMDV 进行了测试，从简单的 PBMC 数据到复杂的肺癌图谱，它都表现出很高的成功率。在最简单的任务上，成功率达到 100%。</p>
+<p>这表明，它有能力处理真实科研中那些不完美的数据。</p>
+<p>虽然 AI 还无法完全理解所有模糊的科研设想，但 ChatMDV 证明，科学家与数据之间无代码的对话式交互是可行的。</p>
+<p>它会把生物信息学家从大量重复性的初级可视化任务中解放出来，使其能够专注于解决更需要智慧与创造力的科学问题。</p>
+<p>📜Title: ChatMDV: Democratising Bioinformatics Analysis Using Large Language Models<br>
+📜Paper: https://www.biorxiv.org/content/10.1101/2025.08.26.671083v1</p>
+</section>
+</section>
+<section id="diffguiai-造分子先画骨再填肉" class="level2">
+<h2 class="anchored" data-anchor-id="diffguiai-造分子先画骨再填肉">3. DiffGui：AI 造分子，先画骨再填肉</h2>
+<p><a href="post_all_image/target_aware_3d_mole_2025_08_29_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/target_aware_3d_mole_2025_08_29_image_1.jpg" class="img-fluid"></a></p>
+<p>与 3D 分子生成模型打过交道的人都了解一个现实：这些 AI 擅长排列原子，却不精通化学。</p>
+<p>给定一个蛋白质口袋，AI 能生成一团在三维空间中填充良好的原子云。但将这些原子云转换成带化学键的二维结构图时，问题便出现了：五配位碳、不存在的化学键等违反化学常识的结构屡见不鲜。这如同建筑师只标出柱子位置，却忽略了梁与楼板，使建筑无法成立。</p>
+<p>Nature Communications 的一篇论文介绍的方法，旨在让 AI 在放置原子的同时，也构建起化学键的框架。</p>
+<section id="先画骨再填肉" class="level4">
+<h4 class="anchored" data-anchor-id="先画骨再填肉">先画骨，再填肉</h4>
+<p>新模型名为 DiffGui，其核心是<strong>同步生成原子和化学键</strong>。</p>
+<p>它属于扩散模型。传统扩散模型从一团模糊的原子「像素点」开始，逐步使其清晰。DiffGui 则从模糊的「像素点」<strong>与</strong>模糊的「连接线」同时开始。</p>
+<p>在生成的每一步，模型同时确定原子的类型和位置，以及原子间的化学键。</p>
+<p>这样，化学键成为生成过程的内在约束，而非后续添加的步骤，从根本上保证了最终分子的化学结构合理性。</p>
+</section>
+<section id="给-ai-一个指南针" class="level4">
+<h4 class="anchored" data-anchor-id="给-ai-一个指南针">给 AI 一个「指南针」</h4>
+<p>仅有化学上合理的骨架并不足够，目标是生成一个<strong>好</strong>的分子。</p>
+<p>DiffGui 引入了<strong>属性引导</strong> (property guidance) 机制。在分子生成的每一步，多个属性评估器会提供反馈。</p>
+<p>例如，「结合亲和力」评估器判断当前步骤是否增强了分子与靶点的结合，并引导其朝结合更紧密的方向优化。「类药性」评估器则会审视分子的化学性质，如溶解度或氢键特征，并进行相应调整。</p>
+<p>通过这种持续的多维度引导，生成过程从单纯模仿训练数据，转变为一个有目的、主动朝向「好分子」的优化过程。</p>
+</section>
+<section id="这东西真的靠谱吗" class="level4">
+<h4 class="anchored" data-anchor-id="这东西真的靠谱吗">这东西真的靠谱吗？</h4>
+<p>同时构建骨架并使用指南针引导，使 DiffGui 生成的分子质量得到提升。</p>
+<p>在一系列基准测试中，DiffGui 的表现超过了现有方法。</p>
+<p>在一个真实的药物设计案例中，研究者使用该工具，为一个发生突变的蛋白质口袋成功设计出能够适应性结合的新分子。这表明 DiffGui 能够理解并响应精细的化学环境变化，是一个实用的设计工具。</p>
+<p>📜Title: Target-aware 3D Molecular Generation Based on Guided Equivariant Diffusion<br>
+📜Paper: https://www.nature.com/articles/s41467-025-63245-0<br>
+💻Code: https://github.com/QiaoyuHu89/DiffGui</p>
+</section>
+</section>
+<section id="ai-药物发现一个能自我进化的机器" class="level2">
+<h2 class="anchored" data-anchor-id="ai-药物发现一个能自我进化的机器">4. AI 药物发现：一个能自我进化的机器</h2>
+<p><a href="post_all_image/the_darwin_godel_dru_2025_08_29_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="post_all_image/the_darwin_godel_dru_2025_08_29_image_1.jpg" class="img-fluid"></a></p>
+<p>AI 药物发现工具能生成分子、预测性质，但它们大多是<strong>静态</strong>的。模型一旦建成，性能就固定了，改进需要人工干预并重新训练。如同有一辆好车，想提速，还得自己动手改装引擎。</p>
+<p>一个名为达尔文 - 哥德尔药物发现机 (Darwin–Gödel Drug Discovery Machine, DGDM) 的新框架，目标是造出一辆能<strong>自己改装引擎</strong>的车。</p>
+<section id="两个循环两种进化" class="level4">
+<h4 class="anchored" data-anchor-id="两个循环两种进化">两个循环，两种进化</h4>
+<p>该框架的核心是两个相互嵌套的循环。</p>
+<p><strong>内循环：达尔文的世界</strong></p>
+<p>内循环优化<strong>分子</strong>，其工作方式如同微缩的达尔文进化。</p>
+<p>首先，生成模型创造一批多样的候选分子。这些分子随即进入模拟的「自然环境」接受筛选，包括分子对接、结合亲和力预测和 ADMET 性质分析等计算评估。表现最佳的分子被选为「亲代」，用于生成下一代。</p>
+<p>循环往复，分子在一代代进化中，愈发符合预设目标，例如结合力更强。</p>
+<p><strong>外循环：哥德尔的幽灵</strong></p>
+<p>外循环优化的不是分子，而是<strong>发现流程本身</strong>。</p>
+<p>其灵感源于数学家哥德尔构想的「哥德尔机」——一种理论上能检查并修改自身代码、从而实现自我完善的机器。</p>
+<p>现实中，无法用严格的数学逻辑证明流程更优，因此该框架采用<strong>统计学</strong>方法。外循环周期性地对整个药物发现流程提出修改建议，例如更换对接打分函数或调整分子生成策略。系统会通过统计检验，评估这些修改是否能提升整体性能。只有数据证明修改有效时，才会被采纳。这是一种由数据驱动、带风险控制的自我进化。</p>
+</section>
+<section id="结果怎么样" class="level4">
+<h4 class="anchored" data-anchor-id="结果怎么样">结果怎么样？</h4>
+<p>研究人员用该系统进行了一次概念验证。</p>
+<p>经过双循环系统优化后，候选分子的中位结合亲和力获得提升，同时分子的类药性和新颖性保持在 100%。这表明系统在优化性能的同时，遵守了化学基本规则。</p>
+<p>这仍是一项针对单个靶点的小规模概念验证。将湿实验数据整合进闭环，是下一步的挑战。</p>
+<p>DGDM 展示了 AI 药物发现的一种可能方向：从使用 AI 工具，到构建能够自我完善的自主 AI 科学家。</p>
+<p>📜Title: The Darwin–Gödel Drug Discovery Machine (DGDM): A Self-Improving AI Framework<br>
+📜Paper: https://www.biorxiv.org/content/10.1101/2025.08.21.671415v1<br>
+💻Code: https://github.com/deep-geo/DGDM</p>
+</section>
+</section>
+<section id="ai-参加生信考试结果令人大跌眼镜" class="level2">
+<h2 class="anchored" data-anchor-id="ai-参加生信考试结果令人大跌眼镜">5. AI 参加生信考试，结果令人大跌眼镜</h2>
+<p><a href="post_all_image/out_of_the_box_bioin_2025_08_29_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="post_all_image/out_of_the_box_bioin_2025_08_29_image_1.jpg" class="img-fluid"></a></p>
+<p>Rosalind 平台，是生物信息学学生的「奥数」训练场。它有上百个经典的计算问题，从计算 DNA 的 GC 含量，到寻找 RNA 的二级结构。学习生信的人，大多都在上面刷过题。</p>
+<p>一篇新论文的研究者，将三个主流大语言模型 (Large Language Models, LLMs)——GPT-3.5、Llama-3-70B 和 GPT-4o——带到这个考场，测试了 104 道题目。</p>
+<p>结果出人意料。</p>
+<section id="姜还是老的辣" class="level4">
+<h4 class="anchored" data-anchor-id="姜还是老的辣">姜还是老的辣？</h4>
+<p><strong>GPT-3.5</strong>拔得头筹，答对了 58% 的题目。而 GPT-4o 和 Llama-3 这两个更新、更强的模型，正确率反而只有 47%。</p>
+<p>这并不意味着 GPT-3.5 比 GPT-4o 更聪明。一种可能的解释是，Rosalind 的题目是有标准答案的「课本习题」，GPT-3.5 的训练数据可能恰好包含了更多现成解法。更新的模型面对这些问题，或许会过度思考，尝试用更通用却非最优的逻辑求解。</p>
+</section>
+<section id="ai-擅长什么不擅长什么" class="level4">
+<h4 class="anchored" data-anchor-id="ai-擅长什么不擅长什么">AI 擅长什么，不擅长什么？</h4>
+<p>这次考试画出了当前通用大模型的「能力圈」。</p>
+<p>在规则明确、计算直接的任务上，它们表现很好，例如计算 DNA 的各种统计特性。这好比让学生去做套公式的数学题，只要背过公式，基本不会出错。</p>
+<p>但涉及更高阶推理的开放问题，比如基因组组装和序列比对，AI 就集体不及格了。这就像让学生去做需要多种思路和创造力的证明题，他脑子里的孤立公式，就不知道该怎么组合了。</p>
+<p>这篇论文有一个发现很能说明问题：AI 解决一个问题的表现，与人类在 Rosalind 平台上尝试该问题的次数高度相关。</p>
+<p>这就像一个学生，他在模拟考里做得最好的题，恰好都是他过去在各种辅导书上见过无数遍的原题。</p>
+<p>这揭示了这些 AI 的学习方式：它们更接近于在庞大的记忆库中进行高效的模式匹配和信息检索，而非从第一性原理出发进行生物信息学推理。</p>
+<p>所以，这些通用大模型仍然有用。对于学习基本概念的学生，它们是很好的助教。对于需要为标准化分析任务快速生成模板代码的研究员，它们是高效率的实习生。</p>
+<p>📜Title: Out-of-the-box bioinformatics capabilities of large language models (LLMs)<br>
+📜Paper: https://www.biorxiv.org/content/10.1101/2025.08.22.671610v1</p>
+
+
+</section>
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-09-17/post_all.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

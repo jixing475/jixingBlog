@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="探索 AI 药物研发的前沿进展。CBYG 框架利用贝叶斯流网络，实现了更可控的 3D 分子生成。MolEncoder 则揭示了分子语言模型的“甜点区”，证明优化的预训练策略比盲目扩大规模更有效。同时，可解释的深度学习模型 DeepSEA 能够精准识别新型抗生素耐药蛋白，突破了传统序列比对的局限。">
+
+<title>DeepSEA：用 AI 揪出隐形的抗生素耐药蛋白 – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+<meta property="og:title" content="DeepSEA：用 AI 揪出隐形的抗生素耐药蛋白 – MPU">
+<meta property="og:description" content="探索 AI 药物研发的前沿进展。CBYG 框架利用贝叶斯流网络，实现了更可控的 3D 分子生成。MolEncoder 则揭示了分子语言模型的“甜点区”，证明优化的预训练策略比盲目扩大规模更有效。同时，可解释的深度学习模型 DeepSEA 能够精准识别新型抗生素耐药蛋白，突破了传统序列比对的局限。">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-09-29/post_all_image/deep_sea_an_alignmen_2025_09_14_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="DeepSEA 是一个可解释的深度学习模型，它能绕过序列比对的限制，更准确地识别新型抗生素耐药蛋白，并揭示其作用机制。
+">
+<meta name="twitter:title" content="DeepSEA：用 AI 揪出隐形的抗生素耐药蛋白 – MPU">
+<meta name="twitter:description" content="探索 AI 药物研发的前沿进展。CBYG 框架利用贝叶斯流网络，实现了更可控的 3D 分子生成。MolEncoder 则揭示了分子语言模型的“甜点区”，证明优化的预训练策略比盲目扩大规模更有效。同时，可解释的深度学习模型 DeepSEA 能够精准识别新型抗生素耐药蛋白，突破了传统序列比对的局限。">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-09-29/post_all_image/deep_sea_an_alignmen_2025_09_14_image_1.jpg">
+<meta name="twitter:image:alt" content="DeepSEA 是一个可解释的深度学习模型，它能绕过序列比对的限制，更准确地识别新型抗生素耐药蛋白，并揭示其作用机制。
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">DeepSEA：用 AI 揪出隐形的抗生素耐药蛋白</h1>
+                  <div>
+        <div class="description">
+          <p>探索 AI 药物研发的前沿进展。CBYG 框架利用贝叶斯流网络，实现了更可控的 3D 分子生成。MolEncoder 则揭示了分子语言模型的“甜点区”，证明优化的预训练策略比盲目扩大规模更有效。同时，可解释的深度学习模型 DeepSEA 能够精准识别新型抗生素耐药蛋白，突破了传统序列比对的局限。</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">AI 药物研发，深度学习，生物信息学，分子生成，"抗生素耐药性"</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Monday, the 29th of September, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#目录" id="toc-目录" class="nav-link active" data-scroll-target="#目录">目录</a></li>
+  <li><a href="#cbyg超越扩散模型3d-分子生成迎来新范式" id="toc-cbyg超越扩散模型3d-分子生成迎来新范式" class="nav-link" data-scroll-target="#cbyg超越扩散模型3d-分子生成迎来新范式">1. CBYG：超越扩散模型，3D 分子生成迎来新范式</a></li>
+  <li><a href="#molencoder分子预训练告别越大越好" id="toc-molencoder分子预训练告别越大越好" class="nav-link" data-scroll-target="#molencoder分子预训练告别越大越好">2. MolEncoder：分子预训练，告别「越大越好」</a></li>
+  <li><a href="#deepsea用-ai-揪出隐形的抗生素耐药蛋白" id="toc-deepsea用-ai-揪出隐形的抗生素耐药蛋白" class="nav-link" data-scroll-target="#deepsea用-ai-揪出隐形的抗生素耐药蛋白">3. DeepSEA：用 AI 揪出隐形的抗生素耐药蛋白</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-09-29/post_all.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="目录" class="level2">
+<h2 class="anchored" data-anchor-id="目录">目录</h2>
+<ol type="1">
+<li>CBYG 框架通过贝叶斯流网络和梯度引导，为结构化药物设计提供了一种比扩散模型更稳定、更可控的 3D 分子生成方法。</li>
+<li>在分子语言模型领域，盲目追求大模型和大数据集并非正途，MolEncoder 证明了更优的预训练策略才是关键。</li>
+<li>DeepSEA 是一个可解释的深度学习模型，它能绕过序列比对的限制，更准确地识别新型抗生素耐药蛋白，并揭示其作用机制。</li>
+</ol>
+</section>
+<section id="cbyg超越扩散模型3d-分子生成迎来新范式" class="level2">
+<h2 class="anchored" data-anchor-id="cbyg超越扩散模型3d-分子生成迎来新范式">1. CBYG：超越扩散模型，3D 分子生成迎来新范式</h2>
+<p><a href="post_all_image/controllable_3d_mole_2025_09_14_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/controllable_3d_mole_2025_09_14_image_1.jpg" class="img-fluid"></a></p>
+<p>做 AIDD 这些年，我们见证了 AI 生成模型的爆发。特别是基于结构的药物设计，扩散模型 (Diffusion Models) 几乎成了标配。但只要你亲手跑过这些模型，就会知道它们有多「任性」。你想要一个高亲和力的分子，它可能会给你一个化学上根本不存在的结构。这背后的核心难题，在于模型很难同时处理好两件事：原子的三维空间位置（连续坐标）和原子的类型（离散的化学元素）。它们就像两个配合不佳的舞伴，步调总是不一致。</p>
+<p>这篇来自 Choi 等人的新工作，提出的 CBYG 框架，就是来解决这个问题的。他们采用了贝叶斯流网络 (Bayesian Flow Networks, BFNs)。</p>
+<p>我们可以这样理解两者的区别。扩散模型的工作方式，好比从一团随机的「原子云」（噪声）开始，一步步把它「去噪」，最终雕琢出一个分子。这个过程很强大，但每一步的修正都可能引入不确定性，尤其是在施加外部引导（比如「提高亲和力」）时，整个系统容易崩溃。</p>
+<p>而 BFNs 的工作原理更像是在搭积木。它有一个更清晰、更有序的路径，从一个简单的初始状态，通过一系列可学习的「流动」变换，逐步构建出最终的复杂分子。这个过程的稳定性天然就更好。</p>
+<p>CBYG 的精髓在于，它在 BFNs 这个稳定的底盘上，加装了一个精准的「导航系统」——梯度引导。在分子生成的每一步，这个系统都会根据我们设定的目标（比如结合亲和力、合成可行性、选择性）计算出一个「梯度」，然后像施加一个微小的力一样，把生成过程往正确的方向推一把。</p>
+<p>打个比方，这就好比我们不是在对一块大理石进行大刀阔斧的雕刻，而是在用 3D 打印机逐层构建。我们可以在打印的每一层都进行微调，确保最终的产品完全符合设计图纸。这种方式让整个生成过程变得可控。当你想让分子更「好」一点时，模型不会给你一个完全离谱的东西，而是在现有基础上稳步优化。</p>
+<p>更让我欣赏的是研究者们设计的评估体系。很多 AI 论文热衷于在一些学术指标上刷分，但这些指标和我们制药工业的日常需求相去甚 - 远。这次，他们把重点放在了结合亲和力、合成可及性分数 (SA score) 和选择性这些我们真正关心的「硬指标」上。实验结果显示，CBYG 在这些贴近实战的基准测试中，性能超过了现有的主流模型。</p>
+<p>对于我们来说，它不再是一个充满惊喜（和惊吓）的「黑箱」，而是一个可以信赖的、能听懂我们化学直 - 觉的工程系统。CBYG 当然不是终点，但它指明了一个有吸引力的方向：让 AI 分子生成变得更像一门严谨的工程科学，而不是一门玄学。</p>
+<p>📜<strong>Title</strong>: Controllable 3D Molecular Generation for Structure-Based Drug Design Through Bayesian Flow Networks and Gradient Integration<br>
+📜<strong>Paper</strong>: https://arxiv.org/abs/2508.21468v1</p>
+</section>
+<section id="molencoder分子预训练告别越大越好" class="level2">
+<h2 class="anchored" data-anchor-id="molencoder分子预训练告别越大越好">2. MolEncoder：分子预训练，告别「越大越好」</h2>
+<p><a href="post_all_image/mol_encoder_towards_2025_09_14_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/mol_encoder_towards_2025_09_14_image_1.jpg" class="img-fluid"></a></p>
+<p>近年来，AI 领域被一个观点主导：模型越大、数据越多，效果就越好。从 GPT 到图像生成模型，这条「力大砖飞」的路线似乎百试百灵。药物发现领域也尝试借鉴，开发了基于分子 SMILES 序列的「分子语言模型」。但分子与语言不同，直接照搬自然语言处理（Natural Language Processing, NLP）的最佳实践，效果并不理想。</p>
+<p>这篇新研究表明，这种照搬是行不通的。</p>
+<p>这些模型的工作原理，是把分子的 SMILES 字符串看作一个句子，如<code>CCO</code>（乙醇）。预训练的核心是「遮蔽语言建模」（Masked Language Modeling），即玩填字游戏。随机盖住句子里的某些部分，让模型去猜。例如将<code>CCO</code>变为<code>C[MASK]O</code>，模型需根据上下文猜出被盖住的是<code>C</code>。</p>
+<p>在 NLP 领域，公认的黄金法则是遮蔽 15% 的词。但研究者发现，这套规则用在分子上效果不佳。分子的语法比人类语言严格得多。在英语里，将”a quick brown fox”换成”a fast brown fox”，意思相近。但在化学里，将乙醇（<code>CCO</code>）的一个碳换成氮（<code>CNO</code>），就变成了完全不同的物质。</p>
+<p>因此，研究者尝试提高遮蔽率。他们发现，当遮蔽率提高到 30% 时，模型在下游任务（如预测分子性质）上的表现大幅提升。这相当于给模型出了更难的考题，迫使它不再是死记 SMILES 的局部模式，而是去理解构成一个稳定、有效分子的深层化学规则。</p>
+<p>另一个发现关乎模型和数据规模。我们通常认为模型参数越多、见过的分子越多，它就越「博学」。但实验结果显示，一个仅有 1500 万参数的中等大小模型，在使用一半 ChEMBL 数据集进行预训练时，表现最佳。继续增大模型尺寸或喂给它全部数据，性能反而开始下降。</p>
+<p>这说明，对于分子性质预测这类任务，存在一个「甜点区」。超过这个区域，更大的模型可能会学到噪音，或者说，更多的参数和数据带来了「收益递减」。这对于计算资源有限的实验室是好消息，我们无需追逐动辄数十亿参数的巨型模型，也能做出顶尖成果。</p>
+<p>基于这些发现，作者构建了 MolEncoder。它是一个在「甜点区」里精心调校过的 BERT 模型。在多个行业标准测试集上，这个小巧的 MolEncoder 全面或部分超越了更大、更复杂的模型，如 ChemBERTa-2 和 MoLFormer。它用更少的计算资源，完成了更出色的工作。</p>
+<p>最后，这项研究还指出：预训练损失（pretraining loss）并不能很好地预测模型在实际任务中的表现。很多团队会盯着这个数字，认为它越低模型就越好。但事实是，必须将模型在真实的下游任务上进行测试，才能知道其真实性能。</p>
+<p>📜Title: MolEncoder: Towards Optimal Masked Language Modeling for Molecules<br>
+📜Paper: https://doi.org/10.26434/chemrxiv-2025-h4w9d</p>
+</section>
+<section id="deepsea用-ai-揪出隐形的抗生素耐药蛋白" class="level2">
+<h2 class="anchored" data-anchor-id="deepsea用-ai-揪出隐形的抗生素耐药蛋白">3. DeepSEA：用 AI 揪出隐形的抗生素耐药蛋白</h2>
+<p><a href="post_all_image/deep_sea_an_alignmen_2025_09_14_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/deep_sea_an_alignmen_2025_09_14_image_1.jpg" class="img-fluid"></a></p>
+<p>抗生素耐药性 (Antimicrobial resistance, AMR) 是一个日益严峻的问题。我们现在监控耐药性的主流方法，如 RGI 和 AMRFinderPlus，严重依赖序列比对。这就像手里拿着一本嫌疑人名单，然后去比对现场发现的指纹。如果罪犯是个新手，不在名单上，你就抓不到他。这些工具的假阴性率因此居高不下，一旦出现序列新颖的耐药蛋白，它们就会失灵。</p>
+<p>这篇论文里的 DeepSEA 模型，试图用一种新思路解决这个问题。它是一个卷积神经网络 (Convolutional Neural Network, CNN)，本质上是一种模式识别工具。你可以把它想象成一个训练有素的专家，看的不是完整的序列，而是序列中的关键「片段」或「基序」。它不关心整个蛋白序列和数据库里的已知序列有多像，只关心它是否包含那些赋予其耐药功能的关键结构域。</p>
+<p>这是它的工作原理。研究者用一个名为 NCRD 的非冗余综合数据库来训练模型。他们把大量的耐药蛋白和非耐药蛋白序列「喂」给 CNN。网络通过学习，自动提取出与耐药性相关的抽象特征。比如，某个特定的氨基酸组合可能形成了一个可以水解抗生素的活性位点。CNN 就能学会识别这个模式，即使它出现在一个全新的蛋白骨架上。</p>
+<p>这个模型让我欣赏的一点是它的可解释性。我们最怕的就是「黑箱模型」。一个模型告诉我这个蛋白有耐药性，但说不出为什么，那它的价值就大打折扣。DeepSEA 的研究者通过分析 CNN 内部神经元的激活模式，反向追溯是输入序列的哪个部分让模型做出了「耐药」的判断。这样一来，模型不仅给出了预测，还用高亮的方式「指」出了蛋白上可能负责降解抗生素的关键功能域。这就从一个单纯的分类工具，变成了一个能启发新实验、帮助我们理解耐药机制的工具。</p>
+<p>模型的性能数据也很扎实。在测试中，它对九类耐药蛋白的召回率 (Recall) 都超过了 0.95。这意味着它几乎能把所有真正的耐药蛋白都找出来，漏网之鱼很少。在和 RGI、AMRFinderPlus 甚至是 ESM2 这种大模型的对比中，DeepSEA 的假阴性更少。</p>
+<p>研究者还测试了它的泛化能力。他们用一些和训练集序列相似度很低的蛋白去测试模型，结果模型的精确率、召回率和 F1 分数依然很高。这说明 DeepSEA 不是靠「死记硬背」来识别序列，而是真正学到了决定蛋白耐药功能的底层规律。</p>
+<p>最后，作者们把这个模型打包成了一个开源的生物信息学工具，提供了命令行界面。这意味着任何一个实验室都可以下载下来，用于分析自己的宏基因组数据，去发现那些可能被传统方法忽略的新型耐药基因。</p>
+<p>📜Title: DeepSEA: An Alignment-Free Explainable Approach to Annotate Antimicrobial Resistance Proteins<br>
+📜Paper: https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-025-06256-4<br>
+💻Code: https://github.com/computational-chemical-biology/DeepSEA-project</p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-09-29/post_all.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>
