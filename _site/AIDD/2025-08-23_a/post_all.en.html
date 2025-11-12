@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="An evaluation of nine major LLMs reveals they still struggle to understand complex biochemical reaction networks. Meanwhile, ESM-LoRA-Gly uses LoRA to efficiently fine-tune a large protein model, significantly improving glycosylation site prediction while cutting computational costs. Finally, a study successfully used generative AI to design entirely new antibiotics that proved effective in animal models, showing AI’s potential to tackle the tough problem of drug resistance.">
+
+<title>Large Language Models’ Blind Spots, Lightweight Fine-Tuning, and Designing Antibiotics from Scratch – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="Large Language Models’ Blind Spots, Lightweight Fine-Tuning, and Designing Antibiotics from Scratch – MPU">
+<meta property="og:description" content="An evaluation of nine major LLMs reveals they still struggle to understand complex biochemical reaction networks. Meanwhile, ESM-LoRA-Gly uses LoRA to efficiently fine-tune a large protein model, significantly improving glycosylation site prediction while cutting computational costs. Finally, a study successfully used generative AI to design entirely new antibiotics that proved effective in animal models, showing AI’s potential to tackle the tough problem of drug resistance.">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-08-23_a/post_all_image/esm_lo_ra_gly_improv_2025_08_20_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="A concept diagram of the ESM-LoRA-Gly method, showing how tiny LoRA patch matrices are added to and trained on the ESM2 protein language model. This allows for efficient fine-tuning of the model for glycosylation site prediction, improving accuracy while reducing computational resource requirements.
+">
+<meta name="twitter:title" content="Large Language Models’ Blind Spots, Lightweight Fine-Tuning, and Designing Antibiotics from Scratch – MPU">
+<meta name="twitter:description" content="An evaluation of nine major LLMs reveals they still struggle to understand complex biochemical reaction networks. Meanwhile, ESM-LoRA-Gly uses LoRA to efficiently fine-tune a large protein model, significantly improving glycosylation site prediction while cutting computational costs. Finally, a study successfully used generative AI to design entirely new antibiotics that proved effective in animal models, showing AI’s potential to tackle the tough problem of drug resistance.">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-08-23_a/post_all_image/esm_lo_ra_gly_improv_2025_08_20_image_1.jpg">
+<meta name="twitter:image:alt" content="A concept diagram of the ESM-LoRA-Gly method, showing how tiny LoRA patch matrices are added to and trained on the ESM2 protein language model. This allows for efficient fine-tuning of the model for glycosylation site prediction, improving accuracy while reducing computational resource requirements.
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">Large Language Models’ Blind Spots, Lightweight Fine-Tuning, and Designing Antibiotics from Scratch</h1>
+                  <div>
+        <div class="description">
+          <p>An evaluation of nine major LLMs reveals they still struggle to understand complex biochemical reaction networks. Meanwhile, ESM-LoRA-Gly uses LoRA to efficiently fine-tune a large protein model, significantly improving glycosylation site prediction while cutting computational costs. Finally, a study successfully used generative AI to design entirely new antibiotics that proved effective in animal models, showing AI’s potential to tackle the tough problem of drug resistance.</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">AI Drug Discovery</div>
+                <div class="quarto-category">Large Language Models</div>
+                <div class="quarto-category">Generative AI</div>
+                <div class="quarto-category">Protein Engineering</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Saturday, the 23rd of August, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#table-of-contents" id="toc-table-of-contents" class="nav-link active" data-scroll-target="#table-of-contents">Table of Contents</a></li>
+  <li><a href="#large-models-dont-get-protein-pathways-a-new-benchmark-reveals-ais-shortcomings" id="toc-large-models-dont-get-protein-pathways-a-new-benchmark-reveals-ais-shortcomings" class="nav-link" data-scroll-target="#large-models-dont-get-protein-pathways-a-new-benchmark-reveals-ais-shortcomings">1. Large models don’t get protein pathways? A new benchmark reveals AI’s shortcomings</a></li>
+  <li><a href="#lora-a-large-protein-model-a-lightweight-breakthrough-in-glycosylation-prediction" id="toc-lora-a-large-protein-model-a-lightweight-breakthrough-in-glycosylation-prediction" class="nav-link" data-scroll-target="#lora-a-large-protein-model-a-lightweight-breakthrough-in-glycosylation-prediction">2. LoRA + a large protein model: A “lightweight” breakthrough in glycosylation prediction</a></li>
+  <li><a href="#ai-designs-new-antibiotics-from-scratch-validated-in-animal-models" id="toc-ai-designs-new-antibiotics-from-scratch-validated-in-animal-models" class="nav-link" data-scroll-target="#ai-designs-new-antibiotics-from-scratch-validated-in-animal-models">3. AI designs new antibiotics from scratch, validated in animal models</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-08-23_a/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="table-of-contents" class="level2">
+<h2 class="anchored" data-anchor-id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li>Large Language Models (LLMs) may be powerful, but when it comes to understanding complex biochemical reaction networks, they’re like new interns—far from having real chemical intuition.</li>
+<li>By using LoRA for “lightweight” fine-tuning of a large protein language model, ESM-LoRA-Gly significantly improves the accuracy of glycosylation site prediction while drastically cutting computational costs, making large-scale analysis possible.</li>
+<li>Researchers used a generative AI framework to successfully design completely new antibiotics that were effective against multi-drug resistant bacteria in animal models, proving AI can explore unknown chemical space to solve the difficult problem of drug resistance.</li>
+</ol>
+</section>
+<section id="large-models-dont-get-protein-pathways-a-new-benchmark-reveals-ais-shortcomings" class="level2">
+<h2 class="anchored" data-anchor-id="large-models-dont-get-protein-pathways-a-new-benchmark-reveals-ais-shortcomings">1. Large models don’t get protein pathways? A new benchmark reveals AI’s shortcomings</h2>
+<p><a href="post_all_image/exposing_the_molecul_2025_08_20_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/exposing_the_molecul_2025_08_20_image_1.jpg" class="img-fluid"></a></p>
+<p>Every day, we deal with signaling pathways. If a certain kinase is inhibited, what happens downstream? If this protein is mutated, which metabolic pathway will it affect? We all have a complex network map in our heads. So, it’s natural to wonder if AI can help us sort through these connections, or even predict links we hadn’t considered.</p>
+<p>Recently, a team put nine of the most popular LLMs to the test in a biochemistry exam.</p>
+<p>To make the test professional and fair, they built a new benchmark dataset called PathwayQA, based on the authoritative Reactome database.</p>
+<p>The exam tested two things: predicting reaction products and linking pathways to diseases.</p>
+<p>The first test was “chemical reaction reasoning”—given the reactants, predict the products. The result? Almost a total failure. Even the best-performing model had a median recovery score of only 0.6667, barely passing. It’s like a student who knows every word in the dictionary but is completely lost when asked to write a coherent essay. LLMs seem to remember a vast number of isolated entities (like protein A or molecule B), but they have a poor understanding of how these entities dynamically interact according to the laws of chemistry and physics.</p>
+<p>The second test was “biological association analysis,” which involved matching signaling pathways with related diseases. The scores were slightly better here, but the average accuracy was only 0.5980, which isn’t great. But there was an interesting finding: the general-purpose, massive-parameter LLMs actually outperformed models specifically trained on biomedical literature. This is worth thinking about. Does it mean that for reasoning tasks that require integrating knowledge across different fields, sheer size—more parameters and broader general knowledge—is more important than narrow, specialized training? This is something for model trainers to consider.</p>
+<p>The researchers also noticed that if a protein is a “social butterfly” involved in many reactions, the model’s prediction accuracy drops significantly. This makes perfect sense. Dealing with these “central hubs” in a network requires a global understanding of complex regulatory networks, not just simple pattern matching. Clearly, today’s models aren’t there yet.</p>
+<p>📜Paper: https://www.biorxiv.org/content/10.1101/2025.08.12.669911v1</p>
+</section>
+<section id="lora-a-large-protein-model-a-lightweight-breakthrough-in-glycosylation-prediction" class="level2">
+<h2 class="anchored" data-anchor-id="lora-a-large-protein-model-a-lightweight-breakthrough-in-glycosylation-prediction">2. LoRA + a large protein model: A “lightweight” breakthrough in glycosylation prediction</h2>
+<p><a href="post_all_image/esm_lo_ra_gly_improv_2025_08_20_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/esm_lo_ra_gly_improv_2025_08_20_image_1.jpg" class="img-fluid"></a></p>
+<p>In biology, glycosylation is like adding different “outfits” to a protein, determining its function, stability, and location in the cell. Figuring out where these “outfits” are attached is crucial for understanding disease mechanisms and developing new drugs, especially biologics like antibodies. The problem is, predicting these sites, particularly O-linked glycosylation, has always been difficult—like finding a needle in a haystack.</p>
+<p>Now, the protein field has its own “GPTs”—large language models like ESM2. By learning from massive amounts of protein sequences, these models have developed a deep understanding of the “rules of protein language.” In theory, we could use them for downstream tasks like predicting glycosylation sites.</p>
+<p>But doing this directly presents a practical problem: the ESM2-3B model has 3 billion parameters. Fully fine-tuning it for a small, specific task is like buying an entire hardware factory just to tighten one screw. The computational cost is absurdly high.</p>
+<p>The ESM-LoRA-Gly method in this paper offers a solution. Instead of adjusting all 3 billion parameters, the authors used a technique called LoRA (Low-Rank Adaptation). LoRA doesn’t change the original model’s massive parameter matrices. Instead, it adds two much smaller “patch” matrices alongside them. During training, only these two small patches are updated. It’s like adding a few sticky notes to a huge reference book instead of rewriting the whole thing. The effect is surprisingly good. The model learns the new task without a significant increase in computational load.</p>
+<p>The results for the notoriously hard task of O-linked glycosylation prediction were impressive. The new method’s MCC score (a comprehensive metric for classification models) more than doubled, leaving previous state-of-the-art methods behind. For N-linked prediction, the AUC-PR reached 0.983, which is very reliable.</p>
+<p>This means we finally have a tool that is both accurate and fast, enabling large-scale glycosylation analysis at the proteome level. Whether it’s for screening new drug targets or optimizing glycoengineering for antibody drugs to improve efficacy and half-life, this tool could be very useful.</p>
+<p>📜Title: ESM-LoRA-Gly: Improved prediction of N- and O-linked glycosylation sites by tuning protein language models with low-rank adaptation (LoRA) 📜Paper: https://www.biorxiv.org/content/10.1101/2025.08.12.669850v1</p>
+</section>
+<section id="ai-designs-new-antibiotics-from-scratch-validated-in-animal-models" class="level2">
+<h2 class="anchored" data-anchor-id="ai-designs-new-antibiotics-from-scratch-validated-in-animal-models">3. AI designs new antibiotics from scratch, validated in animal models</h2>
+<p><a href="post_all_image/a_generative_deep_le_2025_08_20_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/a_generative_deep_le_2025_08_20_image_1.jpg" class="img-fluid"></a></p>
+<p>The antibiotic development pipeline is running dry. This isn’t news. For decades, we’ve been modifying the same classic chemical scaffolds, and the “low-hanging fruit” is long gone.</p>
+<p>This paper claims that scientists used AI to design entirely new (<em>de novo</em>) antibiotics that were effective in animals. Is this for real?</p>
+<p>The authors used two different generative AI strategies.</p>
+<p>The first is “fragment-based growth.” This isn’t a new concept in medicinal chemistry. You start with a known, slightly active “fragment” and build it out into a full drug molecule, like assembling LEGOs. But the key here is that they didn’t have chemists do the building; they had AI tools like genetic algorithms and variational autoencoders (VAEs) do it. It’s like giving the AI a small piece of a puzzle and asking it not only to complete the picture but also to make sure the final picture “makes sense”—meaning it has antibacterial activity.</p>
+<p>The second method is more ambitious: “unconstrained <em>de novo</em> generation.” This is like giving the AI a blank sheet of paper and letting it freely create molecules it thinks will be antibacterial. This is where AI gets exciting—it has the potential to break out of the box of human chemical thinking and create structures we’ve never imagined. Of course, this is also where things can easily go wrong. Many of the molecules AI “draws” are either impossible to synthesize or completely useless.</p>
+<p>From the computer-designed molecules, they selected 24 for synthesis, and 7 of them showed selective antibacterial activity. For exploring brand-new chemical space, that hit rate is quite good.</p>
+<p>The most impressive results came from two star molecules: NG1 and DN1.</p>
+<p>NG1 specifically targets <em>Neisseria gonorrhoeae</em>—a drug-resistant bacterium that’s a major headache for public health departments. Its mechanism is straightforward: it messes with the bacterial cell membrane, reducing its fluidity and eventually causing the entire membrane to lose its integrity. You can think of it as popping a balloon rather than trying to dismantle its complex internal machinery.</p>
+<p>The perpetual challenge with this membrane-attacking strategy is selectivity: how do you ensure you’re only popping the bacteria’s balloon and not harming our own human cells? The paper’s data shows that NG1 has low toxicity, which is a good start. More importantly, it actually worked in a mouse infection model.</p>
+<p>The other molecule, DN1, showed broad-spectrum activity against Gram-positive bacteria, including MRSA. This demonstrates that the AI platform isn’t just getting lucky with one molecule; it has the capability to generate different solutions for different targets.</p>
+<p>So, what does this mean?</p>
+<p>First, it’s a powerful proof of concept. It shows that today’s AI tools are not just for theoretical exercises; they can actually complete the entire process from algorithm to effective results in an animal model. This is a breakthrough from 0 to 1.</p>
+<p>Of course, these are just lead compounds. They are a long way from becoming actual approved drugs. The subsequent studies on pharmacokinetics and toxicology, as well as the long and expensive clinical trials, are all minefields. But the most valuable part of this work is the AI platform itself.</p>
+<p>📜Title: A Generative Deep Learning Approach to De Novo Antibiotic Design 📜Paper: https://www.cell.com/cell/abstract/S0092-8674(25)00855-4</p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-08-23_a/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

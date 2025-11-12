@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="This article introduces five new AI technologies and their latest applications in biopharma. It covers the PepTron model, which for the first time accurately predicts intrinsically disordered proteins (IDPs), opening new paths for drug development. We also look at the BiomarkerML tool, which lets biologists without coding skills use machine learning to find disease biomarkers. Then there’s the MECo framework, which uses code-based editing to let AI optimize molecules with the precision of a chemist. The AF-CALVADOS model combines AlphaFold with simulations to study the dynamic conformations of tens of thousands of human proteins at scale. And finally, ConforFold actively controls secondary structures to predict multiple protein conformations, providing a new tool for understanding dynamic drug targets.">
+
+<title>New AI Frontiers in Protein Research: From Disordered Protein Prediction to Dynamic Conformation Simulation – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="New AI Frontiers in Protein Research: From Disordered Protein Prediction to Dynamic Conformation Simulation – MPU">
+<meta property="og:description" content="This article introduces five new AI technologies and their latest applications in biopharma. It covers the PepTron model, which for the first time accurately predicts intrinsically disordered proteins (IDPs), opening new paths for drug development. We also look at the BiomarkerML tool, which lets biologists without coding skills use machine learning to find disease biomarkers. Then there’s the MECo framework, which uses code-based editing to let AI optimize molecules with the precision of a chemist. The AF-CALVADOS model combines AlphaFold with simulations to study the dynamic conformations of tens of thousands of human proteins at scale. And finally, ConforFold actively controls secondary structures to predict multiple protein conformations, providing a new tool for understanding dynamic drug targets.">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-10-22/post_all_image/af_calvados_alpha_fo_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_2.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="A workflow diagram of the AF-CALVADOS model. It shows a multi-domain protein where stably folded domains are marked as rigid bodies, and low-confidence intrinsically disordered regions (IDRs) are marked as flexible linkers. The diagram illustrates how the model uses AlphaFold's predicted confidence scores to automatically distinguish between the rigid and flexible parts of a protein, enabling large-scale dynamic conformation simulations.
+">
+<meta name="twitter:title" content="New AI Frontiers in Protein Research: From Disordered Protein Prediction to Dynamic Conformation Simulation – MPU">
+<meta name="twitter:description" content="This article introduces five new AI technologies and their latest applications in biopharma. It covers the PepTron model, which for the first time accurately predicts intrinsically disordered proteins (IDPs), opening new paths for drug development. We also look at the BiomarkerML tool, which lets biologists without coding skills use machine learning to find disease biomarkers. Then there’s the MECo framework, which uses code-based editing to let AI optimize molecules with the precision of a chemist. The AF-CALVADOS model combines AlphaFold with simulations to study the dynamic conformations of tens of thousands of human proteins at scale. And finally, ConforFold actively controls secondary structures to predict multiple protein conformations, providing a new tool for understanding dynamic drug targets.">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-10-22/post_all_image/af_calvados_alpha_fo_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_2.jpg">
+<meta name="twitter:image:alt" content="A workflow diagram of the AF-CALVADOS model. It shows a multi-domain protein where stably folded domains are marked as rigid bodies, and low-confidence intrinsically disordered regions (IDRs) are marked as flexible linkers. The diagram illustrates how the model uses AlphaFold's predicted confidence scores to automatically distinguish between the rigid and flexible parts of a protein, enabling large-scale dynamic conformation simulations.
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">New AI Frontiers in Protein Research: From Disordered Protein Prediction to Dynamic Conformation Simulation</h1>
+                  <div>
+        <div class="description">
+          <p>This article introduces five new AI technologies and their latest applications in biopharma. It covers the PepTron model, which for the first time accurately predicts intrinsically disordered proteins (IDPs), opening new paths for drug development. We also look at the BiomarkerML tool, which lets biologists without coding skills use machine learning to find disease biomarkers. Then there’s the MECo framework, which uses code-based editing to let AI optimize molecules with the precision of a chemist. The AF-CALVADOS model combines AlphaFold with simulations to study the dynamic conformations of tens of thousands of human proteins at scale. And finally, ConforFold actively controls secondary structures to predict multiple protein conformations, providing a new tool for understanding dynamic drug targets.</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">Protein Structure Prediction</div>
+                <div class="quarto-category">AI-Aided Drug Design</div>
+                <div class="quarto-category">AlphaFold</div>
+                <div class="quarto-category">Bioinformatics</div>
+                <div class="quarto-category">Machine Learning</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Wednesday, the 22nd of October, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#table-of-contents" id="toc-table-of-contents" class="nav-link active" data-scroll-target="#table-of-contents">Table of Contents</a></li>
+  <li><a href="#new-ai-model-peptron-predicts-disordered-proteins-opening-new-paths-for-drug-discovery" id="toc-new-ai-model-peptron-predicts-disordered-proteins-opening-new-paths-for-drug-discovery" class="nav-link" data-scroll-target="#new-ai-model-peptron-predicts-disordered-proteins-opening-new-paths-for-drug-discovery">1. New AI Model PepTron Predicts Disordered Proteins, Opening New Paths for Drug Discovery</a></li>
+  <li><a href="#biomarkerml-ai-for-proteomics-letting-anyone-find-targets" id="toc-biomarkerml-ai-for-proteomics-letting-anyone-find-targets" class="nav-link" data-scroll-target="#biomarkerml-ai-for-proteomics-letting-anyone-find-targets">2. BiomarkerML: AI for Proteomics, Letting Anyone Find Targets</a></li>
+  <li><a href="#meco-editing-molecules-with-code-making-ai-think-like-a-chemist" id="toc-meco-editing-molecules-with-code-making-ai-think-like-a-chemist" class="nav-link" data-scroll-target="#meco-editing-molecules-with-code-making-ai-think-like-a-chemist">3. MECo: Editing Molecules with Code, Making AI Think Like a Chemist</a></li>
+  <li><a href="#a-new-way-to-use-alphafold-simulating-the-dynamics-of-tens-of-thousands-of-proteins" id="toc-a-new-way-to-use-alphafold-simulating-the-dynamics-of-tens-of-thousands-of-proteins" class="nav-link" data-scroll-target="#a-new-way-to-use-alphafold-simulating-the-dynamics-of-tens-of-thousands-of-proteins">4. A New Way to Use AlphaFold: Simulating the Dynamics of Tens of Thousands of Proteins</a></li>
+  <li><a href="#conforfold-unlocking-protein-dynamics-with-secondary-structures" id="toc-conforfold-unlocking-protein-dynamics-with-secondary-structures" class="nav-link" data-scroll-target="#conforfold-unlocking-protein-dynamics-with-secondary-structures">5. ConforFold: Unlocking Protein Dynamics with Secondary Structures</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-10-22/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="table-of-contents" class="level2">
+<h2 class="anchored" data-anchor-id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li>PeptoneBench, a new benchmark, and PepTron, a data-augmented model, achieve the first accurate predictions of disordered protein ensembles, solving a major challenge in AI structure prediction.</li>
+<li>BiomarkerML packages complex proteomics machine learning workflows, enabling biologists without programming expertise to discover disease biomarkers themselves.</li>
+<li>The MECo framework separates molecular optimization into “idea” and “execution,” using code to precisely implement a chemist’s design intent, making AI drug design more reliable and controllable.</li>
+<li>Researchers developed AF-CALVADOS, a model that combines AlphaFold’s structure predictions with coarse-grained simulations to simulate the dynamic conformations of tens of thousands of human proteins for the first time.</li>
+<li>ConforFold effectively predicts multiple protein conformations by actively sampling secondary structures to guide folding, offering a new tool for understanding dynamic drug targets.</li>
+</ol>
+</section>
+<section id="new-ai-model-peptron-predicts-disordered-proteins-opening-new-paths-for-drug-discovery" class="level2">
+<h2 class="anchored" data-anchor-id="new-ai-model-peptron-predicts-disordered-proteins-opening-new-paths-for-drug-discovery">1. New AI Model PepTron Predicts Disordered Proteins, Opening New Paths for Drug Discovery</h2>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="post_all_image/advancing_protein_en_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="advancing_protein_en_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1"><img src="post_all_image/advancing_protein_en_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg" class="img-fluid figure-img" alt="advancing_protein_en_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1"></a></p>
+<figcaption>advancing_protein_en_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1</figcaption>
+</figure>
+</div>
+<p>AlphaFold2 changed structural biology, but it has an Achilles’ heel: Intrinsically Disordered Proteins (IDPs).</p>
+<p>These proteins lack a fixed 3D structure and instead exist as a dynamic ensemble of conformations, like molecules constantly changing shape. IDPs make up about 30% of the eukaryotic proteome and are linked to diseases like cancer and neurodegeneration. They are attractive drug targets, but their shape-shifting nature makes them difficult to study.</p>
+<p>Models like AlphaFold2 are primarily trained on the Protein Data Bank (PDB), which is full of structurally stable proteins. A model trained on data containing only stable structures will naturally struggle with dynamic IDPs. When AlphaFold2 predicts an IDP, it produces a low-confidence, spaghetti-like structure. While this identifies the disordered region, drug development needs to know all possible conformations of that “spaghetti” and the probability of each one appearing.</p>
+<p><strong>Step 1: Establishing an evaluation standard (PeptoneBench</strong>)</p>
+<p>To solve a problem, you first need a way to measure success. This research established the PeptoneBench benchmark for that purpose.</p>
+<p>It integrates real experimental data, such as NMR chemical shifts and small-angle X-ray scattering (SAXS), to test a model’s performance in realistic scenarios. It’s like testing a race car on a real track.</p>
+<p>The performance comparison chart shows that as protein disorder increases, the performance of models like AlphaFold2 and Boltz2 drops sharply. But the new PepTron model and the computationally expensive BioEmu remain robust. This benchmark reveals which models are true all-rounders.</p>
+<p><strong>Step 2: Training a new model with synthetic data (PepTron</strong>)</p>
+<p>High-quality, real-world data on IDP structures is scarce. The research team’s solution was to create data.</p>
+<p>They developed a fragment generator called IDP-o to create a massive synthetic dataset, IDRome-o, containing various conformations of disordered proteins. They then trained their new model, PepTron, on this synthetic dataset combined with the ordered protein structures from the PDB.</p>
+<p>This data augmentation strategy is an effective application in protein structure prediction, especially for IDPs. It provides the AI model with a lot of knowledge about the “disordered world,” so it’s no longer one-sided.</p>
+<p>PepTron uses a generative model architecture called “flow-matching.” You can think of it as a master sculptor learning the entire path of creation. It learns not just to create from scratch, but the complete generative path from a random block of stone (random noise) to the final product (the real protein conformation ensemble). By training on both ordered and disordered data, PepTron learns to accurately predict structures across the entire spectrum, from ordered to disordered.</p>
+<p><strong>The value of PepTron for drug discovery</strong></p>
+<p>IDPs often act as critical hubs in cellular signaling networks, their flexibility allowing them to bind to multiple protein partners. Traditional drug design looks for stable “pockets” on a protein for small molecules to fit into. This approach doesn’t work for IDPs.</p>
+<p>Newer technologies like PROTACs or molecular glues don’t entirely depend on fixed pockets, but they still require an understanding of the target protein’s dynamic conformations. PepTron provides a high-resolution map of these dynamic conformations, offering a new starting point for computer-aided drug discovery (CADD).</p>
+<p>Of course, this work still has room for improvement. The realism of the synthetic data could be enhanced, and the influence of the cellular environment on IDP conformations needs more accurate modeling. But it’s a step toward solving the IDP prediction problem and opens a new direction for developing drugs against these targets.</p>
+<p>📜 Title: Advancing Protein Ensemble Predictions Across the Order–Disorder Continuum<br>
+🌐 Paper: https://doi.org/10.1101/2025.10.18.680935<br>
+💻 Code: https://www.biorxiv.org/content/10.1101/2025.10.18.680935v2</p>
+</section>
+<section id="biomarkerml-ai-for-proteomics-letting-anyone-find-targets" class="level2">
+<h2 class="anchored" data-anchor-id="biomarkerml-ai-for-proteomics-letting-anyone-find-targets">2. BiomarkerML: AI for Proteomics, Letting Anyone Find Targets</h2>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="post_all_image/biomarker_ml_a_cloud_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2" title="biomarker_ml_a_cloud_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1"><img src="post_all_image/biomarker_ml_a_cloud_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg" class="img-fluid figure-img" alt="biomarker_ml_a_cloud_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1"></a></p>
+<figcaption>biomarker_ml_a_cloud_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1</figcaption>
+</figure>
+</div>
+<p>Drug discovery generates massive amounts of proteomics data every day. Instruments run at high speed, and data piles up. But there’s a shortage of people who can effectively analyze it and extract value. Many wet-lab biologists find themselves with a treasure map they can’t decipher.</p>
+<p>A new tool called BiomarkerML aims to solve this problem. It’s a “proteomics analysis pipeline” that packages complex machine learning operations into a semi-automated workflow.</p>
+<p>How does it work?</p>
+<p>First, it includes several machine learning models, including a Variational Autoencoder (VAE) from deep learning. Proteomics data is noisy and full of non-linear relationships, which limits traditional statistical methods. These models are better suited for such data. The tool also automates tedious steps like hyperparameter tuning and cross-validation to prevent model overfitting and ensure reliable results.</p>
+<p>A key feature of BiomarkerML is how it explains the model’s predictions. It uses SHAP (SHapley Additive exPlanations) technology, which works like a detective analyzing clues. SHAP values identify which “protein witness” provided the key information for a final judgment, like diagnosing a disease. This makes the identified biomarker candidates explainable.</p>
+<p>Focusing only on the most important witnesses isn’t enough. BiomarkerML also analyzes their “social network”—the protein-protein interaction network. Proteins rarely act alone; they usually work with others. By analyzing this network, proteins with low SHAP values that are closely connected to key proteins are also identified. The final list of candidate biomarkers thus tells a complete biological story.</p>
+<p>The tool is built with Python, R, and Workflow Description Language (WDL). WDL is key for creating reproducible and portable analysis workflows. With WDL, the same analysis will produce identical results in different computing environments, like AWS or a company’s internal cluster, as long as it’s configured correctly. In drug discovery, reproducibility is a lifeline.</p>
+<p>The team tested the tool on urine proteomics data from hepatitis B-related liver disease. They achieved high AUC scores and found several promising candidate molecules, validating the workflow’s effectiveness.</p>
+<p>The value of BiomarkerML lies in lowering the barrier to bioinformatics analysis. It allows scientists in the lab who understand biology to use advanced AI methods to mine data without learning complex parameter tuning or scripting. This could speed up many early-stage projects and help valuable biomarkers be discovered faster.</p>
+<p>📜 Paper: BiomarkerML: A cloud-based proteomics ML workflow for biomarker discovery<br>
+🌐 Link: <a href="https://www.biorxiv.org/content/10.1101/2025.10.16.682839v1" class="uri">https://www.biorxiv.org/content/10.1101/2025.10.16.682839v1</a></p>
+</section>
+<section id="meco-editing-molecules-with-code-making-ai-think-like-a-chemist" class="level2">
+<h2 class="anchored" data-anchor-id="meco-editing-molecules-with-code-making-ai-think-like-a-chemist">3. MECo: Editing Molecules with Code, Making AI Think Like a Chemist</h2>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="post_all_image/coder_as_editor_cod_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3" title="coder_as_editor_cod_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1"><img src="post_all_image/coder_as_editor_cod_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg" class="img-fluid figure-img" alt="coder_as_editor_cod_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1"></a></p>
+<figcaption>coder_as_editor_cod_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1</figcaption>
+</figure>
+</div>
+<p>A major challenge in drug discovery is getting AI to optimize molecules with the same systematic logic as a chemist. Many AI models operate directly on SMILES strings, a simplified molecular representation. This is like editing the raw pixels of an image—a small mistake can create a chemically invalid “monster molecule.”</p>
+<p>The MECo framework takes a different approach, one that more closely resembles how chemists work. It splits the molecular optimization process into two steps.</p>
+<p>First, the AI acts as an “editor.” It analyzes the starting molecule and the optimization goal (like increasing activity or reducing toxicity) and then proposes a human-readable modification plan. This plan is like what a chemist might say in a meeting: “Let’s replace the methyl group on this phenyl ring with a trifluoromethyl group to see if we can improve lipophilicity.”</p>
+<p>Second, the AI switches to a “programmer” role and translates this “editing intent” into executable Python code. This code uses cheminformatics toolkits (like RDKit) to perform precise, atom-level operations on the molecular structure, such as locating specific atoms, breaking old bonds, and attaching new functional groups.</p>
+<p>This method solves the problem of generating valid molecules. The code is rigorous. It either executes successfully to produce a chemically valid molecule or it throws an error. It won’t create structures with nonsensical chemical bonds. The reported accuracy is over 98%, a level difficult to achieve with SMILES-based methods. Traditional methods are like someone trying to edit a sentence without knowing grammar, often producing gibberish. MECo first understands the sentence’s meaning and then uses grammatical tools to modify it.</p>
+<p>The optimization process also becomes transparent and controllable. The AI no longer just provides a final result; it shows its entire “thought process”—its editing intent and the code that executed it. Medicinal chemists can review every decision the AI makes and even modify the code before running it. The AI transforms from a “black box” into a collaborative and debuggable tool.</p>
+<p>To train the model, the researchers used a mixed-data strategy, combining theoretical chemical edit operations (synthetic data) with data from real chemical reactions and drug optimization case studies. This allowed the model to learn not just the rules of chemistry but also the practical “feel” and “techniques” of working chemists.</p>
+<p>MECo’s “code as editor” model enables AI to “speak human, act machine” in molecular design. It turns a vague generative task into a clear, verifiable engineering problem, potentially moving AI-assisted drug design toward a more practical and reliable stage.</p>
+<p>📜 Title: Coder as Editor: Code-Driven Interpretable Molecular Optimization<br>
+🌐 Paper: https://arxiv.org/abs/2510.14455v1</p>
+</section>
+<section id="a-new-way-to-use-alphafold-simulating-the-dynamics-of-tens-of-thousands-of-proteins" class="level2">
+<h2 class="anchored" data-anchor-id="a-new-way-to-use-alphafold-simulating-the-dynamics-of-tens-of-thousands-of-proteins">4. A New Way to Use AlphaFold: Simulating the Dynamics of Tens of Thousands of Proteins</h2>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="post_all_image/af_calvados_alpha_fo_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_2.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-4" title="af_calvados_alpha_fo_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_2"><img src="post_all_image/af_calvados_alpha_fo_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_2.jpg" class="img-fluid figure-img" alt="af_calvados_alpha_fo_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_2"></a></p>
+<figcaption>af_calvados_alpha_fo_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_2</figcaption>
+</figure>
+</div>
+<p>Proteins are not rigid rocks; they breathe, wiggle, and change shape. AlphaFold2 gives us high-definition “snapshots” of protein structures, but that’s not enough. We want to see the “movie” to understand how proteins move. This is especially true for multi-domain proteins with Intrinsically Disordered Regions (IDRs). These are like devices made of several solid modules connected by flexible ropes, and simulating their overall motion has always been a challenge.</p>
+<p>The problem was how to tell a computer which parts are “solid modules” and which are “flexible ropes.” In the past, this required researchers to define them manually, a slow and laborious process that couldn’t be done at scale.</p>
+<p>The AF-CALVADOS model offers a solution.</p>
+<p>Here’s how it works: first, it uses AlphaFold2 to predict the structure of the entire protein. Then, the model looks at AlphaFold’s own confidence scores—the pLDDT and PAE. If a region has a high pLDDT score and the PAE shows it’s a stable, independent unit, the model classifies it as a well-folded domain. In the subsequent simulation, this “module” is treated as a single rigid body. Conversely, if a region has a low pLDDT score, it’s a “flexible rope,” and the model lets it move freely during the simulation.</p>
+<p>This automated process is the core of the work, and it makes large-scale simulation possible. Using this method, the researchers simulated the dynamic conformations of 12,483 human cytoplasmic proteins in one go.</p>
+<p>Of course, a new method needs to be validated. The researchers compared their simulation results with existing experimental data (like the protein’s radius of gyration, Rg) and found a good match. This indicates that the dynamics simulated by AF-CALVADOS are largely consistent with physical reality.</p>
+<p>With this tool and this massive dataset, some patterns have started to emerge.</p>
+<p>One important finding is that context changes the behavior of IDRs. An isolated IDR in solution might act like a loose, extended string. But when it’s sandwiched between two well-folded domains, things change. The coordinated movement of these two “heavyweights” restricts its space, “squeezing” it into a more compact shape. It’s like an earphone cord—if the two earbuds are close together, the wire between them can’t stretch out very far.</p>
+<p>The researchers also found that even within the complex environment of a full protein, the intrinsic chemical properties of the IDR sequence itself, like its charge distribution (NCPR) and hydrophobicity pattern (SHD), still subtly influence its conformation. A protein’s dynamic behavior is the result of both its own sequence properties and the physical constraints imposed by surrounding domains.</p>
+<p>This work provides a massive, public database of protein dynamic conformations. Computational scientists can use it to train new machine learning models to predict protein dynamics. And those of us in drug discovery can mine this database to study specific target families, like transcription factors. Their IDR regions often play a key role in binding to DNA or other proteins. Understanding their dynamic changes could provide inspiration for designing new regulatory drugs.</p>
+<p>📜 Title: AF-CALVADOS: AlphaFold-guided simulations of multi-domain proteins at the proteome level<br>
+🌐 Paper: https://www.biorxiv.org/content/10.1101/2025.10.19.683306v1</p>
+</section>
+<section id="conforfold-unlocking-protein-dynamics-with-secondary-structures" class="level2">
+<h2 class="anchored" data-anchor-id="conforfold-unlocking-protein-dynamics-with-secondary-structures">5. ConforFold: Unlocking Protein Dynamics with Secondary Structures</h2>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><a href="post_all_image/confor_fold_recovers_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-5" title="confor_fold_recovers_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1"><img src="post_all_image/confor_fold_recovers_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg" class="img-fluid figure-img" alt="confor_fold_recovers_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1"></a></p>
+<figcaption>confor_fold_recovers_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1</figcaption>
+</figure>
+</div>
+<p>Proteins are not static building blocks; they are constantly moving and changing shape. For example, the DFG-in and DFG-out conformations of a kinase activation loop determine whether an inhibitor is Type I or Type II. AlphaFold is great at predicting a protein’s static structure, but capturing these dynamic changes is difficult.</p>
+<p>In the past, a common way to get different conformations was to manipulate the multiple sequence alignment (MSA), for example, by subsampling. This is like showing a painter many photos of the same person in hopes of getting drawings with different expressions. This method sometimes works, but the model often defaults to generating the most “standard” structure, failing to capture subtle conformational shifts.</p>
+<p>ConforFold changes the approach by directly controlling the protein’s folding “blueprint”—its secondary structure.</p>
+<p>It works in two steps. First, it trains a model called ConforPSSP to predict multiple possible secondary structures for a protein. For instance, the model might predict that a certain sequence has a 60% chance of being an α-helix and a 30% chance of being a coil.</p>
+<p>Second, it feeds these different secondary structure “instructions” into a retrained OpenFold model. This is like directly telling the painter, “This time, draw the corner of the mouth turned up.” By providing explicit local structure commands, the model is forced to explore different folding pathways and generate a variety of 3D conformations.</p>
+<p>This method actively guides the conformational search, rather than passively relying on weak signals in the MSA data.</p>
+<p>On a test set of proteins with two known conformations, ConforFold successfully recovered both conformations 84% of the time (TM-score ≥0.8), outperforming standard AlphaFold and other methods that rely on MSA sampling.</p>
+<p>This tool has two practical benefits:</p>
+<ol type="1">
+<li><strong>Solves the problem of insufficient MSA information</strong>: For evolutionarily conserved targets with poor MSAs, MSA-dependent methods usually fail. ConforFold is less reliant on the MSA, offering a solution for these targets.</li>
+<li><strong>Complements other methods</strong>: ConforFold can be used alongside methods like AlphaFlow. We can build a toolbox and, for different targets, select or combine the most suitable tools to paint a complete picture of a protein’s conformational landscape.</li>
+</ol>
+<p>The project’s code is open source, so computational teams can download it and test it on their own targets. This idea of intervening in the prediction process at a more fundamental level is worth noting.</p>
+<p>📜 Title: ConforFold Recovers Alternative Protein Conformations Beyond MSA Subsampling<br>
+🌐 Paper: https://www.biorxiv.org/content/10.1101/2025.10.14.682366v1<br>
+💻 Code: https://github.com/strauchlab/Confor-PSSP</p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-10-22/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

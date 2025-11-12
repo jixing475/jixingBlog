@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="This article covers five recent studies in biomedical research. We’ll explore how AlphaFold-Multimer is upending our understanding of receptor structure and how ToolUniverse builds personalized AI scientists to speed up drug discovery. We’ll also look at the MOLERR2FIX benchmark, which reveals the limits of large language models in chemistry. Then, we’ll see how BindPred can predict protein binding affinity from sequence alone, and finally, examine a large-scale pharmacogenomic knowledge graph that provides a reliable foundation for AI to discover new links between drugs and diseases.">
+
+<title>AI in Biomedical Research: Advances in AlphaFold, ToolUniverse, and Knowledge Graphs – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="AI in Biomedical Research: Advances in AlphaFold, ToolUniverse, and Knowledge Graphs – MPU">
+<meta property="og:description" content="This article covers five recent studies in biomedical research. We’ll explore how AlphaFold-Multimer is upending our understanding of receptor structure and how ToolUniverse builds personalized AI scientists to speed up drug discovery. We’ll also look at the MOLERR2FIX benchmark, which reveals the limits of large language models in chemistry. Then, we’ll see how BindPred can predict protein binding affinity from sequence alone, and finally, examine a large-scale pharmacogenomic knowledge graph that provides a reliable foundation for AI to discover new links between drugs and diseases.">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-10-16/post_all_image/democratizing_ai_sci_2025_10_09_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="A flowchart shows how the ToolUniverse ecosystem works. On the left, a user
+inputs instructions in natural language. In the center is the ToolUniverse
+core, with 'Find Tool' and 'Call Tool' functions connected to a large
+library of tools (machine learning models, databases, etc.). On the right,
+the system automates the entire process from tool discovery and code
+generation to workflow execution, aiming to accelerate scientific research.
+">
+<meta name="twitter:title" content="AI in Biomedical Research: Advances in AlphaFold, ToolUniverse, and Knowledge Graphs – MPU">
+<meta name="twitter:description" content="This article covers five recent studies in biomedical research. We’ll explore how AlphaFold-Multimer is upending our understanding of receptor structure and how ToolUniverse builds personalized AI scientists to speed up drug discovery. We’ll also look at the MOLERR2FIX benchmark, which reveals the limits of large language models in chemistry. Then, we’ll see how BindPred can predict protein binding affinity from sequence alone, and finally, examine a large-scale pharmacogenomic knowledge graph that provides a reliable foundation for AI to discover new links between drugs and diseases.">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-10-16/post_all_image/democratizing_ai_sci_2025_10_09_image_1.jpg">
+<meta name="twitter:image:alt" content="A flowchart shows how the ToolUniverse ecosystem works. On the left, a user
+inputs instructions in natural language. In the center is the ToolUniverse
+core, with 'Find Tool' and 'Call Tool' functions connected to a large
+library of tools (machine learning models, databases, etc.). On the right,
+the system automates the entire process from tool discovery and code
+generation to workflow execution, aiming to accelerate scientific research.
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">AI in Biomedical Research: Advances in AlphaFold, ToolUniverse, and Knowledge Graphs</h1>
+                  <div>
+        <div class="description">
+          <p>This article covers five recent studies in biomedical research. We’ll explore how AlphaFold-Multimer is upending our understanding of receptor structure and how ToolUniverse builds personalized AI scientists to speed up drug discovery. We’ll also look at the MOLERR2FIX benchmark, which reveals the limits of large language models in chemistry. Then, we’ll see how BindPred can predict protein binding affinity from sequence alone, and finally, examine a large-scale pharmacogenomic knowledge graph that provides a reliable foundation for AI to discover new links between drugs and diseases.</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">AI Drug Discovery</div>
+                <div class="quarto-category">AlphaFold</div>
+                <div class="quarto-category">Knowledge Graph</div>
+                <div class="quarto-category">Large Language Models</div>
+                <div class="quarto-category">Bioinformatics</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Thursday, the 16th of October, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#table-of-contents" id="toc-table-of-contents" class="nav-link active" data-scroll-target="#table-of-contents">Table of Contents</a></li>
+  <li><a href="#alphafold-reveals-a-major-flaw-in-a-classic-receptor-research-technique" id="toc-alphafold-reveals-a-major-flaw-in-a-classic-receptor-research-technique" class="nav-link" data-scroll-target="#alphafold-reveals-a-major-flaw-in-a-classic-receptor-research-technique">1. AlphaFold Reveals a Major Flaw in a Classic Receptor Research Technique</a></li>
+  <li><a href="#tooluniverse-build-your-own-ai-scientist-to-speed-up-drug-discovery" id="toc-tooluniverse-build-your-own-ai-scientist-to-speed-up-drug-discovery" class="nav-link" data-scroll-target="#tooluniverse-build-your-own-ai-scientist-to-speed-up-drug-discovery">2. ToolUniverse: Build Your Own AI Scientist to Speed Up Drug Discovery</a></li>
+  <li><a href="#an-llm-chemist-new-benchmark-molerr2fix-shows-critical-flaws" id="toc-an-llm-chemist-new-benchmark-molerr2fix-shows-critical-flaws" class="nav-link" data-scroll-target="#an-llm-chemist-new-benchmark-molerr2fix-shows-critical-flaws">3. An LLM Chemist? New Benchmark MOLERR2FIX Shows Critical Flaws</a></li>
+  <li><a href="#bindpred-predicting-protein-affinity-from-sequence-alone-no-3d-structure-needed" id="toc-bindpred-predicting-protein-affinity-from-sequence-alone-no-3d-structure-needed" class="nav-link" data-scroll-target="#bindpred-predicting-protein-affinity-from-sequence-alone-no-3d-structure-needed">4. BindPred: Predicting Protein Affinity from Sequence Alone, No 3D Structure Needed</a></li>
+  <li><a href="#a-new-tool-for-ai-drug-discovery-a-large-scale-pharmacogenomic-knowledge-graph" id="toc-a-new-tool-for-ai-drug-discovery-a-large-scale-pharmacogenomic-knowledge-graph" class="nav-link" data-scroll-target="#a-new-tool-for-ai-drug-discovery-a-large-scale-pharmacogenomic-knowledge-graph">5. A New Tool for AI Drug Discovery: A Large-Scale Pharmacogenomic Knowledge Graph</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-10-16/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="table-of-contents" class="level2">
+<h2 class="anchored" data-anchor-id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li>AlphaFold-Multimer predictions show that concatemer technology, used to dictate receptor subunit arrangement, is unreliable. Linker flexibility allows for unexpected subunit insertion.</li>
+<li>ToolUniverse is an open-source ecosystem that lets researchers build custom AI scientists for complex problems by unifying and automating how scientific tools are called, created, and optimized.</li>
+<li>The new MOLERR2FIX benchmark shows that even top large language models perform poorly at understanding and correcting errors in chemical text, meaning they are far from being reliable research assistants.</li>
+<li>BindPred accurately predicts protein binding affinity using only amino acid sequences, working quickly without needing 3D structures.</li>
+<li>Researchers have built a pharmacogenomic knowledge graph, validated with a strict timeline, that provides a reliable foundation for AI to discover new links between drugs, genes, variants, and diseases.</li>
+</ol>
+</section>
+<section id="alphafold-reveals-a-major-flaw-in-a-classic-receptor-research-technique" class="level2">
+<h2 class="anchored" data-anchor-id="alphafold-reveals-a-major-flaw-in-a-classic-receptor-research-technique">1. AlphaFold Reveals a Major Flaw in a Classic Receptor Research Technique</h2>
+<p><a href="post_all_image/alpha_fold_multimer_m_2025_10_09_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/alpha_fold_multimer_m_2025_10_09_image_1.jpg" class="img-fluid"></a></p>
+<p>Determining how subunits are arranged in multi-subunit protein complexes, like nicotinic acetylcholine receptors (nAChRs), has always been a tough problem in structural biology.</p>
+<p>For decades, researchers have used a technique called concatemerization to solve it. The method involves genetically linking subunits A and B with a flexible linker. When the cell expresses this, A and B form a single polypeptide chain, which should ensure they sit next to each other in the final complex. It’s like tying two LEGO bricks together with a string to keep them adjacent. This technique is widely used for important proteins like nAChRs and GABA receptors.</p>
+<p>But research from Hanna M. Sahlström’s team challenges this long-held assumption. They studied the nAChRs of the parasitic sea louse (<em>Lepeophtheirus salmonis</em>). These receptors are key targets for insecticides, so their exact structure is critical for developing new drugs.</p>
+<p>Using AlphaFold-Multimer to predict how the subunits assemble into a pentameric receptor, they found something unexpected. The model showed that even when two subunits are tethered by a linker, they might not end up next to each other in the final complex.</p>
+<p>That linker “string” is much longer and more flexible than previously thought. Its flexibility allows a separate, free-floating subunit to wedge itself between the two linked subunits. The researchers named this phenomenon “wedging.” As a result, the intended “A-B” arrangement could actually form an “A-C-B” configuration.</p>
+<p>This has major implications for drug development. Drugs often act at the interface between subunits. If the model of subunit arrangement is wrong, designing a drug is like making a key for the wrong lock—it will fail.</p>
+<p>The problem isn’t limited to nAChRs. The conclusions of any study that used concatemers to infer subunit stoichiometry are now questionable. Much of the accepted knowledge about receptor structures may need to be re-examined with new tools like AlphaFold.</p>
+<p>The computational predictions were confirmed by experiments. The team expressed the unexpected combinations predicted by the model in <em>Xenopus laevis oocytes</em> and found that they did form functional ion channels.</p>
+<p>This study shows how computational tools can uncover blind spots in traditional experimental methods. AlphaFold is no longer just a tool for predicting protein structures; it is becoming a force for challenging and correcting our basic understanding of complex biological systems.</p>
+<p>📜<strong>Title</strong>: AlphaFold-Multimer Modelling of Linked nAChR Subunits Challenges Concatemer Design Assumptions 🌐<strong>Paper</strong>: https://www.biorxiv.org/content/10.1101/2025.10.02.679753v1</p>
+</section>
+<section id="tooluniverse-build-your-own-ai-scientist-to-speed-up-drug-discovery" class="level2">
+<h2 class="anchored" data-anchor-id="tooluniverse-build-your-own-ai-scientist-to-speed-up-drug-discovery">2. ToolUniverse: Build Your Own AI Scientist to Speed Up Drug Discovery</h2>
+<p><a href="post_all_image/democratizing_ai_sci_2025_10_09_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/democratizing_ai_sci_2025_10_09_image_1.jpg" class="img-fluid"></a></p>
+<p>In drug discovery, we deal with all kinds of software tools every day: molecular docking, ADMET prediction, gene sequence analysis. Each tool has its own quirks and requires its own language. Getting them to work together is like organizing a United Nations meeting—you first need to hire a bunch of interpreters. It’s a painful and inefficient process.</p>
+<p>ToolUniverse, developed by a team at Harvard, aims to solve this by creating a universal operating system for all scientific tools.</p>
+<p><strong>How does it work</strong>?</p>
+<p>The system’s core has just two actions: <code>Find Tool</code> and <code>Call Tool</code>.</p>
+<p>The researchers registered over 600 machine learning models, database APIs, and scientific computing packages into ToolUniverse. They described each tool’s function, input, and output using a standardized specification schema.</p>
+<p>This way, the AI doesn’t have to learn a new way to call each tool. It can find the right tool with <code>Find Tool</code>, like looking up a book in a library, and then use the single, unified command <code>Call Tool</code> to run it. This system breaks down the barriers between different tools, making it possible to build complex, automated workflows.</p>
+<p><strong>Create tools with natural language</strong></p>
+<p>ToolUniverse not only unifies existing tools but also helps create new ones.</p>
+<p>It can automatically generate an executable new tool from a few sentences of natural language. For example, you could tell it: “I need a tool that takes a compound’s SMILES string as input and uses RDKit to calculate its molecular weight and logP.”</p>
+<p>After receiving the instruction, ToolUniverse automatically generates a standardized specification, writes the Python code, creates test cases to validate it, and refines the tool through feedback. The entire process requires no human intervention. This allows non-programmers to quickly create custom tools and integrate them seamlessly into AI-driven research workflows.</p>
+<p><strong>A case study in hyperlipidemia drug discovery</strong></p>
+<p>To demonstrate the system’s utility, the researchers built an AI scientist to study hyperlipidemia.</p>
+<p>The AI scientist started by forming a hypothesis and then independently called various tools: 1. It used a literature mining tool to identify disease-related targets. 2. It used a compound screening tool to search for potential molecules in a virtual library. 3. It used a patent evaluation tool to check the novelty of the candidate molecules. 4. It used a property prediction tool to assess the molecules’ druggability.</p>
+<p>In the end, the AI discovered an analog of an existing drug and predicted it would have better pharmaceutical properties. This case study shows how an AI scientist can use ToolUniverse to handle complex discovery tasks, from early exploration to candidate molecule validation.</p>
+<p>ToolUniverse presents a new vision for researchers on the front lines. The goal is to give every scientist a capable, obedient AI assistant that can constantly learn new skills. This assistant handles the tedious work of calling tools and writing code, letting scientists focus on solving scientific problems.</p>
+<p>📜Title: Democratizing AI scientists using ToolUniverse 🌐Paper: https://arxiv.org/abs/2509.23426v1 💻Code: https://github.com/mims-harvard/ToolUniverse</p>
+</section>
+<section id="an-llm-chemist-new-benchmark-molerr2fix-shows-critical-flaws" class="level2">
+<h2 class="anchored" data-anchor-id="an-llm-chemist-new-benchmark-molerr2fix-shows-critical-flaws">3. An LLM Chemist? New Benchmark MOLERR2FIX Shows Critical Flaws</h2>
+<p><a href="post_all_image/molerr2fix_benchmar_2025_09_14_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/molerr2fix_benchmar_2025_09_14_image_1.jpg" class="img-fluid"></a></p>
+<p>We handle chemical literature all the time. If an assistant can’t even tell whether a molecular structure described in a text is right or wrong, it’s useless—and potentially dangerous. Many people talk about how Large Language Models (LLMs) will transform chemical research, but whether they truly “understand” chemistry is a key question.</p>
+<p>A new benchmark called MOLERR2FIX has provided an answer.</p>
+<p>The test is designed to mirror the daily work of a research scientist. Some past benchmarks mostly tested a model’s ability to do “translation,” like converting a chemical formula (SMILES) into descriptive text. That’s like describing a picture; the model just needs to memorize patterns. But MOLERR2FIX asks the model to act as a peer reviewer.</p>
+<p>Specifically, it gives the model a piece of text describing a molecule, which may contain various errors. The model’s task has four steps: 1. <strong>Detection</strong>: Determine if there is an error in the text. 2. <strong>Localization</strong>: Pinpoint the specific word or phrase that is wrong. 3. <strong>Explanation</strong>: Explain why it is wrong. This tests real chemical knowledge. 4. <strong>Revision</strong>: Provide the correct text.</p>
+<p>A model has to complete this entire process to be considered a competent chemistry assistant. For example, the text might describe “a carbon atom with seven bonds.” The model needs to not only spot that this is impossible but also explain that “carbon typically forms only four covalent bonds due to its valence electrons” and then suggest a correct revision.</p>
+<p>The researchers tested some of the most advanced models, including the general-purpose GPT-4 and the chemistry-focused ChemLLM. The results threw some cold water on the hype around AI in drug discovery.</p>
+<p>The models performed acceptably on the first step, “Detection,” sometimes guessing correctly that the text was “problematic.” But their performance dropped sharply in the later, more detailed steps. They were especially bad at “Explanation,” often spouting nonsense that sounded technical but was chemically incorrect. In the “Revision” step, they frequently introduced new, more subtle errors.</p>
+<p>Current LLMs are essentially statistics-based parrots. They can memorize and repeat vast amounts of chemical text, but they haven’t formed the kind of rule-based chemical “intuition” or “common sense” that human scientists have. An LLM knows that “carbon” and “four bonds” often appear together, but it doesn’t really “understand” why.</p>
+<p>This conclusion is critical for researchers. In the short term, we cannot blindly trust any chemical content generated by an LLM. It might be fine for polishing an email or summarizing a paper’s abstract. But it is too early to let it participate in core R&amp;D tasks that require precise judgment, like interpreting patents or designing synthesis routes. An AI that makes mistakes confidently is far more dangerous than one that admits it doesn’t know.</p>
+<p>The MOLERR2FIX work uses a scientific and rigorous approach to identify the shortcomings of current technology and points the way forward. We need models with true chemical reasoning abilities, not just better language mimics.</p>
+<p>📜Title: MOLERR2FIX: Benchmarking LLM Trustworthiness in Chemistry via Modular Error Detection, Localization, Explanation, and Revision 📜Paper: <a href="https://arxiv.org/abs/2509.00063" class="uri">https://arxiv.org/abs/2509.00063</a></p>
+</section>
+<section id="bindpred-predicting-protein-affinity-from-sequence-alone-no-3d-structure-needed" class="level2">
+<h2 class="anchored" data-anchor-id="bindpred-predicting-protein-affinity-from-sequence-alone-no-3d-structure-needed">4. BindPred: Predicting Protein Affinity from Sequence Alone, No 3D Structure Needed</h2>
+<p><a href="post_all_image/bind_pred_a_framewor_2025_10_09_image_1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="post_all_image/bind_pred_a_framewor_2025_10_09_image_1.png" class="img-fluid"></a></p>
+<p>Predicting the binding strength of two proteins is central to drug development. Traditional methods rely on 3D protein structures, which are determined through complex and time-consuming techniques like X-ray crystallography. Without a structure, researchers must turn to molecular docking or homology modeling, but these methods are computationally expensive and often introduce errors.</p>
+<p>The BindPred framework bypasses 3D structures entirely.</p>
+<p>Here’s how it works: it takes the amino acid sequences of two proteins and feeds them into a Protein Language Model, such as ESM2. These models have been trained on hundreds of millions of protein sequences and have learned the “grammatical rules” left by evolution. The model outputs a numerical vector called an “embedding,” which condenses the essential information from the sequence.</p>
+<p>BindPred then feeds these two vectors into a gradient-boosted tree model, which directly predicts their binding affinity. The entire process goes from sequence input to affinity output in one step.</p>
+<p>On the standard PPB-Affinity benchmark dataset, BindPred’s predictions achieved a Pearson correlation of 0.86 with experimental values.</p>
+<p>A comparative experiment found that adding physics-based energy terms, calculated with traditional tools like PyRosetta and BindCraft, barely improved performance. This suggests that the evolutionary information extracted from the sequences by the protein language model already captures most of the key signals that determine binding affinity. It’s like trying to understand a book’s plot: reading the text directly is more effective than analyzing the physical properties of the paper and ink.</p>
+<p>The value of this method lies in its speed and applicability. Because it doesn’t rely on structures, BindPred can evaluate about three million protein pairs per hour on a single T4 GPU. This is fast enough to screen interactions across the entire proteome, helping to find new leads for drug discovery or systems biology research.</p>
+<p>To test the model’s ability to generalize, the researchers split the data by protein family, ensuring no overlap between the training and test sets. Even when faced with entirely new proteins, BindPred performed robustly. This proves it learns the general principles of protein binding rather than just memorizing training data—a critical feature for discovering new targets and molecules.</p>
+<p>The research team has made the model and code available, along with a Google Colab notebook, making it easy for anyone to use. This should accelerate the adoption of this technology in both academia and industry.</p>
+<p>📜Title: BindPred: A Framework for Predicting Protein-Protein Binding Affinity from Language Model Embeddings 🌐Paper: https://www.biorxiv.org/content/10.1101/2025.09.27.678407v1 💻Code: https://colab.research.google.com/drive/1234567890abcdefghijklmnopqrstuvwxyz</p>
+</section>
+<section id="a-new-tool-for-ai-drug-discovery-a-large-scale-pharmacogenomic-knowledge-graph" class="level2">
+<h2 class="anchored" data-anchor-id="a-new-tool-for-ai-drug-discovery-a-large-scale-pharmacogenomic-knowledge-graph">5. A New Tool for AI Drug Discovery: A Large-Scale Pharmacogenomic Knowledge Graph</h2>
+<p><a href="post_all_image/a_large_scale_pharma_2025_10_09_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="post_all_image/a_large_scale_pharma_2025_10_09_image_1.jpg" class="img-fluid"></a></p>
+<p>One of the big challenges in drug development is data silos. Information about drugs, genes, clinical phenotypes, and pathways is scattered across databases like PharmGKB, ClinVar, SIDER, and Reactome. Each database is like a separate box of puzzle pieces. This preprint describes the work of putting those pieces together—integrating, cleaning, and organizing them into one giant relationship map: the Pharmacogenomic Knowledge Graph (PGx-KG).</p>
+<p>This map contains over 3.7 million nodes (like a drug or a gene) and 9.6 million edges (the relationships between nodes). It creates a huge network of biological relationships, allowing us to see connections like “Drug A inhibits Target B” or “A mutation in Gene C causes Disease D.”</p>
+<p>Building the graph is just the first step. What makes this work stand out is its data handling. A common pitfall in AI prediction is “data leakage,” especially “temporal leakage.” It’s like using tomorrow’s newspaper to “predict” today’s stock prices—your accuracy will be high, but it’s meaningless. In drug discovery, if you train a model on data published in 2023 to “predict” a drug-target relationship that was already known in 2021, the model’s performance will be inflated and useless for real R&amp;D.</p>
+<p>The authors designed a “leakage-free” process. They timestamped all the data and split it strictly by publication date. When training their models, they only used “past” data to predict “future” relationships. This approach makes the model’s evaluation honest and reliable. When they report a Mean Reciprocal Rank (MRR) of 0.347 for their link prediction model, that number was obtained by simulating a real-world research scenario.</p>
+<p>What can this graph and model do? It acts like a “relationship detective,” analyzing known connections in the network to predict “missing links” that likely exist but haven’t been discovered yet. For example, it might propose a new hypothesis: “A certain cancer drug might also be effective for treating a rare genetic disease.” This is drug repositioning. The researchers showed that the model can uncover some potentially meaningful clinical connections.</p>
+<p>This work provides a more reliable infrastructure for AI drug discovery, connecting molecular-level mechanisms (gene variants) with macro-level clinical phenomena (drug efficacy or toxicity). The authors plan to test more advanced Graph Neural Networks (GNNs) on this foundation and integrate real-world evidence. They have released their code and processed data, so the entire community can build on their work.</p>
+<p>📜Title: A Large-Scale Pharmacogenomic Knowledge Graph for Drug-Gene-Variant-Disease Discovery 🌐Paper: https://www.medrxiv.org/content/10.1101/2025.09.24.25336269v1</p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-10-16/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

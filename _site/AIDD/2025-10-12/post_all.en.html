@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="This article explores three breakthroughs in drug discovery. The ALIGNED framework unifies genetic perturbation data and biological knowledge using neuro-symbolic learning for more accurate predictions. The BindFlow tool automates and provides free access to complex absolute binding free energy calculations, speeding up hit screening. Finally, new research shows how Free Energy Perturbation (FEP) can predict drug resistance mutations in flexible proteins (IDRs), offering a new way to design more durable drugs.">
+
+<title>AI in Drug Discovery: Three Advances in Gene Perturbation, Binding Energy, and Resistance Prediction – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="AI in Drug Discovery: Three Advances in Gene Perturbation, Binding Energy, and Resistance Prediction – MPU">
+<meta property="og:description" content="This article explores three breakthroughs in drug discovery. The ALIGNED framework unifies genetic perturbation data and biological knowledge using neuro-symbolic learning for more accurate predictions. The BindFlow tool automates and provides free access to complex absolute binding free energy calculations, speeding up hit screening. Finally, new research shows how Free Energy Perturbation (FEP) can predict drug resistance mutations in flexible proteins (IDRs), offering a new way to design more durable drugs.">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-10-12/post_all_image/bind_flow_a_free_us_2025_10_09_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="A diagram showing the BindFlow workflow, with elements like protein structures, small molecule ligands, a DNA double helix, and charts. It illustrates how the tool automates the process of calculating binding free energy.
+">
+<meta name="twitter:title" content="AI in Drug Discovery: Three Advances in Gene Perturbation, Binding Energy, and Resistance Prediction – MPU">
+<meta name="twitter:description" content="This article explores three breakthroughs in drug discovery. The ALIGNED framework unifies genetic perturbation data and biological knowledge using neuro-symbolic learning for more accurate predictions. The BindFlow tool automates and provides free access to complex absolute binding free energy calculations, speeding up hit screening. Finally, new research shows how Free Energy Perturbation (FEP) can predict drug resistance mutations in flexible proteins (IDRs), offering a new way to design more durable drugs.">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-10-12/post_all_image/bind_flow_a_free_us_2025_10_09_image_1.jpg">
+<meta name="twitter:image:alt" content="A diagram showing the BindFlow workflow, with elements like protein structures, small molecule ligands, a DNA double helix, and charts. It illustrates how the tool automates the process of calculating binding free energy.
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">AI in Drug Discovery: Three Advances in Gene Perturbation, Binding Energy, and Resistance Prediction</h1>
+                  <div>
+        <div class="description">
+          <p>This article explores three breakthroughs in drug discovery. The ALIGNED framework unifies genetic perturbation data and biological knowledge using neuro-symbolic learning for more accurate predictions. The BindFlow tool automates and provides free access to complex absolute binding free energy calculations, speeding up hit screening. Finally, new research shows how Free Energy Perturbation (FEP) can predict drug resistance mutations in flexible proteins (IDRs), offering a new way to design more durable drugs.</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">Drug Discovery</div>
+                <div class="quarto-category">Computational Chemistry</div>
+                <div class="quarto-category">AI</div>
+                <div class="quarto-category">Free Energy Perturbation</div>
+                <div class="quarto-category">Genetic Perturbation</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Sunday, the 12th of October, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#table-of-contents" id="toc-table-of-contents" class="nav-link active" data-scroll-target="#table-of-contents">Table of Contents</a></li>
+  <li><a href="#aligned-an-ai-that-predicts-genetic-perturbations-by-reconciling-data-and-knowledge" id="toc-aligned-an-ai-that-predicts-genetic-perturbations-by-reconciling-data-and-knowledge" class="nav-link" data-scroll-target="#aligned-an-ai-that-predicts-genetic-perturbations-by-reconciling-data-and-knowledge">1. ALIGNED: An AI that Predicts Genetic Perturbations by Reconciling Data and Knowledge</a></li>
+  <li><a href="#bindflow-free-automated-fepmmpbsa-for-drug-discovery" id="toc-bindflow-free-automated-fepmmpbsa-for-drug-discovery" class="nav-link" data-scroll-target="#bindflow-free-automated-fepmmpbsa-for-drug-discovery">2. BindFlow: Free, Automated FEP/MMPBSA for Drug Discovery</a></li>
+  <li><a href="#fep-tackles-flexible-proteins-to-accurately-predict-drug-resistance" id="toc-fep-tackles-flexible-proteins-to-accurately-predict-drug-resistance" class="nav-link" data-scroll-target="#fep-tackles-flexible-proteins-to-accurately-predict-drug-resistance">3. FEP Tackles Flexible Proteins to Accurately Predict Drug Resistance</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-10-12/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="table-of-contents" class="level2">
+<h2 class="anchored" data-anchor-id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li>The ALIGNED framework aligns experimental data with biological knowledge, improving the accuracy of genetic perturbation predictions. It can also correct and refine knowledge bases, moving beyond pure black-box models.</li>
+<li>BindFlow automates the complex process of absolute binding free energy calculation, making it free and easy to use. This provides a reliable tool for predicting affinity in drug development.</li>
+<li>Researchers used Free Energy Perturbation (FEP) to successfully predict drug resistance mutations in intrinsically disordered regions (IDRs), offering a new approach to designing more durable drugs.</li>
+</ol>
+</section>
+<section id="aligned-an-ai-that-predicts-genetic-perturbations-by-reconciling-data-and-knowledge" class="level2">
+<h2 class="anchored" data-anchor-id="aligned-an-ai-that-predicts-genetic-perturbations-by-reconciling-data-and-knowledge">1. ALIGNED: An AI that Predicts Genetic Perturbations by Reconciling Data and Knowledge</h2>
+<p><a href="post_all_image/adaptive_data_knowle_2025_10_09_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/adaptive_data_knowle_2025_10_09_image_1.jpg" class="img-fluid"></a></p>
+<p>Drug development often faces a dilemma. On one hand, we have massive amounts of genetic perturbation data from experiments like CRISPR screens. On the other, we have decades of accumulated biological knowledge in databases like KEGG and Reactome pathway maps. Ideally, these two sources should support each other, but in reality, they often conflict.</p>
+<p>A deep learning model driven purely by data might make predictions that seem accurate but don’t make biological sense. A model based only on a knowledge base might fail to explain new experimental findings because the knowledge is incomplete or wrong. So, which one should we trust?</p>
+<p>The ALIGNED framework, proposed in this paper, is designed to resolve this conflict.</p>
+<p>Its core idea is Neuro-Symbolic Learning. Imagine a team with two roles. The “neuro” part is like an intuitive artist, a neural network that finds hidden patterns in messy data. The “symbolic” part is like a rigorous engineer who strictly follows known biological rules and pathway knowledge.</p>
+<p>Previous methods listened to either the artist or the engineer. ALIGNED creates a communication channel between them. When data and knowledge disagree, it uses an adaptive alignment strategy to make a decision, rather than simply averaging the two. This process uses a gradient-free optimization mechanism that can flexibly handle both types of information.</p>
+<p>To evaluate its decisions, the researchers designed a metric called “balanced consistency.” This metric requires predictions to both fit the experimental data and not significantly contradict the biological knowledge base. It’s like a clinical trial for a drug, where you need to see both efficacy (fitting the data) and a plausible mechanism of action (fitting the knowledge). This makes the results more trustworthy.</p>
+<p>The framework can also update the knowledge base. If experimental data repeatedly points to a conclusion that contradicts the existing knowledge, ALIGNED can determine that the knowledge base may need an update. It uses gradient-based optimization and sparse regularization to correct regulatory relationships in the knowledge base. So, this model is not just a prediction tool; it’s a knowledge discovery engine. It can mine new biological pathways or molecular interactions from large datasets, helping our scientific knowledge evolve.</p>
+<p>Tests on several large-scale datasets show that ALIGNED outperforms existing methods in both prediction accuracy and knowledge consistency. It performs especially well when data is limited, which is valuable for studying new targets where little data is available.</p>
+<p>Work like ALIGNED represents a shift from pure black-box prediction toward intelligent systems that are interpretable, interactive, and can “talk” to domain knowledge. It uses the power of AI while also incorporating the knowledge accumulated by scientists.</p>
+<p>📜Title: Adaptive Data-Knowledge Alignment in Genetic Perturbation Prediction 🌐Paper: <a href="https://arxiv.org/abs/2510.00512" class="uri">https://arxiv.org/abs/2510.00512</a></p>
+</section>
+<section id="bindflow-free-automated-fepmmpbsa-for-drug-discovery" class="level2">
+<h2 class="anchored" data-anchor-id="bindflow-free-automated-fepmmpbsa-for-drug-discovery">2. BindFlow: Free, Automated FEP/MMPBSA for Drug Discovery</h2>
+<p><a href="post_all_image/bind_flow_a_free_us_2025_10_09_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/bind_flow_a_free_us_2025_10_09_image_1.jpg" class="img-fluid"></a></p>
+<p>In drug discovery, accurately predicting the binding affinity of a small molecule to its target protein is a central challenge. Computational chemists have developed two types of tools for this. One type includes methods like Free Energy Perturbation (FEP), which are highly accurate but computationally expensive and labor-intensive. The other includes methods like MM(PB/GB)SA, which are fast but often considered less accurate.</p>
+<p>For decades, using these tools required deep theoretical knowledge and tedious manual setup. High software costs and complex procedures also put them out of reach for many academic labs.</p>
+<p>BindFlow is a tool designed to simplify this process. It’s a Python-based pipeline that automates all the steps for calculating Absolute Binding Free Energy (ABFE). Users just need to prepare the input files and run a command to get the results.</p>
+<p>It’s free and open-source, so it avoids the high license fees of commercial software. It also supports multiple force fields, including GAFF, OpenFF, and Espaloma, giving users flexibility.</p>
+<p>To validate the tool, the team tested it on a set of 139 ligand-target complexes. This set included soluble proteins, membrane proteins, and non-protein host-guest systems. The results showed that BindFlow’s calculations were comparable to industry standards, confirming the reliability of its data.</p>
+<p>An important finding from the study relates to the MM(PB/GB)SA method. The conventional view is that end-point methods like MM(PB/GB)SA are less accurate than path-integral methods like FEP. But this study’s data showed that for certain systems and force field combinations, the affinity predicted by MM(PB/GB)SA can correlate with experimental values just as well as FEP.</p>
+<p>This finding has practical implications. For instance, when screening a large virtual library for hit compounds, one could first use the less costly MM(PB/GB)SA for an initial pass. Then, computational resources could be focused on the most promising molecules for more precise calculation with FEP. This “coarse-to-fine” strategy balances efficiency and accuracy.</p>
+<p>BindFlow turns a specialized computational task into a standardized, automated workflow. It improves the efficiency and reproducibility of binding free energy calculations, helping to speed up modern drug discovery.</p>
+<p>📜Title: BindFlow: A Free, User-Friendly Pipeline for Absolute Binding Free Energy Calculations Using Free Energy Perturbation or MM(PB/GB)SA 🌐Paper: <a href="https://www.biorxiv.org/content/10.1101/2025.09.25.678545v1" class="uri">https://www.biorxiv.org/content/10.1101/2025.09.25.678545v1</a> 💻Code: <a href="https://github.com/ale94mleon/BindFlow" class="uri">https://github.com/ale94mleon/BindFlow</a></p>
+</section>
+<section id="fep-tackles-flexible-proteins-to-accurately-predict-drug-resistance" class="level2">
+<h2 class="anchored" data-anchor-id="fep-tackles-flexible-proteins-to-accurately-predict-drug-resistance">3. FEP Tackles Flexible Proteins to Accurately Predict Drug Resistance</h2>
+<p><a href="post_all_image/accurate_prediction_2025_10_09_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/accurate_prediction_2025_10_09_image_1.jpg" class="img-fluid"></a></p>
+<p>Some targets in drug discovery are hard to work with. Intrinsically Disordered Proteins (IDPs) and their Intrinsically Disordered Regions (IDRs) are a prime example. These regions lack a fixed 3D structure and are flexible like noodles, making structure-based drug design difficult. The N-terminus of the MDM2 protein is a classic IDR and a key target in the p53 tumor suppressor pathway.</p>
+<p>Drug resistance is another tough problem. A single amino acid mutation at the target site can render a drug ineffective. If we could predict which mutations cause resistance, we could design around them from the start. Free Energy Perturbation (FEP) is a computational method used to precisely calculate how mutations change binding energy. But applying it to dynamic IDRs has been a known challenge.</p>
+<p>This work aimed to see if FEP could accurately predict drug resistance mutations for the IDR target MDM2.</p>
+<p>The researchers compared two FEP calculation schemes: Equilibrium (EQ) and Non-equilibrium (NEQ). EQ-FEP allows the system enough time to adapt to a mutation and reach a new equilibrium. NEQ-FEP estimates the energy change by rapidly altering the system.</p>
+<p>The results showed that EQ-FEP was more stable and accurate. Although its total computation time was longer, it needed only 10% of the sampling time to converge, with a final root-mean-square error (RMSE) of 1.48 kcal/mol. NEQ-FEP was faster, but its results were more variable, with an RMSE of 1.20 kcal/mol and a higher standard deviation. A stable, reproducible result is more valuable than a fast calculation that might only be accurate by chance.</p>
+<p>The work also optimized the force field and water model. FEP calculations simulate the microscopic molecular world, and the force field and water model are the physical laws of that world. The researchers found that using the AMBER FF99SB*-ILDN force field with the OPC water model gave the best agreement with experimental data. For the I19G mutation, this combination reduced the RMSE for the AM-7209 complex from 0.79 kcal/mol to 0.39 kcal/mol.</p>
+<p>This optimized protocol successfully predicted the binding affinity changes for two different ligands (AM-7209 and Nutlin-3a) with mutated MDM2, demonstrating the method’s general applicability.</p>
+<p>This research extends the use of FEP as a predictive tool to the domain of IDRs. In the future, when developing drugs for flexible targets, we can predict resistance risk earlier and more accurately, which will help design next-generation drugs that are less likely to fail.</p>
+<p>📜Title: Accurate Prediction of Drug Resistance for Intrinsically Disordered Protein Regions 🌐Paper: https://doi.org/10.26434/chemrxiv-2025-brzks</p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-10-12/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

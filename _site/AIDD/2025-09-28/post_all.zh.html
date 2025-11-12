@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="探讨 AI 在药物研发中的前沿应用。文章介绍了如何通过暴力采样提升 AlphaFold 对复杂蛋白界面的预测精度，展示了结合大语言模型与专业化学工具的 AI 助手 LightChem，并解析了一种利用水分子结构作为向导，解决柔性糖链分子对接难题的新方法。">
+
+<title>AlphaFold 大力出奇迹？暴力采样如何搞定蛋白复合物 – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="AlphaFold 大力出奇迹？暴力采样如何搞定蛋白复合物 – MPU">
+<meta property="og:description" content="探讨 AI 在药物研发中的前沿应用。文章介绍了如何通过暴力采样提升 AlphaFold 对复杂蛋白界面的预测精度，展示了结合大语言模型与专业化学工具的 AI 助手 LightChem，并解析了一种利用水分子结构作为向导，解决柔性糖链分子对接难题的新方法。">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-09-28/post_all_image/massive_fold_data_for_2025_09_14_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="暴力采样能提升 AlphaFold 对复杂蛋白界面的预测精度，但如何从海量模型中挑出最佳答案，仍是关键挑战。
+">
+<meta name="twitter:title" content="AlphaFold 大力出奇迹？暴力采样如何搞定蛋白复合物 – MPU">
+<meta name="twitter:description" content="探讨 AI 在药物研发中的前沿应用。文章介绍了如何通过暴力采样提升 AlphaFold 对复杂蛋白界面的预测精度，展示了结合大语言模型与专业化学工具的 AI 助手 LightChem，并解析了一种利用水分子结构作为向导，解决柔性糖链分子对接难题的新方法。">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-09-28/post_all_image/massive_fold_data_for_2025_09_14_image_1.jpg">
+<meta name="twitter:image:alt" content="暴力采样能提升 AlphaFold 对复杂蛋白界面的预测精度，但如何从海量模型中挑出最佳答案，仍是关键挑战。
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">AlphaFold 大力出奇迹？暴力采样如何搞定蛋白复合物</h1>
+                  <div>
+        <div class="description">
+          <p>探讨 AI 在药物研发中的前沿应用。文章介绍了如何通过暴力采样提升 AlphaFold 对复杂蛋白界面的预测精度，展示了结合大语言模型与专业化学工具的 AI 助手 LightChem，并解析了一种利用水分子结构作为向导，解决柔性糖链分子对接难题的新方法。</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">AI 药物研发，AlphaFold</div>
+                <div class="quarto-category">大语言模型</div>
+                <div class="quarto-category">分子对接，计算化学</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Sunday, the 28th of September, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#目录" id="toc-目录" class="nav-link active" data-scroll-target="#目录">目录</a></li>
+  <li><a href="#alphafold-大力出奇迹暴力采样如何搞定蛋白复合物" id="toc-alphafold-大力出奇迹暴力采样如何搞定蛋白复合物" class="nav-link" data-scroll-target="#alphafold-大力出奇迹暴力采样如何搞定蛋白复合物">1. AlphaFold 大力出奇迹？暴力采样如何搞定蛋白复合物</a></li>
+  <li><a href="#lightchem-更懂化学的轻量级-ai精准预测分子性质" id="toc-lightchem-更懂化学的轻量级-ai精准预测分子性质" class="nav-link" data-scroll-target="#lightchem-更懂化学的轻量级-ai精准预测分子性质">2. LightChem: 更懂化学的轻量级 AI，精准预测分子性质</a></li>
+  <li><a href="#水分子做向导破解糖基对接难题" id="toc-水分子做向导破解糖基对接难题" class="nav-link" data-scroll-target="#水分子做向导破解糖基对接难题">3. 水分子做向导，破解糖基对接难题</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-09-28/post_all.zh.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="目录" class="level2">
+<h2 class="anchored" data-anchor-id="目录">目录</h2>
+<ol type="1">
+<li>暴力采样能提升 AlphaFold 对复杂蛋白界面的预测精度，但如何从海量模型中挑出最佳答案，仍是关键挑战。</li>
+<li>LightChem 将大语言模型的推理能力与成熟的化学计算工具相结合，为化学家提供了一个轻量、精准、且专业的 AI 助手。</li>
+<li>研究者利用蛋白质结合位点的水分子结构作为「路标」，开发出一种引导式对接新方法，解决了柔性糖链分子的对接难题。</li>
+</ol>
+</section>
+<section id="alphafold-大力出奇迹暴力采样如何搞定蛋白复合物" class="level2">
+<h2 class="anchored" data-anchor-id="alphafold-大力出奇迹暴力采样如何搞定蛋白复合物">1. AlphaFold 大力出奇迹？暴力采样如何搞定蛋白复合物</h2>
+<p><a href="post_all_image/massive_fold_data_for_2025_09_14_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/massive_fold_data_for_2025_09_14_image_1.jpg" class="img-fluid"></a></p>
+<p>AlphaFold2 是一个突破性的工具，其预测单个蛋白结构的能力已很惊人。但将其用于蛋白 - 蛋白相互作用（Protein-Protein Interactions, PPIs），特别是预测两个蛋白如何结合时，它有时会出错。如同一个顶尖学生，基础题全对，但一遇到复杂的综合题，就可能给不出确切答案。</p>
+<p>标准的 AlphaFold 运行一次，通常会提供 5 个模型。如果这 5 个模型看起来都不太对，或相互之间差别很大，基本就无计可施了。对于那些结合界面复杂、柔性大的「困难」靶点，这种情况很常见。</p>
+<p><strong>大力真的能出奇迹</strong></p>
+<p>这篇文章的研究者想了一个简单直接的办法：如果 5 个模型不够，那就生成 8000 个。这就是所谓的「暴力采样」（Massive Sampling）。</p>
+<p>这个思路很直接。AlphaFold 在探索构象空间时，本身带有随机性。多跑几次，就等于给了它更多机会「撞」到正确的构象。这如同在沙滩上找一粒特定的沙子，用手抓 5 次可能找不到，但若开来一辆卡车，将整片区域的沙子都筛一遍，找到的概率就大大增加了。</p>
+<p>研究者们在 CASP16-CAPRI 竞赛上系统地测试了这个方法。他们将蛋白复合物的界面按预测难度分为「简单」、「困难」和「极端」三类。结果显示，对于「困难」级别的界面，暴力采样几乎总能生成高质量的结构模型，效果提升明显。</p>
+<p>「<strong>偷懒」方法</strong></p>
+<p>为每个蛋白都生成 8000 个模型，计算成本巨大，需要动用超级计算机集群。</p>
+<p>所以，这项工作最巧妙的地方，是他们找到了一个判断「是否需要采用暴力采样」的指标。</p>
+<p>他们先用标准模式运行一遍 AlphaFold，得到几个模型，然后计算预测界面 TM 分数（interface predicted TM score, ipTM）的中位数。ipTM 分数可以理解为 AlphaFold 对自己预测的界面区域的自信程度。如果这个中位数很低，就说明 AlphaFold 自己也很「心虚」，感觉这个界面很难处理。</p>
+<p>这就是一个信号。一旦出现这个信号，就果断启动暴力采样模式。</p>
+<p>这个方法很实用。它帮助将计算资源用在刀刃上，避免了在那些本就简单的靶点上浪费算力。根据他们的数据，采用这种策略性采样，可以将预测总数从 8040 个模型减少到 2475 个，同时预测精度几乎没有损失。</p>
+<p><strong>新的挑战：大海捞针</strong></p>
+<p>暴力采样解决了一个问题，也带来了另一个问题。</p>
+<p>现在你手里有 8000 个模型，其中可能藏着最接近真实结构的「金标准」。但你怎么把它找出来？</p>
+<p>AlphaFold 自带的模型排序打分，在这种情况下不那么灵了。从 8000 个高度相似的候选中挑出最好的那一个，对现有的打分函数（Scoring function）是个巨大挑战。</p>
+<p>研究者们也坦诚，他们没有解决这个问题。但他们做了一件更有价值的事：将所有数据，包括全部模型、AlphaFold 的打分以及竞赛官方的评估结果，全部公开。</p>
+<p>这对整个领域来说是个宝贵的资源。它提供了一个绝佳的训练场和测试集，让所有从事算法开发的人，都能来尝试开发更精准的打分函数，解决这个「大海捞针」的问题。</p>
+<p>对于研发人员，这项工作提供了一个处理棘手 PPI 靶点的新思路。当你遇到一个高价值但 AlphaFold 预测不佳的复合物时，可以考虑投入计算资源进行暴力采样，这可能会带来突破。同时，它也指明了下一个技术突破点——开发出能从海量数据中精准识别最佳模型的打分算法。</p>
+<p>📜Title: MassiveFold Data for CASP16-CAPRI: A Systematic Massive Sampling Experiment<br>
+📜Paper: https://onlinelibrary.wiley.com/doi/10.1002/prot.70040</p>
+</section>
+<section id="lightchem-更懂化学的轻量级-ai精准预测分子性质" class="level2">
+<h2 class="anchored" data-anchor-id="lightchem-更懂化学的轻量级-ai精准预测分子性质">2. LightChem: 更懂化学的轻量级 AI，精准预测分子性质</h2>
+<p><a href="post_all_image/light_chem_a_lightwe_2025_09_14_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/light_chem_a_lightwe_2025_09_14_image_1.jpg" class="img-fluid"></a></p>
+<p>LLM 知识面广，但让它设计药物分子或规划合成路线，结果常有谬误。这如同让一个通才去做高度专精的外科手术，风险很高。化学是一门精确的学科，差之毫厘，谬以千里。</p>
+<p>LightChem 的作者采用了另一条思路。他们将 LightChem 设计成一个专业的「项目经理」，它自己不掌握所有化学细节，但知道去哪里查资料（检索增强生成），以及该调用哪位「专家」（专业工具）来解决具体问题。</p>
+<p>这个架构设计是整个工作的核心。当用户提出一个化学问题，比如预测分子的油水分配系数（PoLogP），LightChem 不会基于看过的海量文本去「创作」答案。它会启动一个专门用于此项计算的成熟模块，如 PoLogP 预测工具，然后将精确计算的结果用自然语言呈现给你。</p>
+<p>这从根本上解决了通用大模型在专业领域容易出错的问题。对于研发人员来说，可靠性是第一位的。</p>
+<p>它集成的「专家团队」包括：用于逆合成规划的 ReSynZ 模块，以及用于高精度计算的 CIM 和 GEBF 等量子化学软件包。LightChem 的能力建立在这些已被化学界广泛验证的计算方法之上。它像一个经验丰富的科学家，背后有一个装备精良的计算化学团队。</p>
+<p>研究者用几个案例展示了其能力。预测候选药物的理化性质、设计合成路线，这些都是药物化学家的日常工作。LightChem 都能完成。它还能处理更大规模的计算，比如模拟分子在沸石团簇中的结合能，或绿色荧光蛋白（GFP）发色团的激发能，结果与实验值吻合。</p>
+<p>当然，它并非万能。作者坦诚指出，在预测复杂聚集体的最高占据分子轨道 - 最低未占分子轨道（HOMO-LUMO）能隙和光学性质时，模型表现仍有待提高。这种坦诚划定了工具的能力边界，让我们知道在何种情况下可以信任它，何时需要保持谨慎。</p>
+<p>最后，这个工具提供了一个网络界面，将复杂算法打包，降低了使用门槛。它不仅是一个理论模型，更像一个可以集成到实验室工作流里的实用助手。它把知识驱动的推理和第一性原理计算连接了起来。</p>
+<p>📜Title: LightChem: A Lightweight Domain-Specific Language Model for Molecular Property and Reaction Prediction in Chemistry<br>
+📜Paper: <a href="https://doi.org/10.26434/chemrxiv-2025-wd80w" class="uri">https://doi.org/10.26434/chemrxiv-2025-wd80w</a></p>
+</section>
+<section id="水分子做向导破解糖基对接难题" class="level2">
+<h2 class="anchored" data-anchor-id="水分子做向导破解糖基对接难题">3. 水分子做向导，破解糖基对接难题</h2>
+<p><a href="post_all_image/guided_docking_using_2025_09_14_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/guided_docking_using_2025_09_14_image_1.jpg" class="img-fluid"></a></p>
+<p>分子对接（molecular docking）中，处理柔性小分子已很复杂，而对接糖链（glycan）则更为困难。糖链分子大而柔韧，构象繁多。其在蛋白上的结合位点通常又浅又平，富含亲水基团，缺乏传统药物靶点的清晰「口袋」。这导致传统的对接软件常给出能量看似合理、但化学上错误的构象。</p>
+<p>这项研究提供了一个新的解决思路。研究者关注一个问题：<strong>在糖链结合前，蛋白结合位点里有什么</strong>？</p>
+<p>答案是水分子。这些水分子并非随机存在，它们与蛋白表面的氨基酸形成了稳定的氢键网络。</p>
+<p>研究者意识到，这些水分子的位置，实际上标出了一张「相互作用热点图」。一个水分子能在此处与蛋白形成氢键，那么配体上一个合适的基团（如羟基）置于此位，也能形成类似的有利相互作用。</p>
+<p>基于此，他们开发了一套名为「WII 引导方法」（WIIGA）的对接流程。</p>
+<p><strong>它的工作原理如下</strong>：<br>
+1. 首先，使用一个未结合配体的 apo 蛋白结构。<br>
+2. 识别结合位点内的所有水分子，将其位置定义为「水的理想相互作用位点」（Waters Ideal Interactions, WII）。<br>
+3. 然后，在使用 AutoDock Vina 进行对接计算时，为打分函数增加一个「奖励项」：若糖链配体上的某个原子，恰好落在某个 WII 热点区域，并能形成化学上合理的相互作用（如氢键），则该对接构象会获得加分。</p>
+<p>这如同在寻宝游戏中提供一张标有红叉的地图，缩小了搜索范围，避免程序在无意义的构象空间中搜索。</p>
+<p>为验证该方法，研究者们建立了一个包含 30 个高质量蛋白 - 寡糖复合物的测试集。结果显示，WIIGA 的表现全面优于几个主流的糖基对接工具，包括标准版的 AutoDock Vina、Vina Carb (VC) 和 GlycoTorch Vina (GTV)，能更准确地预测出接近晶体结构的正确结合模式。</p>
+<p>该方法的一个优点是，它仅需 apo 蛋白的结构。在药物研发中，通常更容易获得靶点蛋白自身的结构，而非其与配体结合后的复合物结构。WIIGA 在更接近真实场景的交叉对接测试中，依然表现稳健。</p>
+<p>更有价值的是，此方法同样适用于药物化学家更关心的类药小分子——糖模拟物（glycomimetics），可用于设计靶向凝集素（lectin）等糖结合蛋白的小分子药物。</p>
+<p>当然，该方法也有其局限。它的一个主要限制在于蛋白质本身的构象。若蛋白在结合配体时自身会发生剧烈的构象变化（即「诱导契合」），那么基于刚性 apo 结构的 WII 热点图可能就不准确。测试结果也证实了这一点：使用 apo 结构或 AlphaFold3 预测的模型，其对接准确性低于使用实验测定的 holo 结构。这提示，对于构象柔性大的靶点，单一晶体结构可能不够，或需借助分子动力学模拟或结构系综来获得更全面的信息。</p>
+<p>这项工作为解决糖基对接这一难题提供了一个实用且巧妙的工具，它也说明，有时解决复杂问题的关键，就藏在像水这样最常见、最易被忽略的细节之中。</p>
+<p>📜Title: Guided docking using solvent structure information improves the prediction of protein-glycans complexes<br>
+📜Paper: <a href="https://doi.org/10.26434/chemrxiv-2025-8qvgh" class="uri">https://doi.org/10.26434/chemrxiv-2025-8qvgh</a></p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-09-28/post_all.zh.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

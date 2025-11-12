@@ -1,0 +1,15 @@
+---
+title: "刘吉星"
+pagetitle: "刘吉星"
+subtitle: "生物医学数据科学家"
+image: assets/jixing.png
+comments: false
+about:
+  template: jolla
+  image-width: 28em
+  id: hero-heading
+page-layout: article
+
+back-to-top-navigation: false
+  
+---

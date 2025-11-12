@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="本文探讨了三项前沿的 AI 药物发现技术。K-DREAM 将生物知识图谱融入扩散模型，实现有目的性的多靶点药物分子设计；DiffDock+UniDock 流程结合生成式 AI 与快速打分，实现了大规模、无偏见的盲对接虚拟筛选；ADFLIP 模型利用全原子级离散流匹配，能够设计出与特定配体或动态结构精确互作的功能性蛋白质。">
+
+<title>K-DREAM: 让 AI 懂生物学再造分子 – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="K-DREAM: 让 AI 懂生物学再造分子 – MPU">
+<meta property="og:description" content="本文探讨了三项前沿的 AI 药物发现技术。K-DREAM 将生物知识图谱融入扩散模型，实现有目的性的多靶点药物分子设计；DiffDock+UniDock 流程结合生成式 AI 与快速打分，实现了大规模、无偏见的盲对接虚拟筛选；ADFLIP 模型利用全原子级离散流匹配，能够设计出与特定配体或动态结构精确互作的功能性蛋白质。">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-10-25/post_all_image/augmenting_generativ_2025_10_17_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="一张流程图，展示了 K-DREAM 框架如何将生物医学知识图谱整合到分子生成模型中。图中左侧是知识图谱，包含基因、蛋白、疾病等关系；中间是一个上下文回归网络（CRN），用于连接知识和分子结构；右侧是扩散模型，根据知识图谱的引导生成具有特定生物学功能的分子。
+">
+<meta name="twitter:title" content="K-DREAM: 让 AI 懂生物学再造分子 – MPU">
+<meta name="twitter:description" content="本文探讨了三项前沿的 AI 药物发现技术。K-DREAM 将生物知识图谱融入扩散模型，实现有目的性的多靶点药物分子设计；DiffDock+UniDock 流程结合生成式 AI 与快速打分，实现了大规模、无偏见的盲对接虚拟筛选；ADFLIP 模型利用全原子级离散流匹配，能够设计出与特定配体或动态结构精确互作的功能性蛋白质。">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-10-25/post_all_image/augmenting_generativ_2025_10_17_image_1.jpg">
+<meta name="twitter:image:alt" content="一张流程图，展示了 K-DREAM 框架如何将生物医学知识图谱整合到分子生成模型中。图中左侧是知识图谱，包含基因、蛋白、疾病等关系；中间是一个上下文回归网络（CRN），用于连接知识和分子结构；右侧是扩散模型，根据知识图谱的引导生成具有特定生物学功能的分子。
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">K-DREAM: 让 AI 懂生物学再造分子</h1>
+                  <div>
+        <div class="description">
+          <p>本文探讨了三项前沿的 AI 药物发现技术。K-DREAM 将生物知识图谱融入扩散模型，实现有目的性的多靶点药物分子设计；DiffDock+UniDock 流程结合生成式 AI 与快速打分，实现了大规模、无偏见的盲对接虚拟筛选；ADFLIP 模型利用全原子级离散流匹配，能够设计出与特定配体或动态结构精确互作的功能性蛋白质。</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">AI 药物发现</div>
+                <div class="quarto-category">生成式 AI</div>
+                <div class="quarto-category">蛋白质设计</div>
+                <div class="quarto-category">扩散模型</div>
+                <div class="quarto-category">知识图谱</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Saturday, the 25th of October, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#目录" id="toc-目录" class="nav-link active" data-scroll-target="#目录">目录</a></li>
+  <li><a href="#k-dream-让-ai-懂生物学再造分子" id="toc-k-dream-让-ai-懂生物学再造分子" class="nav-link" data-scroll-target="#k-dream-让-ai-懂生物学再造分子">1. K-DREAM: 让 AI 懂生物学再造分子</a></li>
+  <li><a href="#diffdockunidock盲对接虚拟筛选进入工业化时代" id="toc-diffdockunidock盲对接虚拟筛选进入工业化时代" class="nav-link" data-scroll-target="#diffdockunidock盲对接虚拟筛选进入工业化时代">2. DiffDock+UniDock：盲对接虚拟筛选进入工业化时代</a></li>
+  <li><a href="#adflip全原子级蛋白质设计为配体和动态结构而生" id="toc-adflip全原子级蛋白质设计为配体和动态结构而生" class="nav-link" data-scroll-target="#adflip全原子级蛋白质设计为配体和动态结构而生">3. ADFLIP：全原子级蛋白质设计，为配体和动态结构而生</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-10-25/post_all.zh.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="目录" class="level2">
+<h2 class="anchored" data-anchor-id="目录">目录</h2>
+<ol type="1">
+<li>K-DREAM 将生物知识图谱融入生成模型，让 AI 像经验丰富的化学家一样，有目的地设计药物分子，而不是盲目搜索。</li>
+<li>生成式 AI 与快速打分的结合，突破了盲对接的效率瓶颈，让大规模、无偏见的虚拟筛选成为可能。</li>
+<li>ADFLIP 模型基于全原子级的离散流匹配，可以设计出与特定配体、核酸或金属离子精确互作的蛋白质序列，也能处理动态构象。</li>
+</ol>
+</section>
+<section id="k-dream-让-ai-懂生物学再造分子" class="level2">
+<h2 class="anchored" data-anchor-id="k-dream-让-ai-懂生物学再造分子">1. K-DREAM: 让 AI 懂生物学再造分子</h2>
+<p><a href="post_all_image/augmenting_generativ_2025_10_17_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/augmenting_generativ_2025_10_17_image_1.jpg" class="img-fluid"></a></p>
+<p>药物发现需要面对巨大的化学空间。生成模型（Generative models）能产生海量分子结构，却不理解生物学，只是在数字和向量的海洋里随机组合，因此绝大多数产出都毫无用处。</p>
+<p>K-DREAM 框架为生成模型引入了一位导师——生物医学知识图谱（biomedical knowledge graphs）。</p>
+<p><strong>K-DREAM 的工作原理</strong></p>
+<p>它的核心思路是：直接为模型提供生物学背景，避免盲目猜测。</p>
+<p>K-DREAM 使用扩散模型（diffusion model）作为分子的生成引擎。该引擎能从噪声开始，逐步构建化学结构。关键在于如何引导这个过程。</p>
+<p>知识图谱就在此发挥作用。知识图谱包含了基因、蛋白、疾病、药物间的复杂关系网络，是数十年生物医学研究的积累。K-DREAM 将这些信息压缩成数学上可处理的嵌入向量（embeddings）。每个靶点蛋白因此在知识图谱中获得一个独特的「坐标」。</p>
+<p>框架中一个名为「上下文回归网络」（Context Regressor Network, CRN）的模块，扮演了翻译官的角色。CRN 负责在「化学语言」（分子结构）和「生物语言」（知识图谱嵌入向量）间建立联系。它通过图注意力层（graph attention layers）学习，能够根据一个分子，在知识图谱中定位其对应的生物学「坐标」。</p>
+<p>这盘活了整个生成流程。设定一个生物学目标（例如某个激酶靶点）后，K-DREAM 便利用其在知识图谱中的「坐标」来指导扩散模型。这样，生成的分子就能兼顾目标的生物学功能和相应的化学结构。整个过程变成了一次有导航的精确打击。</p>
+<p><strong>解决多靶点设计的难题</strong></p>
+<p>许多复杂疾病（如癌症、自身免疫病）的治疗，仅抑制单个靶点效果有限，需要能同时调控多个靶点的分子。</p>
+<p>传统方法难以应对这一挑战。K-DREAM 通过向量插值提供了解决方案。</p>
+<p>每个靶点在知识图谱中都有一个向量「坐标」。要设计一个同时作用于靶点 A 和 B 的分子，只需在 A 和 B 的向量坐标间取一个中间点，并将这个新的「虚拟坐标」设为生成目标。模型便会生成一个兼具两者特性的分子。这种方法为设计特定多靶点谱（multi-target profiles）的药物提供了可能，且易于操作。</p>
+<p><strong>避开「对接分数」的陷阱</strong></p>
+<p>许多生成模型存在一个误区：过度优化对接分数（docking score）。对接分数是计算模拟值，与真实生物活性不完全等同。过度优化它，就像为了考试而刷题，分数虽高，解决实际问题的能力却差。生成的分子可能计算数据完美，但合成后活性很差。</p>
+<p>K-DREAM 利用知识图谱提供的宏观、丰富的生物学上下文，绕开了这个陷阱，不把对接分数当作唯一的优化标准。它引导模型寻找位于「生物学意义正确」区域的分子，而非在单一指标上得分高的分子。这种策略接近药物化学家的直觉，更有可能找到有价值的候选药物。</p>
+<p>该框架仍有提升空间。未来可以整合更多维度的知识，如药代动力学（pharmacokinetics, PK）或吸收、分布、代谢、排泄和毒性（ADMET）数据，让模型不仅设计出「有效」的分子，还能设计出「能成药」的分子。K-DREAM 展示了一个方向：让 AI 学习并利用人类积累的生物学知识，使其从「分子生成器」进化为「药物设计伙伴」。</p>
+<p>📜Title: Augmenting generative models with biomedical knowledge graphs improves targeted drug discovery<br>
+🌐Paper: https://arxiv.org/abs/2510.09914</p>
+</section>
+<section id="diffdockunidock盲对接虚拟筛选进入工业化时代" class="level2">
+<h2 class="anchored" data-anchor-id="diffdockunidock盲对接虚拟筛选进入工业化时代">2. DiffDock+UniDock：盲对接虚拟筛选进入工业化时代</h2>
+<p><a href="post_all_image/blind_virtual_screen_2025_10_17_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/blind_virtual_screen_2025_10_17_image_1.jpg" class="img-fluid"></a></p>
+<p>药物发现的早期阶段，常会遇到一个难题：已知新靶点的三维结构，却不知其小分子结合位点。传统的基于结构的药物设计 (Structure-Based Drug Design, SBDD) 要求预先指定一个「口袋」 (binding pocket)，软件再将化合物库逐一匹配。这就像在暗室中找钥匙孔，一旦猜错位置，后续工作便徒劳无功。</p>
+<p>新流程实现了「盲对接」 (Blind Docking)。无需任何提示，模型能自动识别蛋白与小分子最可能的结合位点及构象。</p>
+<p><strong>这是它的工作原理</strong>：</p>
+<p>该流程分两步，结合了两种技术的优点。</p>
+<p>第一步，用 <strong>DiffDock</strong>生成可能的结合构象。DiffDock 是一种扩散生成模型 (diffusion-based generative model)，与 Midjourney 等 AI 绘画工具技术同源。它将小分子视为随机分布在蛋白周围的「噪声」，再通过「去噪」过程，逐步引导分子至能量有利的稳定构象。该过程不依赖先验的口袋信息，由数据驱动，最终生成几种最可能的结合模式。</p>
+<p>第二步，用 <strong>UniDock Vina</strong>快速打分排序。DiffDock 生成高质量构象，但直接用于大规模筛选速度过慢。因此，流程先由 DiffDock 为每个化合物生成少数几个（例如 3 个）最可能的构象，再由速度优化的打分函数 UniDock Vina 快速评估并排序。这好比一位专家 (DiffDock) 提出几种可行方案，再由一位计算飞快的助手 (UniDock Vina) 评估并选出最优解。</p>
+<p><strong>它的表现如何</strong>？</p>
+<p>在公认的 DUD-E 测试集上，即便每个分子只生成 3 个构象，该流程也能在排名前 1% 的化合物中富集到 86.78% 的活性分子。这表明该方法能有效区分活性与非活性分子，让研究者能用更少计算资源获得高质量的苗头化合物列表。</p>
+<p>速度是另一关键。在 8 张 A100 GPU 上并行运行时，处理一对蛋白 - 配体（生成 40 个构象）平均耗时 0.76 秒。这个速度使其具备了工业化应用潜力，筛选千万级化合物库可在数天内完成。</p>
+<p>研究还发现，使用多个生成构象的<strong>中位数</strong>得分排序，效果优于最高分。最高分可能来自整体不合理的局部高分「异常值」，而中位数更能反映化合物与靶点结合的普遍趋势，结果更稳健。</p>
+<p>这项工作为信息不足的新靶点提供了可靠、可规模化的计算工具，能够进行无偏见的全蛋白范围苗头化合物发现，可能改变早期药物发现的策略。</p>
+<p>📜Title: Blind Virtual Screening at Scale: A Scalable End-to-End Pipeline for Blind Docking and Affinity Prediction<br>
+🌐Paper: https://www.biorxiv.org/content/10.1101/2025.10.10.681617v1</p>
+</section>
+<section id="adflip全原子级蛋白质设计为配体和动态结构而生" class="level2">
+<h2 class="anchored" data-anchor-id="adflip全原子级蛋白质设计为配体和动态结构而生">3. ADFLIP：全原子级蛋白质设计，为配体和动态结构而生</h2>
+<p><a href="post_all_image/all_atom_inverse_pro_2025_10_17_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/all_atom_inverse_pro_2025_10_17_image_1.jpg" class="img-fluid"></a></p>
+<p>蛋白质的反向折叠（Inverse Folding）设计，传统方法常有局限。它们大多只关注蛋白质的 Cα 骨架来推测氨基酸序列，忽略了决定蛋白质功能的关键细节。这好比只看建筑框架，却不考虑家具（配体）和水电（辅因子）来做室内设计，成品往往华而不实。</p>
+<p>蛋白质的功能取决于它与其他分子的精细相互作用。例如，酶的活性位点需要精确结合底物，抗体的 CDR 区要识别抗原。这些相互作用发生在原子级别，由氨基酸侧链、小分子配体和金属离子共同决定。忽略这些关键部分的设计模型，就像盲人摸象。</p>
+<p>Yi 等人开发的 ADFLIP 模型正是针对这一问题，它是一个「全原子」模型。</p>
+<p>ADFLIP 采用离散流匹配（Discrete Flow Matching）生成策略。可以将其比作一位雕塑家，从一堆随机的氨基酸「泥块」开始，参照一幅包含所有原子（包括配体、离子）的完整 3D 蓝图。他逐步将「泥块」替换成正确的氨基酸，每一步决策都基于周围原子的精确位置和化学性质。在此过程中，氨基酸侧链也逐渐成形，为后续步骤提供更精细的结构信息。</p>
+<p>在设计药物靶点的结合口袋时，ADFLIP 能「看到」小分子药物的每个原子，从而设计出能形成最佳氢键、疏水或盐桥相互作用的氨基酸序列，使「为配体设计蛋白质」成为可能。</p>
+<p>ADFLIP 还能处理蛋白质的动态性。许多蛋白质并非刚体，而是在不同构象状态下发挥功能。传统方法基于单一晶体结构，难以应对这种动态变化。ADFLIP 则能学习由核磁共振（Nuclear Magnetic Resonance, NMR）等技术测定的构象集合（ensemble），设计出能适应所有这些状态的序列，使设计的蛋白质在真实生理环境下功能更稳定。</p>
+<p>ADFLIP 还有一个实用设计：「无训练引导采样」（training-free classifier guidance sampling）。这如同为设计过程加装一个「导航仪」。无需重新训练主模型，就可以外接一个小型预训练预测模型，例如亲和力预测器 DSMBind。在序列生成的每一步，这个「导航仪」会引导主模型向特定方向优化，比如「增强与配体的结合力」。这种方式让我们能根据高亲和力、高稳定性等特定需求「定制」蛋白质序列。</p>
+<p>ADFLIP 将蛋白质设计从骨架级的「草图绘制」提升到全原子级的「精密工程」，让我们能更好地设计出在复杂生物环境中执行特定任务的功能性蛋白质。</p>
+<p>📜Title: All-atom inverse protein folding through discrete flow matching<br>
+🌐Paper: <a href="https://raw.githubusercontent.com/mlresearch/v267/main/assets/yi25a/yi25a.pdf" class="uri">https://raw.githubusercontent.com/mlresearch/v267/main/assets/yi25a/yi25a.pdf</a></p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-10-25/post_all.zh.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

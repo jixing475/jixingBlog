@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="Explore recent advances in AI drug discovery, including MLFGNN for molecular property prediction, MolSnap as a fast generator challenging diffusion models, and PepThink-R1, a cyclic peptide optimization AI that can explain its design logic. These models are changing how we approach molecular discovery and bioinformatics analysis.">
+
+<title>PepThink-R1: A Cyclic Peptide Optimization AI That Can ‘Think’ – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="PepThink-R1: A Cyclic Peptide Optimization AI That Can ‘Think’ – MPU">
+<meta property="og:description" content="Explore recent advances in AI drug discovery, including MLFGNN for molecular property prediction, MolSnap as a fast generator challenging diffusion models, and PepThink-R1, a cyclic peptide optimization AI that can explain its design logic. These models are changing how we approach molecular discovery and bioinformatics analysis.">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-09-08/post_all_image/pep_think_r1_llm_for_2025_08_24_image_2.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="By learning a Chain-of-Thought, PepThink-R1 not only provides results when optimizing cyclic peptides but also explains why it made those changes, making the AI's decision process transparent.
+">
+<meta name="twitter:title" content="PepThink-R1: A Cyclic Peptide Optimization AI That Can ‘Think’ – MPU">
+<meta name="twitter:description" content="Explore recent advances in AI drug discovery, including MLFGNN for molecular property prediction, MolSnap as a fast generator challenging diffusion models, and PepThink-R1, a cyclic peptide optimization AI that can explain its design logic. These models are changing how we approach molecular discovery and bioinformatics analysis.">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-09-08/post_all_image/pep_think_r1_llm_for_2025_08_24_image_2.jpg">
+<meta name="twitter:image:alt" content="By learning a Chain-of-Thought, PepThink-R1 not only provides results when optimizing cyclic peptides but also explains why it made those changes, making the AI's decision process transparent.
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">PepThink-R1: A Cyclic Peptide Optimization AI That Can ‘Think’</h1>
+                  <div>
+        <div class="description">
+          <p>Explore recent advances in AI drug discovery, including MLFGNN for molecular property prediction, MolSnap as a fast generator challenging diffusion models, and PepThink-R1, a cyclic peptide optimization AI that can explain its design logic. These models are changing how we approach molecular discovery and bioinformatics analysis.</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">AI Drug Discovery</div>
+                <div class="quarto-category">Generative Models</div>
+                <div class="quarto-category">Large Language Models</div>
+                <div class="quarto-category">Graph Neural Networks</div>
+                <div class="quarto-category">Bioinformatics</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Monday, the 8th of September, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#table-of-contents" id="toc-table-of-contents" class="nav-link active" data-scroll-target="#table-of-contents">Table of Contents</a></li>
+  <li><a href="#mlfgnn-correcting-the-nearsightedness-and-farsightedness-of-graph-neural-networks" id="toc-mlfgnn-correcting-the-nearsightedness-and-farsightedness-of-graph-neural-networks" class="nav-link" data-scroll-target="#mlfgnn-correcting-the-nearsightedness-and-farsightedness-of-graph-neural-networks">1. MLFGNN: Correcting the Nearsightedness and Farsightedness of Graph Neural Networks</a></li>
+  <li><a href="#one-click-ai-drug-generation-molsnap-moves-beyond-slow-diffusion-models" id="toc-one-click-ai-drug-generation-molsnap-moves-beyond-slow-diffusion-models" class="nav-link" data-scroll-target="#one-click-ai-drug-generation-molsnap-moves-beyond-slow-diffusion-models">2. One-Click AI Drug Generation: MolSnap Moves Beyond Slow Diffusion Models</a></li>
+  <li><a href="#ai-drug-discovery-this-time-it-made-active-molecules" id="toc-ai-drug-discovery-this-time-it-made-active-molecules" class="nav-link" data-scroll-target="#ai-drug-discovery-this-time-it-made-active-molecules">3. AI Drug Discovery: This Time, It Made Active Molecules</a></li>
+  <li><a href="#pepthink-r1-a-cyclic-peptide-optimization-ai-that-can-think" id="toc-pepthink-r1-a-cyclic-peptide-optimization-ai-that-can-think" class="nav-link" data-scroll-target="#pepthink-r1-a-cyclic-peptide-optimization-ai-that-can-think">4. PepThink-R1: A Cyclic Peptide Optimization AI That Can ‘Think’</a></li>
+  <li><a href="#promptbio-your-ai-bioinformatics-expert-team" id="toc-promptbio-your-ai-bioinformatics-expert-team" class="nav-link" data-scroll-target="#promptbio-your-ai-bioinformatics-expert-team">5. PromptBio: Your AI Bioinformatics Expert Team</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-09-08/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="table-of-contents" class="level2">
+<h2 class="anchored" data-anchor-id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li>MLFGNN tries to capture both local details and global structure by fusing graph attention networks, graph transformers, and molecular fingerprints. It shows strong benchmark performance, but its value in real drug discovery projects is yet to be proven.</li>
+<li>MolSnap challenges slow and expensive diffusion models with a new, nearly instantaneous generation method that also produces higher-quality molecules.</li>
+<li>PocketXMol uses a fundamental, atom-level perspective to build a true “one-model-fits-all” molecular design platform, proving its real-world utility with wet lab results.</li>
+<li>By learning a “Chain-of-Thought,” PepThink-R1 can not only provide results when optimizing cyclic peptides but also explain <em>why</em> it made those changes, moving beyond black-box AI.</li>
+<li>PromptBio is an AI-driven “bioinformatics department in a box” that automates everything from standard multi-omics analysis to custom workflows in natural language, addressing the core reproducibility problem in the field.</li>
+</ol>
+</section>
+<section id="mlfgnn-correcting-the-nearsightedness-and-farsightedness-of-graph-neural-networks" class="level2">
+<h2 class="anchored" data-anchor-id="mlfgnn-correcting-the-nearsightedness-and-farsightedness-of-graph-neural-networks">1. MLFGNN: Correcting the Nearsightedness and Farsightedness of Graph Neural Networks</h2>
+<p><a href="post_all_image/image_20250709_223404_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/image_20250709_223404_1.jpg" class="img-fluid"></a></p>
+<p>Is a molecule’s property determined by a specific functional group, or by its overall topology?</p>
+<p>The answer is “both.”</p>
+<p>This creates a big challenge for Graph Neural Networks (GNNs). Most models are good at one or the other. They either focus on local details, like looking through a high-power microscope at an ester group or a halogen, or they take a bird’s-eye view, grasping the molecule’s overall shape and flexibility. It’s hard to get one model to have both types of “vision.”</p>
+<p>MLFGNN uses a Graph Attention Network (GAT) to handle local information. You can think of a GAT as a team of sniffer dogs, highly sensitive to the chemical environment around each atom. This is the model’s “nearsighted” ability, responsible for identifying key groups that determine local reactivity or binding patterns.</p>
+<p>Next, to get “farsighted” vision, the researchers brought in a graph transformer. Transformers dominate natural language processing because they excel at capturing long-range dependencies. Here, they’re used to examine the entire molecular graph, understanding interactions that span multiple chemical bonds, like the molecule’s overall dipole moment or complex steric effects.</p>
+<p>The cleverest part is the “adaptive fusion mechanism.” It works like an intelligent autofocus system. If the property the model is predicting (like water solubility) depends more on the molecule’s overall polar surface area, the system gives more weight to global information (the transformer’s output). If it’s predicting metabolic stability at a specific site, the local chemical environment (the GAT’s output) is more important. This mechanism lets the model learn to adapt to the situation instead of using a one-size-fits-all approach.</p>
+<p>And they didn’t stop there. The researchers also integrated traditional molecular fingerprints. Fingerprints are veterans in cheminformatics—simple, fast, and built on decades of chemical knowledge. MLFGNN uses a cross-attention module to let the new features learned by the GNN “talk” with these classic fingerprint features, allowing them to complement each other. It’s like having a talented young chemist consult an experienced old master, which prevents the GNN from overthinking things in the complex graph space.</p>
+<p>The benchmark results in the paper look great, as always. MLFGNN outperformed existing top methods on several public datasets. But that’s like passing a driving test. The real challenge is taking this car onto the “dirt roads” of a real drug discovery project. Real-world molecular libraries are full of biases and unseen scaffolds. Will this sophisticated “hybrid power” system hold up, or will it overfit due to its complexity?</p>
+<p>The code is open source, so the entire community can now take MLFGNN for a spin. We can test it with our own messy, challenging proprietary data. Only then will we know if this new model is a magic tool that can turn lead into gold, or just another shiny object that dazzles on benchmarks but fails in practice.</p>
+<p>📜Title: Multi-Level Fusion Graph Neural Network for Molecule Property Prediction 📜Paper: https://arxiv.org/abs/2507.03430v1 💻Code: https://github.com/lhb0189/MLFGNN</p>
+</section>
+<section id="one-click-ai-drug-generation-molsnap-moves-beyond-slow-diffusion-models" class="level2">
+<h2 class="anchored" data-anchor-id="one-click-ai-drug-generation-molsnap-moves-beyond-slow-diffusion-models">2. One-Click AI Drug Generation: MolSnap Moves Beyond Slow Diffusion Models</h2>
+<p><a href="post_all_image/mol_snap_snap_fast_m_2025_08_10_image_1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/mol_snap_snap_fast_m_2025_08_10_image_1.png" class="img-fluid"></a></p>
+<p>If you follow AI drug discovery, you’ve heard of “Diffusion Models.”</p>
+<p>They are the current darlings, capable of generating very high-quality molecules. But they have a fatal flaw: they are slow. Painfully slow. They work like a meticulous sculptor, starting with a random block of “noise” marble and patiently chipping away, step by step, to reveal the final molecular shape. This process can take hundreds or even thousands of steps.</p>
+<p>It’s an elegant process, but in the fast-paced world of drug discovery, the results might be good, but they arrive too late.</p>
+<p>MolSnap’s message to diffusion models is: “You’re too slow!”</p>
+<p>It has two main weapons.</p>
+<p>The first is “Variational Mean Flow” (VMF). You don’t need to understand the complex math behind it. You just need to know that it turns molecular generation from a thousand-step process into a one-shot deal. Instead of inching its way from noise to a molecule, it learns the “road map” from the start to the end and then jumps directly to the destination. The paper says it only needs 1-5 function evaluations to get the job done. In terms of computational efficiency, that’s like trading a bicycle for a jet.</p>
+<p>The second, which is key to ensuring quality, is the “Causal-Aware Transformer” (CAT). This solves another big problem. Many models that generate molecules from text (e.g., “I want a molecule that inhibits kinases and is water-soluble”) act like they’re playing with a word puzzle, forcing features together without regard for chemical logic. CAT, however, enforces “causal dependency” during generation. It’s like building with Lego—you have to put down the base before you can add bricks on top. This respect for the logic of chemical construction leads to a stunning result: <strong>100% chemical validity</strong>. It won’t generate molecules with five-coordinate carbons or other oddities that make organic chemists’ blood pressure rise.</p>
+<p>So, MolSnap is not just fast; it’s high-quality. The molecules it generates are better in novelty and diversity than those from the best existing methods.</p>
+<p>This allows us to explore chemical space in an interactive way with almost no delay. We can quickly test “what-if” ideas, much like talking to a chatbot. “What would a molecule with three hydrogen bond donors and a cLogP of less than 2 look like?” MolSnap can give you an answer almost instantly.</p>
+<p>📜Title: MolSnap: Snap-Fast Molecular Generation with Latent Variational Mean Flow 📜Paper: https://arxiv.org/abs/2508.05411v1</p>
+</section>
+<section id="ai-drug-discovery-this-time-it-made-active-molecules" class="level2">
+<h2 class="anchored" data-anchor-id="ai-drug-discovery-this-time-it-made-active-molecules">3. AI Drug Discovery: This Time, It Made Active Molecules</h2>
+<p><a href="post_all_image/pocket_x_mol_an_atom_2025_08_10_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/pocket_x_mol_an_atom_2025_08_10_image_1.jpg" class="img-fluid"></a></p>
+<p>Our hard drives are filled with a zoo of AI drug design tools. There’s one for generating small molecules, another for designing peptides, and yet another for docking. They all work in their own separate worlds. Every time you want to try something new, you have to find a new tool and learn its unique dialect.</p>
+<p>PocketXMol feels like an attempt to unify the field.</p>
+<p>PocketXMol argues that we should stop drawing lines between small molecules and peptides. At the most fundamental physical level, what are they? They are just collections of atoms arranged in a specific three-dimensional way inside a protein’s pocket.</p>
+<p>So, PocketXMol uses this fundamental, unbiased “atom-level” perspective to train a massive foundation model. It doesn’t learn “chemistry”; it learns “how atoms should be placed.” It’s like teaching an AI to be a chef not by making it memorize a million recipes, but by teaching it the principles of thermodynamics, molecular gastronomy, and the Maillard reaction.</p>
+<p>Its training method, “recovering structure from noise,” is similar to diffusion models. But its application is “task-prompted.” You don’t need to fine-tune the model for every new task. You just talk to it like you would to ChatGPT: “Hey, design a small molecule that binds to this pocket,” or “Design a peptide that fits into this groove.” It understands and starts “creating” at the atomic level.</p>
+<p>Okay, that’s the theory. I only care about one thing: <strong>Does it work</strong>?</p>
+<p>The researchers didn’t just get a high score on benchmarks (though it did come in first on 11 out of 13 tasks). They actually tested it. * They had PocketXMol design inhibitors for Caspase-9. The AI-designed molecules showed activity comparable to commercially available inhibitors. * They had PocketXMol design peptides that bind to PD-L1. The success rate was far higher than random screening.</p>
+<p>Succeeding in both small molecules and peptides—two fields with very different rules—is strong proof of the power of its unified “atom-level” representation. The AI doesn’t need to know what an amino acid or a benzene ring is. It just needs to know which combinations of atoms are most stable in a given physicochemical environment.</p>
+<p>📜Title: PocketXMol: An Atom-level Generative Foundation Model for Molecular Interaction with Pockets 📜Paper: https://www.biorxiv.org/content/10.1101/2024.10.17.618827v2 💻Code: https://github.com/pengxingang/PocketXMol</p>
+</section>
+<section id="pepthink-r1-a-cyclic-peptide-optimization-ai-that-can-think" class="level2">
+<h2 class="anchored" data-anchor-id="pepthink-r1-a-cyclic-peptide-optimization-ai-that-can-think">4. PepThink-R1: A Cyclic Peptide Optimization AI That Can ‘Think’</h2>
+<p><a href="post_all_image/pep_think_r1_llm_for_2025_08_24_image_2.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="post_all_image/pep_think_r1_llm_for_2025_08_24_image_2.jpg" class="img-fluid"></a></p>
+<p>Using Large Language Models (LLMs) to design peptides is no longer new. We give a model an initial cyclic peptide sequence, ask it to optimize it, and it gives us a new sequence with good predicted metrics. But if you ask it, “Why did you change the alanine at position 5 to a non-natural amino acid?” it can’t answer.</p>
+<p>This black-box model, where we know the “what” but not the “why,” makes it hard to fully trust AI-generated designs. We don’t know if a change was based on learned chemical principles or just a random correlation in the training data.</p>
+<p>The PepThink-R1 framework enables an LLM not only to do the work of cyclic peptide optimization but also to “write a lab notebook” explaining its process.</p>
+<section id="how-do-you-teach-an-ai-to-write-a-lab-notebook" class="level4">
+<h4 class="anchored" data-anchor-id="how-do-you-teach-an-ai-to-write-a-lab-notebook">How do you teach an AI to “write a lab notebook”?</h4>
+<p>The core technique is “Chain-of-Thought” (CoT).</p>
+<p>The authors built a new training dataset where each pair of “before-and-after” cyclic peptide sequences is paired with a “design rationale” as a label.</p>
+<p>This “design rationale” explicitly states:</p>
+<p>They used this data with “work logs” to perform supervised fine-tuning (SFT) on the LLM. This is like teaching the model, step-by-step, how to connect a specific amino acid modification to a desired improvement in pharmaceutical properties.</p>
+</section>
+<section id="from-learning-to-think-to-autonomous-exploration" class="level4">
+<h4 class="anchored" data-anchor-id="from-learning-to-think-to-autonomous-exploration">From “Learning to Think” to “Autonomous Exploration”</h4>
+<p>Once the model has a basic grasp of this “think-then-modify” pattern through SFT, PepThink-R1 enters its second phase: <strong>Reinforcement Learning (RL</strong>).</p>
+<p>In this stage, the model begins to autonomously explore different amino acid modifications. For each change it makes, it receives a “reward score.” This score is a composite evaluation of the new peptide’s chemical validity and the degree of improvement in properties like lipophilicity and stability.</p>
+<p>Through trial and error, the model gradually learns which “operations” earn high scores and which modifications are dead ends.</p>
+<p>This two-step “SFT + RL” strategy gives the model a solid starting point, preventing it from getting lost in the vast search space of reinforcement learning. The RL phase then gives the model the ability to go beyond its training data and discover new, potentially better solutions.</p>
+</section>
+<section id="what-were-the-results" class="level4">
+<h4 class="anchored" data-anchor-id="what-were-the-results">What were the results?</h4>
+<p>Compared to general-purpose LLMs and the specialized baseline model PepINVENT, PepThink-R1 showed a clear advantage in both optimization success rate and the interpretability of its results. Its High-Quality Success Rate (HQSR) reached 0.890, meaning the vast majority of its suggestions are reliable and valuable.</p>
+<p>Most importantly, the “chains of thought” it generates are valuable information in themselves. They can inspire us to think about structure-activity relationships from new angles, turning AI into an intelligent partner we can actually “talk” with in our research.</p>
+<p>📜Paper: https://arxiv.org/abs/2508.14765v1</p>
+</section>
+</section>
+<section id="promptbio-your-ai-bioinformatics-expert-team" class="level2">
+<h2 class="anchored" data-anchor-id="promptbio-your-ai-bioinformatics-expert-team">5. PromptBio: Your AI Bioinformatics Expert Team</h2>
+<p><a href="post_all_image/prompt_bio_a_multi_a_2025_07_11_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="post_all_image/prompt_bio_a_multi_a_2025_07_11_image_1.jpg" class="img-fluid"></a></p>
+<p>Bioinformatics analysis is the engine of modern biomedical research and the nightmare of countless graduate students: a pile of scripts from unknown sources, an environment that never works, and the classic line, “It runs on my machine.” Trying to reproduce your own analysis six months later is nearly impossible. The field is full of manual, workshop-style practices, and reproducibility is a disaster.</p>
+<p>The PromptBio platform aims to rescue us from this disaster. It’s not just another standalone analysis tool. Its architecture is a “multi-agent system”—basically, it gives you an AI team with a manager and specialized agents, each with its own job.</p>
+<p>This team has several star employees:</p>
+<p>The first is <strong>DiscoverFlow</strong>. Think of it as an extremely rigorous, almost obsessive-compulsive “assembly line worker.” You give it a standard multi-omics analysis task, and it will execute it following a predefined, unchangeable workflow (a Directed Acyclic Graph, or DAG). The benefit? Absolute reproducibility. The results will be identical whether it’s run today or tomorrow, by you or by me. For large-scale, standardized data processing, this is exactly what we need.</p>
+<p>The second is <strong>ToolsGenie</strong>, the team’s “creative genius.” You no longer need to learn complex command lines. You just tell it in plain English: “Hey, find the genes in my tumor samples that are overexpressed and are also kinases.” ToolsGenie will then select the right tools, generate the scripts, assemble them, and give you the answer. It frees you from the tedious details of “how to do it,” letting you focus on the scientific questions of “what to do” and “why.”</p>
+<p>The third is <strong>MarkerGenie</strong>, the team’s “librarian” and “literature analyst.” When you get a list of genes from the first two modules, do you still have to go to PubMed and search for them one by one to see if they are known biomarkers? MarkerGenie does that work for you. It automatically searches the literature and gives you a summary report on the roles these genes have played in disease.</p>
+<p>From the very beginning, PromptBio has prioritized <strong>security and compliance</strong>. It includes encryption, access control, and audit logs, all aimed at HIPAA and SOC2 standards. This clearly shows that its goal is to be used in real clinical settings, handling sensitive patient data. This is a completely different level of thinking from projects that are just for academic use.</p>
+<p>📜Paper: https://www.biorxiv.org/content/10.1101/2025.07.05.663295v1</p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-09-08/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

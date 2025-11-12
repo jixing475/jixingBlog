@@ -1,13 +1,11 @@
 ---
 title: "AIDD"
 page-layout: full
-title-block-banner: true
-image: /assets/images/social-profile.png
-listing:
-  contents: AIDD
-  sort: "date desc"
-  type: default
-  categories: true
-  sort-ui: false
-  filter-ui: false
 ---
+
+<script>
+  // Redirect to English version
+  window.location.href = "aidd.en.html";
+</script>
+
+<p>Redirecting to <a href="aidd.en.html">AIDD (English)</a>...</p>

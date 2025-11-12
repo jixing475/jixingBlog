@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="This article explores three key directions in AI for drug discovery. First, we look at the challenges and solutions for building digital twins of biological systems using symbolic regression, sparse regression, and hybrid frameworks. Next, we cover how the BioMD generative model uses a hierarchical strategy to efficiently simulate all-atom molecular dynamics and predict ligand unbinding pathways. Finally, we show how instruction-tuning allows Large Language Models (LLMs) to accurately extract virus-host interaction data from full scientific papers using just a few samples, speeding up knowledge graph construction.">
+
+<title>Frontiers in AI Drug Discovery: Digital Twins, Generative Models, and Large Language Models – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="Frontiers in AI Drug Discovery: Digital Twins, Generative Models, and Large Language Models – MPU">
+<meta property="og:description" content="This article explores three key directions in AI for drug discovery. First, we look at the challenges and solutions for building digital twins of biological systems using symbolic regression, sparse regression, and hybrid frameworks. Next, we cover how the BioMD generative model uses a hierarchical strategy to efficiently simulate all-atom molecular dynamics and predict ligand unbinding pathways. Finally, we show how instruction-tuning allows Large Language Models (LLMs) to accurately extract virus-host interaction data from full scientific papers using just a few samples, speeding up knowledge graph construction.">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-10-10/post_all_image/data_driven_discover_2025_09_14_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="A concept image showing the process of building a precise digital twin of a biological system from vast, messy biological data (like genomics and proteomics) through complex mathematical models and algorithms.
+">
+<meta name="twitter:title" content="Frontiers in AI Drug Discovery: Digital Twins, Generative Models, and Large Language Models – MPU">
+<meta name="twitter:description" content="This article explores three key directions in AI for drug discovery. First, we look at the challenges and solutions for building digital twins of biological systems using symbolic regression, sparse regression, and hybrid frameworks. Next, we cover how the BioMD generative model uses a hierarchical strategy to efficiently simulate all-atom molecular dynamics and predict ligand unbinding pathways. Finally, we show how instruction-tuning allows Large Language Models (LLMs) to accurately extract virus-host interaction data from full scientific papers using just a few samples, speeding up knowledge graph construction.">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-10-10/post_all_image/data_driven_discover_2025_09_14_image_1.jpg">
+<meta name="twitter:image:alt" content="A concept image showing the process of building a precise digital twin of a biological system from vast, messy biological data (like genomics and proteomics) through complex mathematical models and algorithms.
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">Frontiers in AI Drug Discovery: Digital Twins, Generative Models, and Large Language Models</h1>
+                  <div>
+        <div class="description">
+          <p>This article explores three key directions in AI for drug discovery. First, we look at the challenges and solutions for building digital twins of biological systems using symbolic regression, sparse regression, and hybrid frameworks. Next, we cover how the BioMD generative model uses a hierarchical strategy to efficiently simulate all-atom molecular dynamics and predict ligand unbinding pathways. Finally, we show how instruction-tuning allows Large Language Models (LLMs) to accurately extract virus-host interaction data from full scientific papers using just a few samples, speeding up knowledge graph construction.</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">AI Drug Discovery</div>
+                <div class="quarto-category">Digital Twins</div>
+                <div class="quarto-category">Molecular Dynamics</div>
+                <div class="quarto-category">Generative Models</div>
+                <div class="quarto-category">Large Language Models</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Friday, the 10th of October, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#table-of-contents" id="toc-table-of-contents" class="nav-link active" data-scroll-target="#table-of-contents">Table of Contents</a></li>
+  <li><a href="#digital-twins-in-pharma-the-challenge-of-getting-from-data-to-models" id="toc-digital-twins-in-pharma-the-challenge-of-getting-from-data-to-models" class="nav-link" data-scroll-target="#digital-twins-in-pharma-the-challenge-of-getting-from-data-to-models">1. Digital Twins in Pharma: The Challenge of Getting from Data to Models</a></li>
+  <li><a href="#the-biomd-generative-model-hitting-fast-forward-on-molecular-dynamics" id="toc-the-biomd-generative-model-hitting-fast-forward-on-molecular-dynamics" class="nav-link" data-scroll-target="#the-biomd-generative-model-hitting-fast-forward-on-molecular-dynamics">2. The BioMD Generative Model: Hitting Fast-Forward on Molecular Dynamics</a></li>
+  <li><a href="#a-new-way-for-ai-to-read-papers-small-sample-fine-tuning-for-full-text-virus-host-interaction-extraction" id="toc-a-new-way-for-ai-to-read-papers-small-sample-fine-tuning-for-full-text-virus-host-interaction-extraction" class="nav-link" data-scroll-target="#a-new-way-for-ai-to-read-papers-small-sample-fine-tuning-for-full-text-virus-host-interaction-extraction">3. A New Way for AI to Read Papers: Small-Sample Fine-Tuning for Full-Text Virus-Host Interaction Extraction</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-10-10/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="table-of-contents" class="level2">
+<h2 class="anchored" data-anchor-id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li>Building a digital twin of a biological system from data can’t be done with just one method. The future lies in hybrid frameworks that merge multiple techniques.</li>
+<li>BioMD’s “coarse-to-fine” hierarchical strategy lowers the cost of long-timescale, all-atom molecular dynamics simulations, showing high efficiency and physical realism in predicting ligand unbinding pathways.</li>
+<li>With instruction-tuning, Large Language Models can efficiently extract virus-host interaction data from full papers. Even with little training data, they far outperform traditional models.</li>
+</ol>
+</section>
+<section id="digital-twins-in-pharma-the-challenge-of-getting-from-data-to-models" class="level2">
+<h2 class="anchored" data-anchor-id="digital-twins-in-pharma-the-challenge-of-getting-from-data-to-models">1. Digital Twins in Pharma: The Challenge of Getting from Data to Models</h2>
+<p><a href="post_all_image/data_driven_discover_2025_09_14_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/data_driven_discover_2025_09_14_image_1.jpg" class="img-fluid"></a></p>
+<p>“Digital Twin” is a hot term right now, used in everything from manufacturing to aerospace. In drug discovery, the idea is just as appealing: create a virtual, computable copy of a cell, an organ, or even a patient inside a computer.</p>
+<p>The appeal is that we could run all sorts of experiments on this virtual copy. We could test a newly designed molecule to see its effect on a signaling pathway, or predict a patient’s response to a specific therapy. All this could happen before synthesizing compounds or running clinical trials, which in theory would save time and money.</p>
+<p>But here’s the problem: how do you actually build this “twin”?</p>
+<p>We have plenty of data—mountains of it from omics, imaging, and time-series studies. The challenge is to automatically dig through this messy data and find the mathematical models that accurately describe the underlying rules of a biological system. This review paper sorts through the tools we currently have and lays out their pros and cons.</p>
+<p>The authors focus on two classic methods: Symbolic Regression and Sparse Regression.</p>
+<p>Symbolic Regression is a brute-force approach. You give a computer a set of basic mathematical building blocks—add, subtract, multiply, divide, logarithms, trig functions—and let it assemble them in every possible way until it finds an equation that perfectly fits your data. The upside is flexibility. It doesn’t require many prior assumptions and could potentially uncover biological mechanisms we never expected. But the downside is obvious: the computational load is staggering, like finding a specific needle in the entire galaxy. It also often spits out a monstrously complex and uninterpretable equation that, while fitting the data, doesn’t help us understand the mechanism at all.</p>
+<p>Sparse Regression takes a different path. It’s more like a disciplined artisan. You start by giving it a huge library of possibilities, like all the potential interactions in a complex network. Then, it uses algorithms (like the classic LASSO) to “prune” this library, keeping only the few essential terms that are most important for explaining the data. The benefit is that the resulting model is clean and easy to interpret. You get the results and can clearly see, “Ah, it’s the phosphorylation of protein B by kinase A that’s driving this.” But the risk is that you might accidentally prune away weak but critical interactions—the classic “throwing the baby out with the bathwater” problem.</p>
+<p>So, can the newer tools like deep learning and Large Language Models (LLMs) solve this?</p>
+<p>The authors mention that these new tools do have potential, especially for integrating prior knowledge. For instance, an LLM can learn from millions of papers that a certain protein belongs to a specific family or that a known crosstalk exists between two pathways. It can use this information as a “hint” to guide the model-building process.</p>
+<p>But we have to be realistic. The reliability of these models is still a huge question mark. They can “hallucinate,” confidently stating nonsense as fact. If these hallucinations are treated as scientific truth and used to guide subsequent research, the damage could be disastrous.</p>
+<p>The paper points out the elephant in the room for all these methods: <strong>the complexity of biological data itself</strong>.</p>
+<p>Real-world biological data is never clean. It’s full of noise, measurement errors, and we can never measure every variable in a system (meaning there are lots of hidden variables). An algorithm that runs beautifully on simulated data often collapses when you feed it real experimental data.</p>
+<p>Because of this, the authors call for a standardized Benchmarking Framework, and I completely agree. We need a recognized “testing ground” to evaluate different algorithms on the same set of challenging, realistic datasets. That’s how we’ll separate what works from what doesn’t.</p>
+<p>The path forward proposed by the paper also aligns with my own judgment: the future belongs not to any single method, but to Hybrid Frameworks.</p>
+<p>We can imagine a workflow like this: 1. First, use existing biological knowledge to build a basic mechanistic model skeleton. 2. Then, use deep learning models to fit the complex, non-linear parts that we don’t yet understand. 3. Finally, place the entire model within a Bayesian Inference framework to get not just a prediction, but also the uncertainty of that prediction.</p>
+<p>For drug discovery, knowing “how uncertain the model is” is just as important as knowing “what the model predicts.” This helps us make more rational decisions and avoid pouring resources down the wrong path.</p>
+<p>This review gives us a clear roadmap. It shows the bright future of automated model discovery but is also honest about the thorns along the way.</p>
+<p>📜Title: Data-Driven Discovery of Digital Twins in Biomedical Research 📜Paper: <a href="https://arxiv.org/abs/2508.21484" class="uri">https://arxiv.org/abs/2508.21484</a></p>
+</section>
+<section id="the-biomd-generative-model-hitting-fast-forward-on-molecular-dynamics" class="level2">
+<h2 class="anchored" data-anchor-id="the-biomd-generative-model-hitting-fast-forward-on-molecular-dynamics">2. The BioMD Generative Model: Hitting Fast-Forward on Molecular Dynamics</h2>
+<p><a href="post_all_image/bio_md_all_atom_gene_2025_09_14_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/bio_md_all_atom_gene_2025_09_14_image_1.jpg" class="img-fluid"></a></p>
+<p>In drug development, we’re always racing against the clock. A molecule’s effectiveness isn’t just about how tightly it binds to a target (affinity), but also how long it stays there (residence time). This residence time, defined by the dissociation rate constant k_off, directly determines how long a drug’s effect lasts. Predicting it on a computer traditionally requires running Molecular Dynamics (MD) simulations. The problem is, a ligand escaping from a binding pocket can take milliseconds or even seconds. Simulating this step-by-step with traditional MD is a computational black hole; it can easily run for weeks or months.</p>
+<p>The BioMD generative model offers a completely new way to solve this. Instead of grinding through every single femtosecond of movement, it takes a “divide and conquer” approach.</p>
+<p>It works in two steps. First, it uses a coarse-grained model to sketch out the molecule’s general movement over nanoseconds or even longer. You can think of this like planning a long road trip by first deciding which major cities you’ll pass through, rather than worrying about every single side street from the start. This is fast and effectively avoids the cumulative errors—“one wrong step leads to a cascade of errors”—that plague traditional long-run MD simulations.</p>
+<p>Second, between these key “city” nodes, BioMD switches to a fine-grained, all-atom model to fill in the gaps. This model adds all the details, generating a complete, physically realistic atomic trajectory. It’s like using a high-precision GPS to navigate once your main route is set, ensuring every turn is accurate. This process relies on a velocity network and an SE(3)-equivariant graph transformer. In simple terms, these mathematical tools ensure the model correctly understands 3D rotations and translations, making sure the generated molecular conformations don’t violate the laws of physics.</p>
+<p>The most impressive part of this model is that it operates directly at the all-atom level. Many models trying to be fast simplify amino acids into a few points, ignoring a lot of side-chain detail. But we all know that drug-protein interactions often depend on subtle hydrogen bonds and hydrophobic effects. BioMD keeps all the atoms, allowing it to capture these make-or-break details.</p>
+<p>The researchers tested BioMD on two challenging datasets. The results showed that for a typical long-timescale event like ligand unbinding, BioMD successfully generated a dissociation pathway in 97.1% of attempts within ten tries. This isn’t just a number; it means we now have a reliable tool to quickly and systematically explore the potential “escape routes” of a drug molecule. This is immensely valuable for understanding drug resistance or for designing molecules with longer residence times.</p>
+<p>BioMD also offers two modes: one focused on accurately reproducing known pathways, and another focused on exploring new possibilities. This flexibility is very useful in R&amp;D. Sometimes we need to confirm a known mechanism, and other times we hope to discover unexpected new conformations or pathways. BioMD can handle both.</p>
+<p>📜Paper: https://arxiv.org/abs/2509.02642v1</p>
+</section>
+<section id="a-new-way-for-ai-to-read-papers-small-sample-fine-tuning-for-full-text-virus-host-interaction-extraction" class="level2">
+<h2 class="anchored" data-anchor-id="a-new-way-for-ai-to-read-papers-small-sample-fine-tuning-for-full-text-virus-host-interaction-extraction">3. A New Way for AI to Read Papers: Small-Sample Fine-Tuning for Full-Text Virus-Host Interaction Extraction</h2>
+<p><a href="post_all_image/instruction_tuned_ex_2025_09_14_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/instruction_tuned_ex_2025_09_14_image_1.jpg" class="img-fluid"></a></p>
+<p>In drug discovery, extracting key information like “how virus protein A interacts with host protein B” from massive amounts of literature is a heavy lift. Most past Natural Language Processing (NLP) tools only analyzed paper abstracts. That’s like trying to understand a movie by only watching the trailer over and over, missing all the critical details and evidence.</p>
+<p>A new paper demonstrates a more efficient method. Researchers used “Instruction-Tuning” to train a general-purpose LLM into a biomedical expert, which they named ChatMed-VHI.</p>
+<p>It works a lot like training an intern. You don’t need them to memorize the entire company handbook. You just give them clear instructions: “Go into this paper, find all the protein-protein interactions (PPIs) and RNA-protein interactions (RPIs) between the virus and the host, and tell me if you found this information in the ‘Results,’ ‘Methods,’ or ‘Tables’ section.” This approach is highly efficient.</p>
+<p>This model has two standout advantages.</p>
+<p>First, it can read the entire paper, not just the abstract. An abstract might say, “we discovered an interaction between A and B,” but the specific details of how it was discovered, the experimental conditions, and the data’s reliability are usually buried in the “Methods” and “Results” sections. Tables also contain a wealth of structured data. ChatMed-VHI can “read section by section,” understanding the value and style of information in different parts of a paper.</p>
+<p>Second, it requires very little data. Training an NLP model used to require thousands of manually labeled examples, which was time-consuming and expensive. ChatMed-VHI achieved an F1 score of 89.7% with fewer than 500 training samples. This is very valuable in real-world R&amp;D settings where resources are limited. We can quickly customize an efficient model for a new information extraction task at a very low cost.</p>
+<p>This makes it possible to rapidly build virus-host interaction knowledge graphs and accelerate the discovery of potential drug targets. For example, when a new virus emerges, we could use this tool to quickly scan all relevant literature and piece together the complete mechanism of viral invasion and replication. This is no longer simple text search; it’s a tool that extracts structured knowledge from unstructured text to speed up the drug discovery process.</p>
+<p>📜Title: Instruction-tuned extraction of virus-host interactions from integrated scientific evidence 📜Paper: https://www.biorxiv.org/content/10.1101/2025.09.02.673691v1 Code: https://github.com/benkyusimasu/ChatMed-VHI</p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-10-10/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

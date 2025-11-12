@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="This article explores five new developments in AI drug discovery. They cover automating computational chemistry, generating molecules with physics constraints, predicting drug approval with explainable AI, improving docking accuracy with experimental data, and a new way to generate molecules by learning their complete distribution. These techniques are moving AI from simply imitating to truly understanding, making it a powerful engine for drug discovery.">
+
+<title>Chemsmart: Saying Goodbye to the ‘Manual Workshop’ of Computational Chemistry – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="Chemsmart: Saying Goodbye to the ‘Manual Workshop’ of Computational Chemistry – MPU">
+<meta property="og:description" content="This article explores five new developments in AI drug discovery. They cover automating computational chemistry, generating molecules with physics constraints, predicting drug approval with explainable AI, improving docking accuracy with experimental data, and a new way to generate molecules by learning their complete distribution. These techniques are moving AI from simply imitating to truly understanding, making it a powerful engine for drug discovery.">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-09-13/post_all_image/chemsmart_chemistry_2025_08_29_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="Chemsmart is an open-source 'Swiss Army knife' toolkit designed to automate
+the tedious manual processes in computational chemistry, letting scientists
+focus on scientific thinking instead of file format conversions.
+">
+<meta name="twitter:title" content="Chemsmart: Saying Goodbye to the ‘Manual Workshop’ of Computational Chemistry – MPU">
+<meta name="twitter:description" content="This article explores five new developments in AI drug discovery. They cover automating computational chemistry, generating molecules with physics constraints, predicting drug approval with explainable AI, improving docking accuracy with experimental data, and a new way to generate molecules by learning their complete distribution. These techniques are moving AI from simply imitating to truly understanding, making it a powerful engine for drug discovery.">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-09-13/post_all_image/chemsmart_chemistry_2025_08_29_image_1.jpg">
+<meta name="twitter:image:alt" content="Chemsmart is an open-source 'Swiss Army knife' toolkit designed to automate
+the tedious manual processes in computational chemistry, letting scientists
+focus on scientific thinking instead of file format conversions.
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">Chemsmart: Saying Goodbye to the ‘Manual Workshop’ of Computational Chemistry</h1>
+                  <div>
+        <div class="description">
+          <p>This article explores five new developments in AI drug discovery. They cover automating computational chemistry, generating molecules with physics constraints, predicting drug approval with explainable AI, improving docking accuracy with experimental data, and a new way to generate molecules by learning their complete distribution. These techniques are moving AI from simply imitating to truly understanding, making it a powerful engine for drug discovery.</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">AI Drug Discovery</div>
+                <div class="quarto-category">Computational Chemistry</div>
+                <div class="quarto-category">Generative Models</div>
+                <div class="quarto-category">Reinforcement Learning</div>
+                <div class="quarto-category">Molecular Docking</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Saturday, the 13th of September, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#table-of-contents" id="toc-table-of-contents" class="nav-link active" data-scroll-target="#table-of-contents">Table of Contents</a></li>
+  <li><a href="#chemsmart-saying-goodbye-to-the-manual-workshop-of-computational-chemistry" id="toc-chemsmart-saying-goodbye-to-the-manual-workshop-of-computational-chemistry" class="nav-link" data-scroll-target="#chemsmart-saying-goodbye-to-the-manual-workshop-of-computational-chemistry">1. Chemsmart: Saying Goodbye to the ‘Manual Workshop’ of Computational Chemistry</a></li>
+  <li><a href="#ai-molecule-generation-finally-learning-physics" id="toc-ai-molecule-generation-finally-learning-physics" class="nav-link" data-scroll-target="#ai-molecule-generation-finally-learning-physics">2. AI Molecule Generation: Finally Learning Physics</a></li>
+  <li><a href="#drugreasoner-an-ai-that-can-explain-its-predictions" id="toc-drugreasoner-an-ai-that-can-explain-its-predictions" class="nav-link" data-scroll-target="#drugreasoner-an-ai-that-can-explain-its-predictions">3. DrugReasoner: An AI That Can Explain Its Predictions</a></li>
+  <li><a href="#polaris-challenge-using-fragment-knowledge-to-improve-docking-accuracy" id="toc-polaris-challenge-using-fragment-knowledge-to-improve-docking-accuracy" class="nav-link" data-scroll-target="#polaris-challenge-using-fragment-knowledge-to-improve-docking-accuracy">4. Polaris Challenge: Using Fragment Knowledge to Improve Docking Accuracy</a></li>
+  <li><a href="#drugflow-ai-learns-to-draw-a-treasure-map" id="toc-drugflow-ai-learns-to-draw-a-treasure-map" class="nav-link" data-scroll-target="#drugflow-ai-learns-to-draw-a-treasure-map">5. DRUGFLOW: AI Learns to Draw a “Treasure Map”</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-09-13/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="table-of-contents" class="level2">
+<h2 class="anchored" data-anchor-id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li>Chemsmart is an open-source “Swiss Army knife” toolkit designed to automate the tedious manual processes in computational chemistry, letting scientists focus on scientific thinking instead of file format conversions.</li>
+<li>A new framework gives AI generative models a “physics tutor.” It uses reinforcement learning to reward chemically stable and realistic molecules, guiding AI beyond simple imitation.</li>
+<li>DrugReasoner is an AI that predicts the probability of a new drug’s approval. It explains its predictions by comparing known successful and failed drugs, reasoning like a chemist and revealing the model’s internal logic.</li>
+<li>A new process uses known molecular fragment data to guide and correct traditional docking. This improves the accuracy of predicting how a drug molecule binds, showing the power of combining data with physics.</li>
+<li>DRUGFLOW learns the complete distribution of “good molecules,” like drawing a complete treasure map. This allows for more realistic and controllable molecule generation.</li>
+</ol>
+</section>
+<section id="chemsmart-saying-goodbye-to-the-manual-workshop-of-computational-chemistry" class="level2">
+<h2 class="anchored" data-anchor-id="chemsmart-saying-goodbye-to-the-manual-workshop-of-computational-chemistry">1. Chemsmart: Saying Goodbye to the ‘Manual Workshop’ of Computational Chemistry</h2>
+<p><a href="post_all_image/chemsmart_chemistry_2025_08_29_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/chemsmart_chemistry_2025_08_29_image_1.jpg" class="img-fluid"></a></p>
+<p>Anyone who’s done quantum chemistry calculations by hand knows the deal: most of your time is spent wrestling with tedious data, like a data janitor. Very little time is left for thinking about the deep chemistry questions.</p>
+<p>A researcher’s typical workflow looks like this: you draw a molecule in one program and save it in a specific format. Then you convert it to another format for the calculation. Next, you have to manually write an input file, carefully set the parameters, and submit it to a computing cluster. While you wait, you constantly check the job status. When it’s done, you have to extract key data like energy and coordinates from a massive output file, either by hand or with a custom script. Finally, you import this data into visualization software to make images for your report.</p>
+<p>Every step in this process is filled with repetitive work, format incompatibilities, and the risk of human error. We have powerful computational engines like Gaussian and ORCA, but we’re still stuck manually “refueling and cleaning them.”</p>
+<section id="chemsmart-a-project-manager-for-computational-chemistry" class="level4">
+<h4 class="anchored" data-anchor-id="chemsmart-a-project-manager-for-computational-chemistry">Chemsmart: A “Project Manager” for Computational Chemistry</h4>
+<p>The Chemsmart toolkit aims to be a “project manager” for the entire research process, solving the real pain points in research.</p>
+<p>As an open-source Python toolkit, Chemsmart’s idea is simple: automate the most tedious manual tasks in computational chemistry.</p>
+<p>Here’s how it works:</p>
+<p>First, it defines a core <code>Molecule</code> object, which you can think of as a “universal file format.” Molecules and data from different chemistry software can all be converted into this standard object. This solves the format incompatibility problem, like giving all software a universal translator.</p>
+<p>Second, it breaks down the entire computational process into independent, modular tasks, like “geometry optimization,” “transition state search,” and “thermodynamic analysis.” Users can combine these modules like Lego bricks to build fully automated workflows.</p>
+<p>A user just needs to give a command, like: “Optimize this molecule, calculate its frequencies, and generate a PyMOL visualization file.” It handles the rest. Chemsmart automatically prepares input files, submits jobs, monitors progress, parses the results, and organizes all the files.</p>
+</section>
+<section id="the-change-chemsmart-brings" class="level4">
+<h4 class="anchored" data-anchor-id="the-change-chemsmart-brings">The Change Chemsmart Brings</h4>
+<p>Researchers are freed from repetitive, uncreative labor and can focus on the chemistry itself.</p>
+<p>For beginners, Chemsmart lowers the entry barrier. Users don’t need to memorize the obscure input parameters for various software; they just call a few simple Python functions.</p>
+<p>For experienced researchers, it boosts efficiency and reproducibility. It becomes possible to run standardized computational workflows on hundreds of molecules, which is critical for studies like structure-activity relationships.</p>
+<p>All of Chemsmart’s code is open source and has a modular design. This means it can be used as a standalone tool or as a Python library, integrating seamlessly into more complex, custom analysis pipelines.</p>
+<p>Chemsmart is a practical toolbox built by an experienced engineer to solve everyday problems. For researchers on the front lines, a handy toolbox is sometimes more valuable than a distant theory.</p>
+<p>📜Title: Chemsmart: Chemistry Simulation and Modeling Automation Toolkit for High-Efficiency Computational Chemistry Workflows 📜Paper: https://arxiv.org/abs/2508.20042v1</p>
+</section>
+</section>
+<section id="ai-molecule-generation-finally-learning-physics" class="level2">
+<h2 class="anchored" data-anchor-id="ai-molecule-generation-finally-learning-physics">2. AI Molecule Generation: Finally Learning Physics</h2>
+<p><a href="post_all_image/guiding_diffusion_mo_2025_08_29_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/guiding_diffusion_mo_2025_08_29_image_1.jpg" class="img-fluid"></a></p>
+<p>Anyone who has worked with 3D molecule generation models knows the reality: these AIs are first-rate artists but last-rate engineers.</p>
+<p>You give one a task, and it can “draw” molecules that are structurally novel and look beautiful. But when you put these “artworks” under a physics microscope, problems appear. Bond lengths are wrong, bond angles are distorted, and atoms are packed together like a rush-hour subway car. These molecules couldn’t exist in the real world.</p>
+<p>We’ve always wanted an AI engineer that understands physics. The new RLPF framework is a solid step in that direction.</p>
+<section id="getting-ai-a-physics-tutor" class="level4">
+<h4 class="anchored" data-anchor-id="getting-ai-a-physics-tutor">Getting AI a Physics Tutor</h4>
+<p>The researchers didn’t build a more complex AI that had seen more data. Instead, they took a different path. They gave the AI a “physics tutor” and a “reward-and-punishment” system.</p>
+<p>The tutor is a <strong>force field</strong>, and the system is <strong>Reinforcement Learning (RL</strong>).</p>
+<p>Here’s how it works:</p>
+<p>A diffusion model doesn’t generate a molecule all at once. It’s like a sculptor starting with a fuzzy “cloud of atoms” and gradually carving out the details.</p>
+<p>The RLPF framework has the physics “tutor” evaluate the sculpture after every single cut.</p>
+<p>The tutor (the force field) determines if that cut increased or decreased the internal stress of the structure. Did it make it more stable or closer to falling apart?</p>
+<p>If a step makes the molecule more stable and physically sound, the AI gets a “reward” and remembers it was a good move.</p>
+<p>If a step makes the molecule more unstable, the AI gets a “punishment” and learns to avoid that path.</p>
+<p>Through this constant loop of physics feedback, rewards, and punishments, the AI is forced to consider the physical consequences of every creative step. It moves beyond just imitating the shapes of molecules in its training data.</p>
+</section>
+<section id="how-well-does-it-work" class="level4">
+<h4 class="anchored" data-anchor-id="how-well-does-it-work">How Well Does It Work?</h4>
+<p>The molecules generated by the tutored AI are on another level.</p>
+<p>On the standard QM9 dataset, the proportion of physically stable molecules it generated rose from 82% to over 93%.</p>
+<p>This “tutor” framework is versatile and can guide different diffusion models like EDM, GeoLDM, and UniGEM. It’s a universal, plug-and-play “enhancement module.”</p>
+<p>This work steps outside the paradigm of competing on model parameters and represents a fundamental shift in thinking. It injects physics knowledge directly into the AI’s generation process.</p>
+<p>📜Title: Guiding Diffusion Models with Reinforcement Learning for Stable Molecule Generation 📜Paper: https://arxiv.org/abs/2508.16521 💻Code: https://github.com/ZhijianZhou/RLPF/tree/verl_diffusion</p>
+</section>
+</section>
+<section id="drugreasoner-an-ai-that-can-explain-its-predictions" class="level2">
+<h2 class="anchored" data-anchor-id="drugreasoner-an-ai-that-can-explain-its-predictions">3. DrugReasoner: An AI That Can Explain Its Predictions</h2>
+<p><a href="post_all_image/drug_reasoner_interp_2025_08_29_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/drug_reasoner_interp_2025_08_29_image_1.jpg" class="img-fluid"></a></p>
+<p>The field of drug discovery is full of AI models that can predict a molecule’s solubility, toxicity, or binding affinity. But very few people would dare to bet a hundred-million-dollar clinical trial entirely on a number from an AI model.</p>
+<p>That’s because most of these models are black boxes.</p>
+<p>When a model gives a druggability score of 0.87 but can’t explain why, it’s like a fortune teller who only gives you numbers. Decision-makers can’t tell if the prediction is based on rigorous calculation or a random guess. A result that can’t be explained has limited value.</p>
+<p>DrugReasoner was designed to solve this problem.</p>
+<section id="the-ai-learns-to-reason-by-analogy" class="level4">
+<h4 class="anchored" data-anchor-id="the-ai-learns-to-reason-by-analogy">The AI Learns to “Reason by Analogy”</h4>
+<p>The researchers trained the AI to master a core skill of chemists: <strong>comparison</strong>.</p>
+<p>When you input a newly designed drug candidate, DrugReasoner searches its knowledge base to find the most structurally similar known drugs. It then divides these similar drugs into two groups: those that made it to market successfully and those that failed in clinical trials.</p>
+<p>Finally, it generates a reasoning report, for example:</p>
+<p>“This molecule has a 73% probability of approval. Part A of its structure is similar to a successful anti-cancer drug, and this structure generally has good druggability. However, Part B is similar to a molecule that failed due to liver toxicity, which lowers its probability of approval.”</p>
+<p>This type of explanation provides clear information that can be used for decision-making.</p>
+</section>
+<section id="what-were-the-results" class="level4">
+<h4 class="anchored" data-anchor-id="what-were-the-results">What Were the Results?</h4>
+<p>When tested on a dataset containing a large number of real drug molecules, DrugReasoner’s prediction accuracy (AUC of 0.73) was comparable to traditional machine learning methods like XGBoost and better than another recently published model, ChemAP.</p>
+<p>This shows that the model provides explainability without sacrificing predictive accuracy.</p>
+<p>Predicting whether a new drug will be approved depends on many variables, including science, business, and luck. In this context, an AUC of 0.73 is a solid result, though not perfect.</p>
+<p>The researchers acknowledge that to prevent the model from “cheating” by memorizing SMILES strings, the SMILES representations of the molecules were not provided during training. This might have limited the model’s understanding of fine-grained chemical structures, but it also proves that the reasoning method is effective even with limited information.</p>
+<p>📜Title: DrugReasoner: Interpretable Drug Approval Prediction with a Reasoning-augmented Language Model 📜Paper: https://arxiv.org/abs/2508.18579 💻Code: https://github.com/mohammad-gh009/DrugReasoner</p>
+</section>
+</section>
+<section id="polaris-challenge-using-fragment-knowledge-to-improve-docking-accuracy" class="level2">
+<h2 class="anchored" data-anchor-id="polaris-challenge-using-fragment-knowledge-to-improve-docking-accuracy">4. Polaris Challenge: Using Fragment Knowledge to Improve Docking Accuracy</h2>
+<p><a href="post_all_image/polaris_challenge_d_2025_08_29_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="post_all_image/polaris_challenge_d_2025_08_29_image_1.jpg" class="img-fluid"></a></p>
+<p>Researchers in structure-based drug design have a complicated relationship with molecular docking software. It’s fast, capable of screening a million-compound library overnight. But its scoring functions are often unreliable. The software will generate lots of seemingly perfect binding poses and give them high scores, but experimental validation often proves them wrong.</p>
+<p>Docking software is like a fast but reckless scout. It can survey the entire battlefield quickly but often mistakes scarecrows for the enemy. What researchers need is a pair of “friend-or-foe” goggles. A paper from the Polaris Challenge demonstrates just such a pair.</p>
+<section id="stop-letting-ai-guess-give-it-a-cheat-sheet" class="level4">
+<h4 class="anchored" data-anchor-id="stop-letting-ai-guess-give-it-a-cheat-sheet">Stop Letting AI Guess, Give It a “Cheat Sheet”</h4>
+<p>The researchers’ idea wasn’t to rebuild the docking engine but to improve the scoring step. They argue that tools like Vina are already good enough at generating diverse poses; the weak link is the scoring.</p>
+<p>The “cheat sheet” they used is the <strong>crystal structures of thousands of small molecule fragments</strong> from a database.</p>
+<p>These fragments act like “road signs,” using experimental data to mark which areas of a protein pocket are hydrophobic and where hydrogen bonds are likely to form.</p>
+<p>The new process first uses VinaGPU to generate many possible binding poses. Then, the AI uses the “cheat sheet” to grade them. It checks whether the chemical groups in the molecule match the “road signs” from the known fragments. A match gets bonus points; a mismatch gets points deducted.</p>
+<p>The process also uses the “cheat sheet” more proactively through <strong>constrained docking</strong>. Like a hint before an exam, it guides the docking program to search in the right direction from the very beginning.</p>
+</section>
+<section id="what-if-theres-no-cheat-sheet" class="level4">
+<h4 class="anchored" data-anchor-id="what-if-theres-no-cheat-sheet">What If There’s No Cheat Sheet?</h4>
+<p>When there’s no relevant fragment data to reference, the process switches to a backup plan: <strong>MM/GBSA rescoring</strong>.</p>
+<p>This traditional physics-based calculation method is slower than Vina’s scoring function but is generally more accurate.</p>
+<p>The entire process forms a multi-layered filter: screen with the fastest method, refine with data-driven knowledge, and finally, double-check with physics.</p>
+</section>
+<section id="does-this-thing-actually-work" class="level4">
+<h4 class="anchored" data-anchor-id="does-this-thing-actually-work">Does This Thing Actually Work?</h4>
+<p>The researchers applied this process to the proteases of the COVID-19 virus (SARS-CoV-2) and its close relative, MERS-CoV.</p>
+<p>The results showed that for over half of the molecules, the process successfully predicted a binding pose with an error of less than 2 angstroms compared to the crystal structure. This is a solid performance on a real-world target.</p>
+<p>They also demonstrated that the knowledge learned from SARS-CoV-2 fragment data could be successfully transferred and used for predictions on MERS-CoV.</p>
+<p>This work offers a deployable engineering solution designed to solve practical problems in day-to-day research. The future of computational drug discovery lies in cleverly combining data, physics principles, and chemical intuition, not in relying on a single tool.</p>
+<p>📜Title: Polaris Challenge: Data-driven Priors to Improve Docking for Pose Prediction 📜Paper: https://doi.org/10.26434/chemrxiv-2025-fv3c3</p>
+</section>
+</section>
+<section id="drugflow-ai-learns-to-draw-a-treasure-map" class="level2">
+<h2 class="anchored" data-anchor-id="drugflow-ai-learns-to-draw-a-treasure-map">5. DRUGFLOW: AI Learns to Draw a “Treasure Map”</h2>
+<p><a href="post_all_image/multi_domain_distrib_2025_08_29_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="post_all_image/multi_domain_distrib_2025_08_29_image_1.jpg" class="img-fluid"></a></p>
+<ul>
+<li>It learns the entire distribution of “good molecules,” like drawing a complete treasure map, instead of the old method of just marking individual treasure spots.</li>
+<li>It has built-in features chemists need, like uncertainty detection and protein flexibility, turning the AI from an artist into an engineer.</li>
+</ul>
+<p>Anyone who has worked with generative AI knows that it’s a first-rate artist but a second-rate chemist. Give it a protein pocket, and it can “draw” novel molecules that look perfect. But most of these molecules just statistically “resemble” known drugs. The AI doesn’t really understand what makes a molecule “good.”</p>
+<p>It’s like an artist who can only copy Van Gogh’s paintings. He can paint a starry night, but he doesn’t understand its deeper meaning.</p>
+<p>DRUGFLOW’s goal is to teach the AI to learn astronomy.</p>
+<section id="from-taking-snapshots-to-drawing-a-map" class="level4">
+<h4 class="anchored" data-anchor-id="from-taking-snapshots-to-drawing-a-map">From “Taking Snapshots” to “Drawing a Map”</h4>
+<p>The core idea of this work is a shift in perspective. A good drug sits within a vast “chemical space” in a region of low energy and good properties. The AI’s job, then, is to learn to draw a complete “map” of this region, rather than just generating single “snapshots.”</p>
+<p>DRUGFLOW learns the <strong>complete distribution</strong> of all “good molecules” in a protein pocket by combining two mathematical tools: Continuous Flow Matching, which you can think of as tracing the terrain with smooth curves, and Discrete Markov Bridges, which you can imagine as building step-by-step paths between key landmarks.</p>
+<p>Once it learns to draw the map, the AI transforms from an imitating artist into a geographer who can point out the peaks and valleys.</p>
+</section>
+<section id="the-ai-finally-grows-a-brain" class="level4">
+<h4 class="anchored" data-anchor-id="the-ai-finally-grows-a-brain">The AI Finally Grows a “Brain”</h4>
+<p>With this global view, the AI can now perform functions that were difficult before.</p>
+<p>First is <strong>uncertainty</strong>. DRUGFLOW has a built-in “unreliability detector.” When it generates a molecule that falls in an unexplored region of the map, it will tell you directly: “I’m not sure if this molecule is reliable.” This ability to know what it “doesn’t know” can prevent scientists from synthesizing molecules that the AI just hallucinated.</p>
+<p>Second is <strong>size adaptation</strong>. When generating a molecule, it dynamically adjusts its size, proactively removing atoms that might clash with the protein pocket. It’s like a mover who takes the legs off a sofa before trying to fit it through a doorway.</p>
+<p>Finally, there’s <strong>protein flexibility</strong>. An upgraded version, FLEXFLOW, can adjust the orientation of amino acid side chains in the protein pocket while simultaneously generating the ligand molecule. In the real world, a protein pocket isn’t a rigid mold; it’s more like a soft glove. FLEXFLOW acts like a true designer, allowing the glove to adapt to the shape of the hand as the hand is being designed.</p>
+<p>📜Title: Multi-Domain Distribution Learning for De Novo Drug Design 📜Paper: https://arxiv.org/abs/2508.17815</p>
+
+
+</section>
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-09-13/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

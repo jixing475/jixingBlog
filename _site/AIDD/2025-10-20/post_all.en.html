@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="This article explores five recent research advances in AI-driven drug discovery. Topics include the SAM-DTI model, which uses a spatial attention mechanism to innovate drug-target prediction; a new strategy that improves machine learning efficiency with molecular docking scores; the Ensemblify tool, which converts AlphaFold’s uncertainty into dynamic protein conformational ensembles; the FusionCLM framework, which combines the strengths of multiple chemical language models; and a new unbiased random sampling method for chemical space that addresses data bias in AI model training.">
+
+<title>Five Innovations in AI Drug Discovery: From Target Prediction to Chemical Space Exploration – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="Five Innovations in AI Drug Discovery: From Target Prediction to Chemical Space Exploration – MPU">
+<meta property="og:description" content="This article explores five recent research advances in AI-driven drug discovery. Topics include the SAM-DTI model, which uses a spatial attention mechanism to innovate drug-target prediction; a new strategy that improves machine learning efficiency with molecular docking scores; the Ensemblify tool, which converts AlphaFold’s uncertainty into dynamic protein conformational ensembles; the FusionCLM framework, which combines the strengths of multiple chemical language models; and a new unbiased random sampling method for chemical space that addresses data bias in AI model training.">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-10-20/post_all_image/sam_dti_a_spatial_a_2025_09_14_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="An infographic showing the concept of the SAM-DTI model. On the left is a 3D structure representing a drug molecule, and on the right is a 3D structure of a protein target. Arrows and lines connect them, highlighting key interaction areas, symbolizing how the model uses a spatial attention mechanism to predict drug-target binding.
+">
+<meta name="twitter:title" content="Five Innovations in AI Drug Discovery: From Target Prediction to Chemical Space Exploration – MPU">
+<meta name="twitter:description" content="This article explores five recent research advances in AI-driven drug discovery. Topics include the SAM-DTI model, which uses a spatial attention mechanism to innovate drug-target prediction; a new strategy that improves machine learning efficiency with molecular docking scores; the Ensemblify tool, which converts AlphaFold’s uncertainty into dynamic protein conformational ensembles; the FusionCLM framework, which combines the strengths of multiple chemical language models; and a new unbiased random sampling method for chemical space that addresses data bias in AI model training.">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-10-20/post_all_image/sam_dti_a_spatial_a_2025_09_14_image_1.jpg">
+<meta name="twitter:image:alt" content="An infographic showing the concept of the SAM-DTI model. On the left is a 3D structure representing a drug molecule, and on the right is a 3D structure of a protein target. Arrows and lines connect them, highlighting key interaction areas, symbolizing how the model uses a spatial attention mechanism to predict drug-target binding.
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">Five Innovations in AI Drug Discovery: From Target Prediction to Chemical Space Exploration</h1>
+                  <div>
+        <div class="description">
+          <p>This article explores five recent research advances in AI-driven drug discovery. Topics include the SAM-DTI model, which uses a spatial attention mechanism to innovate drug-target prediction; a new strategy that improves machine learning efficiency with molecular docking scores; the Ensemblify tool, which converts AlphaFold’s uncertainty into dynamic protein conformational ensembles; the FusionCLM framework, which combines the strengths of multiple chemical language models; and a new unbiased random sampling method for chemical space that addresses data bias in AI model training.</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">AI in Pharma</div>
+                <div class="quarto-category">Drug Discovery</div>
+                <div class="quarto-category">Machine Learning</div>
+                <div class="quarto-category">Computational Chemistry</div>
+                <div class="quarto-category">AlphaFold</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Monday, the 20th of October, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#table-of-contents" id="toc-table-of-contents" class="nav-link active" data-scroll-target="#table-of-contents">Table of Contents</a></li>
+  <li><a href="#sam-dti-a-new-ai-model-to-rethink-drug-target-prediction" id="toc-sam-dti-a-new-ai-model-to-rethink-drug-target-prediction" class="nav-link" data-scroll-target="#sam-dti-a-new-ai-model-to-rethink-drug-target-prediction">1. SAM-DTI: A New AI Model to Rethink Drug-Target Prediction</a></li>
+  <li><a href="#a-new-idea-in-ai-drug-discovery-empowering-machine-learning-with-docking-scores" id="toc-a-new-idea-in-ai-drug-discovery-empowering-machine-learning-with-docking-scores" class="nav-link" data-scroll-target="#a-new-idea-in-ai-drug-discovery-empowering-machine-learning-with-docking-scores">2. A New Idea in AI Drug Discovery: Empowering Machine Learning with Docking Scores</a></li>
+  <li><a href="#ensemblify-turning-alphafolds-uncertainty-into-a-treasure-trove-for-idp-conformation-sampling" id="toc-ensemblify-turning-alphafolds-uncertainty-into-a-treasure-trove-for-idp-conformation-sampling" class="nav-link" data-scroll-target="#ensemblify-turning-alphafolds-uncertainty-into-a-treasure-trove-for-idp-conformation-sampling">3. Ensemblify: Turning AlphaFold’s Uncertainty into a Treasure Trove for IDP Conformation Sampling</a></li>
+  <li><a href="#fusionclm-a-new-paradigm-in-ai-drug-discovery-by-fusing-language-models" id="toc-fusionclm-a-new-paradigm-in-ai-drug-discovery-by-fusing-language-models" class="nav-link" data-scroll-target="#fusionclm-a-new-paradigm-in-ai-drug-discovery-by-fusing-language-models">4. FusionCLM: A New Paradigm in AI Drug Discovery by Fusing Language Models</a></li>
+  <li><a href="#a-new-sampling-method-for-chemical-space-can-ai-drug-discovery-move-beyond-data-bias" id="toc-a-new-sampling-method-for-chemical-space-can-ai-drug-discovery-move-beyond-data-bias" class="nav-link" data-scroll-target="#a-new-sampling-method-for-chemical-space-can-ai-drug-discovery-move-beyond-data-bias">5. A New Sampling Method for Chemical Space: Can AI Drug Discovery Move Beyond Data Bias?</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-10-20/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="table-of-contents" class="level2">
+<h2 class="anchored" data-anchor-id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li>The SAM-DTI model first builds a 2D interaction map of drug-protein substructures and then uses a spatial attention mechanism to focus on key regions, achieving more accurate and chemically intuitive drug-target interaction predictions.</li>
+<li>Using molecular docking scores as features can improve the data efficiency and hit rate of machine learning in drug optimization.</li>
+<li>Ensemblify is a computational tool that uses AlphaFold’s low-confidence scores as a guide to efficiently generate dynamic conformational ensembles of intrinsically disordered regions (IDRs), solving a major challenge in structural biology.</li>
+<li>FusionCLM combines the strengths of multiple chemical language models using a stacked ensemble learning strategy, providing a more accurate solution for molecular property prediction.</li>
+<li>A new method using unbiased random sampling allows us to generate truly representative molecular datasets, fundamentally addressing the data bias problem in current AI drug discovery models.</li>
+</ol>
+</section>
+<section id="sam-dti-a-new-ai-model-to-rethink-drug-target-prediction" class="level2">
+<h2 class="anchored" data-anchor-id="sam-dti-a-new-ai-model-to-rethink-drug-target-prediction">1. SAM-DTI: A New AI Model to Rethink Drug-Target Prediction</h2>
+<p><a href="post_all_image/sam_dti_a_spatial_a_2025_09_14_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/sam_dti_a_spatial_a_2025_09_14_image_1.jpg" class="img-fluid"></a></p>
+<p>There are many AI models for predicting Drug-Target Interactions (DTI), but most of them work in a roundabout way. They typically take a drug molecule (like a SMILES string) and a protein sequence (like a FASTA sequence), feed each into a separate encoder to extract features, and only merge these two streams of information at the very last step to decide if they bind.</p>
+<p>This is like trying to figure out if a key fits a lock by only studying the key’s material and the lock’s brand, instead of just seeing if the key’s teeth match the lock’s pins. This “late fusion” strategy loses the most critical spatial correspondence between the two early in the process.</p>
+<p>The SAM-DTI model takes a more direct approach.</p>
+<p>Instead of letting the drug and protein information go their separate ways, the researchers bring them together from the start. They first break down both the drug molecule and the protein into chemically or biologically meaningful “substructure” units. Then, they build a two-dimensional interaction matrix. You can think of this matrix as a chessboard. The horizontal axis represents the drug’s substructures, and the vertical axis represents the protein’s substructures. Each square on the board represents a potential interaction between a specific pair of substructures.</p>
+<p>This turns a complex DTI prediction problem into a more intuitive image recognition problem.</p>
+<p>Next comes the model’s core component: a spatial attention mechanism. With this “interaction chessboard,” the model scans the entire map like an experienced chemist. Its attention naturally focuses on the key “hotspots” that determine binding. For example, the “square” formed by a hydrogen bond donor on the drug and a hydrogen bond acceptor in the protein’s pocket would be given a higher weight.</p>
+<p>The benefits of this method are obvious. It aligns better with our chemical intuition about molecular recognition, and because the model “sees” the global interaction pattern, its predictions are more accurate. The data shows that SAM-DTI outperforms several existing baseline models on multiple public datasets (measured by ROC-AUC and PR-AUC). This means it performs more reliably when screening for true positive results.</p>
+<p>A model’s value is ultimately judged by its ability to solve real problems. The researchers used SAM-DTI for virtual screening in drug repurposing and found some interesting results. For instance, the model predicted that the natural products curcumin, EGCG, and melatonin might act on new targets. These are valuable scientific hypotheses that can be validated by future experiments.</p>
+<p>The paper’s ablation study also confirmed the soundness of the model’s design. The results showed that the spatial attention mechanism is the core driver of performance improvement, while other components like residual connections play a supporting role, helping to further optimize the model.</p>
+<p>Overall, SAM-DTI shifts the design philosophy from “sequence processing” to “spatial relationship modeling,” bringing AI a step closer to how chemists think about molecular interactions.</p>
+<p>📜Title: SAM-DTI: A Spatial Attention Model for Drug-Target Interaction Prediction 📜Paper: https://www.biorxiv.org/content/10.1101/2025.08.31.673317v1</p>
+</section>
+<section id="a-new-idea-in-ai-drug-discovery-empowering-machine-learning-with-docking-scores" class="level2">
+<h2 class="anchored" data-anchor-id="a-new-idea-in-ai-drug-discovery-empowering-machine-learning-with-docking-scores">2. A New Idea in AI Drug Discovery: Empowering Machine Learning with Docking Scores</h2>
+<p><a href="post_all_image/optimizing_drug_acti_2025_09_14_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/optimizing_drug_acti_2025_09_14_image_1.jpg" class="img-fluid"></a></p>
+<p>In the early stages of drug discovery, we are always playing a numbers game. The scale of chemical space is astronomical, while our time and budget are limited. We have two main tools for molecular screening: Structure-Based Virtual Screening (SBVS) and Ligand-Based Virtual Screening (LBVS).</p>
+<p>SBVS is like trying a key (a small molecule) in a lock (a target protein). Docking is its core technique, using physics-based models to predict how a molecule binds to a target and with what affinity. This method is intuitive, but the accuracy of docking scores can sometimes be disappointing.</p>
+<p>LBVS is different. It doesn’t look at the shape of the “lock” but analyzes all the “keys” that are known to open it. Through machine learning, a model can learn chemical patterns from known active molecules and then predict the activity of new ones. This approach is powerful when there’s enough data, but if you have very little data to start with, the model has nothing to learn from.</p>
+<p>The researchers behind this paper tried to combine the strengths of both.</p>
+<p>Their idea was to let the physics-based model give the machine learning model some “initial hints.” Specifically, they first docked all the molecules in a library against the target to get a docking score. Then, they fed this score as an additional feature to the machine learning model.</p>
+<p>This process uses a Bayesian optimization framework. You can think of Bayesian optimization as a treasure-hunting robot. Each time it digs, it updates its treasure map based on what it finds and then decides where to dig next. The traditional approach is to let the robot start digging randomly.</p>
+<p>The researchers’ improvement was to give the robot a “rough treasure map” first, using the docking scores. They used the molecules with the best docking scores as starting points, telling the robot to begin digging in the places most likely to hold treasure.</p>
+<p>The results showed that on 14 ChEMBL datasets and 4 challenging LIT-PCBA datasets, this “docking-informed” method performed well. Compared to traditional random or diversity-based initialization, it reduced the average number of compounds that needed to be tested to find the optimal active molecule by 24%. In virtual screening, its ability to find highly active molecules (enrichment factor) increased by 32%.</p>
+<p>Fewer experiments mean lower costs. In drug development, every compound you don’t have to synthesize and test saves valuable time and money.</p>
+<p>The value of this strategy lies in its practicality. It doesn’t invent a new, complex algorithm but cleverly combines two mature tools to achieve a result where the whole is greater than the sum of its parts.</p>
+<p>This approach offers a great starting point, especially for new target projects that lack initial activity data. It leverages physical information—the target’s structure—to guide the data-driven machine learning model, preventing it from fumbling in the dark at the outset.</p>
+<p>📜Title: Optimizing Drug Activity Using Docking-Informed Machine Learning 📜Paper: https://chemrxiv.org/engage/api-gateway/chemrxiv/assets/orp/resource/item/68b6f727a94eede1541ec4da/original/optimizing-drug-activity-using-docking-informed-machine-learning.pdf</p>
+</section>
+<section id="ensemblify-turning-alphafolds-uncertainty-into-a-treasure-trove-for-idp-conformation-sampling" class="level2">
+<h2 class="anchored" data-anchor-id="ensemblify-turning-alphafolds-uncertainty-into-a-treasure-trove-for-idp-conformation-sampling">3. Ensemblify: Turning AlphaFold’s Uncertainty into a Treasure Trove for IDP Conformation Sampling</h2>
+<p><a href="post_all_image/ensemblify_a_user_f_2025_09_14_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/ensemblify_a_user_f_2025_09_14_image_1.jpg" class="img-fluid"></a></p>
+<p>Intrinsically Disordered Proteins (IDPs) are a tough problem in drug development. They lack a fixed 3D structure yet play roles in key biological processes like signal transduction and cell cycle regulation, making them potential targets for many diseases. Their highly dynamic nature makes them difficult to address with traditional drug discovery methods.</p>
+<p>AlphaFold excels at predicting stable, folded domains, but it produces low pLDDT confidence scores when it encounters IDPs or the flexible linkers connecting domains. In the past, researchers usually ignored these low-score regions.</p>
+<p>The Ensemblify tool offers a new way of thinking: use AlphaFold’s uncertainty as a form of information.</p>
+<p>Here’s how it works:</p>
+<p>First, it takes an AlphaFold prediction for a protein. For stable regions with high pLDDT scores, it locks the structure in place.</p>
+<p>Then, for the Intrinsically Disordered Regions (IDRs) with low pLDDT scores, it uses a Monte Carlo algorithm to perform extensive conformational sampling, rapidly exploring the various shapes they might take.</p>
+<p>The most critical step is that Ensemblify incorporates AlphaFold’s pLDDT and PAE scores as “flexible restraints” into the PyRosetta energy function. Regions where AlphaFold is less confident are allowed greater conformational freedom, while regions with slightly higher confidence are more constrained. It interprets AlphaFold’s “uncertainty” as “physical flexibility.”</p>
+<p>In this way, Ensemblify can efficiently generate an “ensemble” containing thousands of conformations. This ensemble provides a more realistic picture of an IDP’s dynamic behavior under physiological conditions than a single static structure.</p>
+<p>A drug molecule might only bind to a specific conformation of an IDP. With only a static structure, we might miss this druggable “transient state.” With a conformational ensemble, researchers have a chance to screen for key conformations and design drugs based on them.</p>
+<p>The researchers tested Ensemblify on 10 different proteins. The results showed that the generated conformational ensembles agreed well with experimental data from techniques like Small-Angle X-ray Scattering (SAXS), proving the tool’s utility.</p>
+<p>Ensemblify offers a command-line interface and a simple HTML parameter form, making it easy to use. Biologists without a strong background in computational chemistry can get started quickly, which should speed up research into IDP function and druggability.</p>
+<p>Ensemblify turns a model’s “weakness” into a useful input for problem-solving, providing a new key to explore the challenging field of IDPs.</p>
+<p>📜Title: Ensemblify: a user-friendly tool for generating ensembles of intrinsically disordered regions of AlphaFold and user-defined models 📜Paper: https://www.biorxiv.org/content/10.1101/2025.08.26.672300v1</p>
+</section>
+<section id="fusionclm-a-new-paradigm-in-ai-drug-discovery-by-fusing-language-models" class="level2">
+<h2 class="anchored" data-anchor-id="fusionclm-a-new-paradigm-in-ai-drug-discovery-by-fusing-language-models">4. FusionCLM: A New Paradigm in AI Drug Discovery by Fusing Language Models</h2>
+<p><a href="post_all_image/fusion_clm_enhanced_2025_09_14_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="post_all_image/fusion_clm_enhanced_2025_09_14_image_1.jpg" class="img-fluid"></a></p>
+<p>In drug discovery, we are always searching for better computational models to predict molecular properties. There are now several Chemical Language Models (CLMs) that treat molecular structures (usually SMILES strings) like a language. Examples like ChemBERTa and MolT5 each act like specialists with their own expertise. When faced with a new molecule, deciding which “expert” to listen to becomes a challenge.</p>
+<p>The traditional approach is to pick the best-performing model or simply average the opinions of all the experts. But this method ignores how “confident” each expert is about different problems. The FusionCLM paper proposes a more refined solution, like assembling an effective expert committee rather than just taking a simple vote.</p>
+<p><strong>Here is how it works</strong>.</p>
+<p>The process has two steps. In the first step, a molecule is presented to all the “experts” (the individual CLMs) on the committee. Each expert provides three things: 1. <strong>A prediction</strong>: For example, the molecule’s solubility. 2. <strong>A SMILES embedding</strong>: The expert’s “understanding” of the molecule, a numerical vector containing chemical information. 3. <strong>A predicted loss</strong>: This can be seen as the expert’s “lack of confidence” in its own prediction.</p>
+<p>The key here is the third point. The researchers designed an auxiliary model specifically to “estimate” the error each expert is likely to make on a new task (the <strong>test loss</strong>). This is like asking each expert to provide a self-assessment along with their opinion: “For this type of molecule, my judgment is about 80% accurate.”</p>
+<p>Next is the second step. FusionCLM bundles together all the experts’ “predictions,” their “lack of confidence” (estimated loss), and their “understanding” (SMILES embeddings) to form a more comprehensive feature matrix.</p>
+<p>This enhanced feature matrix is then submitted to a “committee chair” (a meta-model, such as XGBoost). The “chair’s” job is to learn how to make the final, most reliable decision based on each expert’s opinion and their confidence level. If the “chair” finds that expert A is consistently less confident when dealing with macrocycles (high predicted loss), it will reduce expert A’s influence in the final decision.</p>
+<p>This method is effective because it doesn’t just perform a simple weighted average; it dynamically learns which model to trust under which circumstances. Adding the SMILES embeddings is like allowing the “chair” to not only hear the conclusion but also understand each expert’s “thought process” in reaching it, providing richer context for the final decision.</p>
+<p>The researchers tested FusionCLM on five standard datasets from MoleculeNet. The results showed that this “expert committee” outperformed any single expert and also surpassed some other advanced multi-modal deep learning frameworks.</p>
+<p>FusionCLM’s appeal lies in its practicality. We don’t need to train a massive new model from scratch. Instead, we can leverage existing, pre-trained CLMs and unlock more of their potential through this ensemble approach. The workflow is still somewhat complex, and future work to simplify it and improve its interpretability—for instance, by helping us understand the “committee chair’s” decision-making process—would make it even more valuable.</p>
+<p>📜Title: FusionCLM: enhanced molecular property prediction via knowledge fusion of chemical language models 📜Paper: https://jcheminf.biomedcentral.com/articles/10.1186/s13321-025-01073-6 code: https://github.com/Yutong-Lu/FusionCLM</p>
+</section>
+<section id="a-new-sampling-method-for-chemical-space-can-ai-drug-discovery-move-beyond-data-bias" class="level2">
+<h2 class="anchored" data-anchor-id="a-new-sampling-method-for-chemical-space-can-ai-drug-discovery-move-beyond-data-bias">5. A New Sampling Method for Chemical Space: Can AI Drug Discovery Move Beyond Data Bias?</h2>
+<p><a href="post_all_image/representative_rando_2025_09_14_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="post_all_image/representative_rando_2025_09_14_image_1.jpg" class="img-fluid"></a></p>
+<p>In computational chemistry and drug discovery, almost all of us rely on existing chemical databases like QM9 or the GDB series. We use this data to train machine learning models, hoping they can predict the properties of new molecules. But these databases are biased. They are like maps that only show the roads we have already traveled, leaving vast, unknown territories blank. The models we train are more like drivers familiar with specific city routes than explorers who can navigate uncharted continents.</p>
+<p>A new paper proposes a solution that gives us a chance to draw a more complete map of chemical space.</p>
+<section id="escaping-the-streetlight-effect" class="level4">
+<h4 class="anchored" data-anchor-id="escaping-the-streetlight-effect">Escaping the “Streetlight Effect”</h4>
+<p>The scale of chemical space is beyond imagination. Even when limited to a few elements and a few dozen atoms, the number of possible molecular structures is astronomical. Our existing databases, whether from experimental synthesis or theoretical calculations, represent just a tiny fraction of this vast universe. This bias is known as the “streetlight effect”—we always look for our keys (useful molecules) under the streetlight (in the known, easy-to-synthesize parts of chemical space) because that’s where it’s brightest.</p>
+<p>The work in this paper is about developing a method for unbiased random sampling of any user-defined chemical space. This means we can finally know what percentage of the chemical space a database like GDB-13 actually represents and how biased it is. According to their analysis, the representativeness of existing databases is not ideal.</p>
+</section>
+<section id="how-does-it-work" class="level4">
+<h4 class="anchored" data-anchor-id="how-does-it-work">How does it work?</h4>
+<p>The method’s core has two steps.</p>
+<p>First, it uses a mathematical technique called “integer partitioning.” Imagine you want to build a molecule with carbon, hydrogen, oxygen, and nitrogen atoms, with a total of no more than 30 atoms. Integer partitioning helps list all possible combinations of atoms—that is, all possible molecular formulas. This breaks down a complex problem into a series of well-defined smaller ones.</p>
+<p>Second, for each specific molecular formula, it employs Markov Chain Monte Carlo (MCMC) sampling. You can think of MCMC as a “random walker.” You place it in the space of all possible isomers for a given formula, and it wanders around, with each step following specific probability rules. After walking long enough, the samples it collects can accurately represent the overall distribution of that space. This process doesn’t require us to list all possible isomers beforehand, which greatly improves efficiency.</p>
+<p>This approach allows us to “fish out” molecular samples from the entire chemical space fairly and without bias.</p>
+</section>
+<section id="what-does-this-mean-for-ai-drug-discovery" class="level4">
+<h4 class="anchored" data-anchor-id="what-does-this-mean-for-ai-drug-discovery">What does this mean for AI drug discovery?</h4>
+<p>This is crucial for how we train machine learning models. A model trained on a biased dataset will have limited generalization ability. When it encounters a new molecule from an “unknown chemical space,” its prediction is likely to be inaccurate.</p>
+<p>With this unbiased sampling method, we can build more diverse and representative training sets. Models trained on such data can truly learn the underlying chemical and physical principles, rather than just memorizing patterns of specific molecules. This means the models’ predictions will be more robust and better suited for discovering drug molecules with entirely new scaffolds.</p>
+<p>Of course, this method has so far been validated mainly on small molecules with up to 30 atoms. The next challenge is to extend it to larger drug-like molecules while keeping computational costs manageable. But this is undoubtedly a key step in the right direction.</p>
+<p>📜Title: Representative Random Sampling of Chemical Space 📜Paper: <a href="https://arxiv.org/abs/2508.20609v1" class="uri">https://arxiv.org/abs/2508.20609v1</a></p>
+
+
+</section>
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-10-20/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

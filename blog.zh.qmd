@@ -1,0 +1,15 @@
+---
+title: "Blog"
+page-layout: full
+title-block-banner: true
+image: /assets/images/social-profile.png
+listing:
+  contents: 
+    - "posts/**/*.zh.qmd"
+    - "posts/**/*.zh.md"
+  sort: "date desc"
+  type: default
+  categories: true
+  sort-ui: false
+  filter-ui: false
+---

@@ -31,8 +31,6 @@ ul.task-list li input[type="checkbox"] {
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
 <link href=".//assets/images/cabin.png" rel="icon" type="image/png">
-<script src="site_libs/quarto-listing/list.min.js"></script>
-<script src="site_libs/quarto-listing/quarto-listing.js"></script>
 <script src="site_libs/quarto-html/quarto.js"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
@@ -70,72 +68,65 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
-<script>
-
-  window.document.addEventListener("DOMContentLoaded", function (_event) {
-    const listingTargetEl = window.document.querySelector('#listing-listing .list');
-    if (!listingTargetEl) {
-      // No listing discovered, do not attach.
-      return; 
-    }
-
-    const options = {
-      valueNames: ['listing-date','listing-title','listing-author','listing-image','listing-description','listing-categories',{ data: ['index'] },{ data: ['categories'] },{ data: ['listing-date-sort'] },{ data: ['listing-file-modified-sort'] }],
-      
-      searchColumns: ["listing-date","listing-title","listing-author","listing-image","listing-description","listing-categories"],
-    };
-
-    window['quarto-listings'] = window['quarto-listings'] || {};
-    window['quarto-listings']['listing-listing'] = new List('listing-listing', options);
-
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  });
-
-  window.addEventListener('hashchange',() => {
-    if (window['quarto-listing-loaded']) {
-      window['quarto-listing-loaded']();
-    }
-  })
-  </script>
-
-  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
-
-<script type="text/javascript">
-const typesetMath = (el) => {
-  if (window.MathJax) {
-    // MathJax Typeset
-    window.MathJax.typeset([el]);
-  } else if (window.katex) {
-    // KaTeX Render
-    var mathElements = el.getElementsByClassName("math");
-    var macros = [];
-    for (var i = 0; i < mathElements.length; i++) {
-      var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN") {
-        window.katex.render(texText.data, mathElements[i], {
-          displayMode: mathElements[i].classList.contains('display'),
-          throwOnError: false,
-          macros: macros,
-          fleqn: false
-        });
-      }
-    }
-  }
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
-window.Quarto = {
-  typesetMath
-};
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
 </script>
 
+
 <meta property="og:title" content="Blog – MPU">
+<meta property="og:description" content="A data science blog and portfolio by Jixing Liu">
 <meta property="og:image" content="https://jixing.liu.fr/assets/images/social-profile.png">
 <meta property="og:site_name" content="MPU">
 <meta property="og:image:height" content="460">
 <meta property="og:image:width" content="460">
 <meta name="twitter:title" content="Blog – MPU">
+<meta name="twitter:description" content="A data science blog and portfolio by Jixing Liu">
 <meta name="twitter:image" content="https://jixing.liu.fr/assets/images/social-profile.png">
 <meta name="twitter:image-height" content="460">
 <meta name="twitter:image-width" content="460">
@@ -145,7 +136,7 @@ window.Quarto = {
 <body class="nav-fixed">
 
 <div id="quarto-search-results"></div>
-  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+  <header id="quarto-header" class="headroom fixed-top">
     <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container mx-auto">
@@ -167,11 +158,11 @@ window.Quarto = {
 <span class="menu-text">About</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link active" href="./blog.html" aria-current="page"> 
+    <a class="nav-link" href="./blog.en.html"> 
 <span class="menu-text">Blog</span></a>
   </li>  
   <li class="nav-item">
-    <a class="nav-link" href="./aidd.html"> 
+    <a class="nav-link" href="./aidd.en.html"> 
 <span class="menu-text">AIDD</span></a>
   </li>  
 </ul>
@@ -182,286 +173,43 @@ window.Quarto = {
     </nav>
 </header>
 <!-- content -->
-<header id="title-block-header" class="quarto-title-block default page-columns page-full">
-  <div class="quarto-title-banner page-columns page-full">
-    <div class="quarto-title column-page-left">
-      <h1 class="title">Blog</h1>
-                      </div>
-  </div>
-    
-  
-  <div class="quarto-title-meta column-page-left">
-
-      
-    
-      
-    </div>
-    
-  
-  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-full page-navbar">
 <!-- sidebar -->
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        
-    <h5 class="quarto-listing-category-title">Categories</h5><div class="quarto-listing-category category-default"><div class="category" data-category="">All <span class="quarto-category-count">(5)</span></div><div class="category" data-category="QUk=">AI <span class="quarto-category-count">(3)</span></div><div class="category" data-category="QUktRmlyc3Q=">AI-First <span class="quarto-category-count">(1)</span></div><div class="category" data-category="QmxvZw==">Blog <span class="quarto-category-count">(1)</span></div><div class="category" data-category="Q29tbWVudHM=">Comments <span class="quarto-category-count">(1)</span></div><div class="category" data-category="RGVwbG95bWVudA==">Deployment <span class="quarto-category-count">(1)</span></div><div class="category" data-category="R2lzY3Vz">Giscus <span class="quarto-category-count">(1)</span></div><div class="category" data-category="R2l0SHViJTIwQWN0aW9ucw==">GitHub Actions <span class="quarto-category-count">(1)</span></div><div class="category" data-category="R2l0SHViJTIwRGlzY3Vzc2lvbnM=">GitHub Discussions <span class="quarto-category-count">(1)</span></div><div class="category" data-category="R2l0SHViJTIwUGFnZXM=">GitHub Pages <span class="quarto-category-count">(1)</span></div><div class="category" data-category="SGFja2F0aG9u">Hackathon <span class="quarto-category-count">(1)</span></div><div class="category" data-category="TUNQ">MCP <span class="quarto-category-count">(1)</span></div><div class="category" data-category="UHJvZHVjdCUyMERldmVsb3BtZW50">Product Development <span class="quarto-category-count">(1)</span></div><div class="category" data-category="UHVibGlzaGluZw==">Publishing <span class="quarto-category-count">(1)</span></div><div class="category" data-category="UXVhcnRv">Quarto <span class="quarto-category-count">(2)</span></div><div class="category" data-category="VGVhbSUyMEN1bHR1cmU=">Team Culture <span class="quarto-category-count">(1)</span></div><div class="category" data-category="VHJvdWJsZXNob290aW5n">Troubleshooting <span class="quarto-category-count">(1)</span></div><div class="category" data-category="VHV0b3JpYWw=">Tutorial <span class="quarto-category-count">(1)</span></div><div class="category" data-category="aU9TJTIwQXBw">iOS App <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU0JUJBJUJBJUU1JUI3JUE1JUU2JTk5JUJBJUU4JTgzJUJE">人工智能 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU0JUJBJUJBJUU2JTlDJUJBJUU0JUJBJUE0JUU0JUJBJTky">人机交互 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU0JUJGJUExJUU2JTgxJUFGJUU4JThDJUE3JUU2JTg4JUJG">信息茧房 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU1JUE0JUE3JUU4JTg0JTkx">大脑 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU1JUI3JUE1JUU3JUE4JThC">工程 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU2JUIzJUE4JUU2JTg0JThGJUU1JThBJTlC">注意力 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU3JTk0JTlGJUU0JUJBJUE3JUU1JThBJTlC">生产力 <span class="quarto-category-count">(1)</span></div><div class="category" data-category="JUU4JUFFJUE0JUU3JTlGJUE1JUU3JUE3JTkxJUU1JUFEJUE2">认知科学 <span class="quarto-category-count">(1)</span></div></div></div>
+    
 <!-- main -->
-<main class="content quarto-banner-title-block column-page-left" id="quarto-document-content">
+<main class="content column-page" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Blog</h1>
+</div>
 
 
 
+<div class="quarto-title-meta column-page">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<script>
+  // Redirect to English version
+  window.location.href = "blog.en.html";
+</script>
+<p>
+Redirecting to <a href="blog.en.html">Blog (English)</a>…
+</p>
 
 
 
-
-
-
-<div class="quarto-listing quarto-listing-container-default" id="listing-listing">
-<div class="list quarto-listing-default">
-<div class="quarto-post image-right" data-index="0" data-categories="QUklMkNQcm9kdWN0JTIwRGV2ZWxvcG1lbnQlMkNUZWFtJTIwQ3VsdHVyZSUyQ0hhY2thdGhvbiUyQ2lPUyUyMEFwcCUyQ01DUCUyQ0FJLUZpcnN0" data-listing-date-sort="1753632000000" data-listing-file-modified-sort="1757508603092" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="252">
-<div class="thumbnail">
-<p><a href="./posts/AI-Native team about Every/index.html" class="no-external"></a></p><a href="./posts/AI-Native team about Every/index.html" class="no-external">
-<p><img loading="lazy" src="./posts/AI-Native team about Every/index_image/GwwnSlobgAEGSms.jpg" class="thumbnail-image" alt="Every Hackathon 项目列表展示，包含多个 AI 驱动项目的截图。
-"></p>
-</a><p><a href="./posts/AI-Native team about Every/index.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/AI-Native team about Every/index.html" class="no-external">AI-Native 团队的「狂飙」周末：从黑客松到 MCP 管理神器 Passport，Every 正在重新定义 AI 时代的产品开发</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/AI-Native team about Every/index.html" class="no-external"></a>
-</div>
-<div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('QUk='); return false;">
-AI
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('UHJvZHVjdCUyMERldmVsb3BtZW50'); return false;">
-Product Development
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('VGVhbSUyMEN1bHR1cmU='); return false;">
-Team Culture
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('SGFja2F0aG9u'); return false;">
-Hackathon
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('aU9TJTIwQXBw'); return false;">
-iOS App
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('TUNQ'); return false;">
-MCP
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('QUktRmlyc3Q='); return false;">
-AI-First
-</div>
-</div>
-<div class="listing-description">
-<a href="./posts/AI-Native team about Every/index.html" class="no-external">在 AI 技术浪潮席卷全球的今天，一家名为 Every 的科技媒体和创作者社区，正以一种独特而激进的方式，向我们展示未来组织的可能性。他们不仅仅报道 AI，更将自己变成了 AI-First 的”原生部落”。 </a>
-</div>
-</div>
-<div class="metadata">
-<a href="./posts/AI-Native team about Every/index.html" class="no-external">
-<div class="listing-date">
-Monday, the 28th of July, 2025
-</div>
-<div class="listing-author">
-Jixing Liu, <em>Ph.D.</em>
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="1" data-categories="UXVhcnRvJTJDR2lzY3VzJTJDQ29tbWVudHMlMkNCbG9nJTJDVHV0b3JpYWwlMkNHaXRIdWIlMjBEaXNjdXNzaW9ucyUyQ1Ryb3VibGVzaG9vdGluZw==" data-listing-date-sort="1748707200000" data-listing-file-modified-sort="1757508603094" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="4" data-listing-word-count-sort="798">
-<div class="thumbnail">
-<p><a href="./posts/Easily solve the Giscus is not installed error in Quarto blog/Easily solve the Giscus is not installed error in Quarto blog.html" class="no-external"></a></p><a href="./posts/Easily solve the Giscus is not installed error in Quarto blog/Easily solve the Giscus is not installed error in Quarto blog.html" class="no-external">
-<p><img loading="lazy" src="./posts/Easily solve the Giscus is not installed error in Quarto blog/featured.png" class="thumbnail-image" alt="Quarto 博客界面显示 Giscus 评论系统配置，背景为代码编辑器和 GitHub Discussions 界面。
-"></p>
-</a><p><a href="./posts/Easily solve the Giscus is not installed error in Quarto blog/Easily solve the Giscus is not installed error in Quarto blog.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/Easily solve the Giscus is not installed error in Quarto blog/Easily solve the Giscus is not installed error in Quarto blog.html" class="no-external">轻松解决 Quarto 博客中的 ‘Giscus is not installed’ 报错</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/Easily solve the Giscus is not installed error in Quarto blog/Easily solve the Giscus is not installed error in Quarto blog.html" class="no-external"></a>
-</div>
-<div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('UXVhcnRv'); return false;">
-Quarto
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('R2lzY3Vz'); return false;">
-Giscus
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('Q29tbWVudHM='); return false;">
-Comments
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('QmxvZw=='); return false;">
-Blog
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('VHV0b3JpYWw='); return false;">
-Tutorial
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('R2l0SHViJTIwRGlzY3Vzc2lvbnM='); return false;">
-GitHub Discussions
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('VHJvdWJsZXNob290aW5n'); return false;">
-Troubleshooting
-</div>
-</div>
-<div class="listing-description">
-<a href="./posts/Easily solve the Giscus is not installed error in Quarto blog/Easily solve the Giscus is not installed error in Quarto blog.html" class="no-external">当你为 Quarto 博客切换新主题时遇到 “Giscus is not installed” 错误？本教程详细介绍了问题原因， 并提供两种解决方案：正确配置 Giscus 评论系统或完全禁用评论功能。 </a>
-</div>
-</div>
-<div class="metadata">
-<a href="./posts/Easily solve the Giscus is not installed error in Quarto blog/Easily solve the Giscus is not installed error in Quarto blog.html" class="no-external">
-<div class="listing-date">
-Sunday, the 1st of June, 2025
-</div>
-<div class="listing-author">
-Jixing Liu, <em>Ph.D.</em>
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="2" data-categories="QUklMkMlRTQlQkElQkElRTUlQjclQTUlRTYlOTklQkElRTglODMlQkQlMkMlRTUlQTQlQTclRTglODQlOTElMkMlRTglQUUlQTQlRTclOUYlQTUlRTclQTclOTElRTUlQUQlQTYlMkMlRTQlQkElQkElRTYlOUMlQkElRTQlQkElQTQlRTQlQkElOTIlMkMlRTYlQjMlQTglRTYlODQlOEYlRTUlOEElOUIlMkMlRTQlQkYlQTElRTYlODElQUYlRTglOEMlQTclRTYlODglQkY=" data-listing-date-sort="1747843200000" data-listing-file-modified-sort="1757508603090" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="1" data-listing-word-count-sort="195">
-<div class="thumbnail">
-<p><a href="./posts/AI overuse/AI overuse.html" class="no-external"></a></p><a href="./posts/AI overuse/AI overuse.html" class="no-external">
-<div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
-</a><p><a href="./posts/AI overuse/AI overuse.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/AI overuse/AI overuse.html" class="no-external">AI 滥用对人类大脑的影响</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/AI overuse/AI overuse.html" class="no-external"></a>
-</div>
-<div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('QUk='); return false;">
-AI
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('JUU0JUJBJUJBJUU1JUI3JUE1JUU2JTk5JUJBJUU4JTgzJUJE'); return false;">
-人工智能
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('JUU1JUE0JUE3JUU4JTg0JTkx'); return false;">
-大脑
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('JUU4JUFFJUE0JUU3JTlGJUE1JUU3JUE3JTkxJUU1JUFEJUE2'); return false;">
-认知科学
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('JUU0JUJBJUJBJUU2JTlDJUJBJUU0JUJBJUE0JUU0JUJBJTky'); return false;">
-人机交互
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('JUU2JUIzJUE4JUU2JTg0JThGJUU1JThBJTlC'); return false;">
-注意力
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('JUU0JUJGJUExJUU2JTgxJUFGJUU4JThDJUE3JUU2JTg4JUJG'); return false;">
-信息茧房
-</div>
-</div>
-<div class="listing-description">
-<a href="./posts/AI overuse/AI overuse.html" class="no-external">AI 滥用对人类大脑的影响，可以看作是一个复杂的系统交互失衡问题。我们的大脑本身就是一个精密的、持续进化的信息处理系统，而 AI，尤其是被滥用的 AI，则像一个外部强力“插件”或“环境”，以其特有的方式重塑着我们大脑的“底层算法”和“硬件性能”。 </a>
-</div>
-</div>
-<div class="metadata">
-<a href="./posts/AI overuse/AI overuse.html" class="no-external">
-<div class="listing-date">
-Thursday, the 22nd of May, 2025
-</div>
-<div class="listing-author">
-Jixing Liu, <em>Ph.D.</em>
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="3" data-categories="UXVhcnRvJTJDR2l0SHViJTIwUGFnZXMlMkNQdWJsaXNoaW5nJTJDRGVwbG95bWVudCUyQ0dpdEh1YiUyMEFjdGlvbnM=" data-listing-date-sort="1735488000000" data-listing-file-modified-sort="1748744189930" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="11" data-listing-word-count-sort="2112">
-<div class="thumbnail">
-<p><a href="./posts/2024-12-30-quarto-github-pages/index.html" class="no-external"></a></p><a href="./posts/2024-12-30-quarto-github-pages/index.html" class="no-external">
-<p><img loading="lazy" src="./posts/2024-12-30-quarto-github-pages/featured.png" class="thumbnail-image" alt="Quarto icon and text logo above GitHub Pages logo.
-"></p>
-</a><p><a href="./posts/2024-12-30-quarto-github-pages/index.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/2024-12-30-quarto-github-pages/index.html" class="no-external">Quarto: Publishing to GitHub Pages</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/2024-12-30-quarto-github-pages/index.html" class="no-external"></a>
-</div>
-<div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('UXVhcnRv'); return false;">
-Quarto
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('R2l0SHViJTIwUGFnZXM='); return false;">
-GitHub Pages
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('UHVibGlzaGluZw=='); return false;">
-Publishing
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('RGVwbG95bWVudA=='); return false;">
-Deployment
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('R2l0SHViJTIwQWN0aW9ucw=='); return false;">
-GitHub Actions
-</div>
-</div>
-<div class="listing-description">
-<a href="./posts/2024-12-30-quarto-github-pages/index.html" class="no-external">In this guide, we’ll explore various methods to publish your Quarto projects to GitHub Pages. We’ll cover both manual and automated approaches to help you choose the best fit for your workflow. </a>
-</div>
-</div>
-<div class="metadata">
-<a href="./posts/2024-12-30-quarto-github-pages/index.html" class="no-external">
-<div class="listing-date">
-Monday, the 30th of December, 2024
-</div>
-<div class="listing-author">
-Jixing Liu, <em>Ph.D.</em>
-</div>
-</a>
-</div>
-</div>
-<div class="quarto-post image-right" data-index="4" data-categories="QUklMkMlRTUlQjclQTUlRTclQTglOEIlMkMlRTclOTQlOUYlRTQlQkElQTclRTUlOEElOUI=" data-listing-date-sort="1735488000000" data-listing-file-modified-sort="1756351485233" data-listing-date-modified-sort="NaN" data-listing-reading-time-sort="2" data-listing-word-count-sort="204">
-<div class="thumbnail">
-<p><a href="./posts/AI_is_not_Making_Engineers_10x_as_Productive/index.html" class="no-external"></a></p><a href="./posts/AI_is_not_Making_Engineers_10x_as_Productive/index.html" class="no-external">
-<div class="listing-item-img-placeholder card-img-top" >&nbsp;</div>
-</a><p><a href="./posts/AI_is_not_Making_Engineers_10x_as_Productive/index.html" class="no-external"></a></p>
-</div>
-<div class="body">
-<h3 class="no-anchor listing-title">
-<a href="./posts/AI_is_not_Making_Engineers_10x_as_Productive/index.html" class="no-external">10 倍 AI 工程师神话：别信营销，看清工程物理学</a>
-</h3>
-<div class="listing-subtitle">
-<a href="./posts/AI_is_not_Making_Engineers_10x_as_Productive/index.html" class="no-external"></a>
-</div>
-<div class="listing-categories">
-<div class="listing-category" onclick="window.quartoListingCategory('QUk='); return false;">
-AI
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('JUU1JUI3JUE1JUU3JUE4JThC'); return false;">
-工程
-</div>
-<div class="listing-category" onclick="window.quartoListingCategory('JUU3JTk0JTlGJUU0JUJBJUE3JUU1JThBJTlC'); return false;">
-生产力
-</div>
-</div>
-<div class="listing-description">
-<a href="./posts/AI_is_not_Making_Engineers_10x_as_Productive/index.html" class="no-external">别再为’10 倍 AI 工程师’的鬼话焦虑了。AI 是个有用的副驾驶，但它无法改变软件工程的基本物理定律：真正的瓶颈是思考和沟通，不是打字。</a>
-</div>
-</div>
-<div class="metadata">
-<a href="./posts/AI_is_not_Making_Engineers_10x_as_Productive/index.html" class="no-external">
-<div class="listing-date">
-Monday, the 30th of December, 2024
-</div>
-<div class="listing-author">
-Jixing Liu, <em>Ph.D.</em>
-</div>
-</a>
-</div>
-</div>
-</div>
-<div class="listing-no-matching d-none">
-No matching items
-</div>
-</div><a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
 <script id="quarto-html-after-body" type="application/javascript">
 window.document.addEventListener("DOMContentLoaded", function (event) {
   const toggleBodyColorMode = (bsSheetEl) => {

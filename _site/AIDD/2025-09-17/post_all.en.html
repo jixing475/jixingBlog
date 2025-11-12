@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="Let’s explore five recent advances in AI for biomedicine. Find out how AIDO.ModelGenerator simplifies multimodal model development with YAML, how ChatMDV turns natural language into visualization code, and how DiffGui generates chemically sound molecules. We also look at DGDM, a self-evolving drug discovery framework, and analyze the true capabilities of general-purpose large models on classic bioinformatics problems.">
+
+<title>DiffGui: Building Molecules Like an Architect, Drawing the Skeleton Before Adding the Flesh – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="DiffGui: Building Molecules Like an Architect, Drawing the Skeleton Before Adding the Flesh – MPU">
+<meta property="og:description" content="Let’s explore five recent advances in AI for biomedicine. Find out how AIDO.ModelGenerator simplifies multimodal model development with YAML, how ChatMDV turns natural language into visualization code, and how DiffGui generates chemically sound molecules. We also look at DGDM, a self-evolving drug discovery framework, and analyze the true capabilities of general-purpose large models on classic bioinformatics problems.">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-09-17/post_all_image/target_aware_3d_mole_2025_08_29_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="DiffGui builds chemical bonds while generating atoms, guided by binding affinity and drug-likeness. This makes the AI-generated molecules chemically valid structures, not just clouds of atoms.
+">
+<meta name="twitter:title" content="DiffGui: Building Molecules Like an Architect, Drawing the Skeleton Before Adding the Flesh – MPU">
+<meta name="twitter:description" content="Let’s explore five recent advances in AI for biomedicine. Find out how AIDO.ModelGenerator simplifies multimodal model development with YAML, how ChatMDV turns natural language into visualization code, and how DiffGui generates chemically sound molecules. We also look at DGDM, a self-evolving drug discovery framework, and analyze the true capabilities of general-purpose large models on classic bioinformatics problems.">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-09-17/post_all_image/target_aware_3d_mole_2025_08_29_image_1.jpg">
+<meta name="twitter:image:alt" content="DiffGui builds chemical bonds while generating atoms, guided by binding affinity and drug-likeness. This makes the AI-generated molecules chemically valid structures, not just clouds of atoms.
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">DiffGui: Building Molecules Like an Architect, Drawing the Skeleton Before Adding the Flesh</h1>
+                  <div>
+        <div class="description">
+          <p>Let’s explore five recent advances in AI for biomedicine. Find out how AIDO.ModelGenerator simplifies multimodal model development with YAML, how ChatMDV turns natural language into visualization code, and how DiffGui generates chemically sound molecules. We also look at DGDM, a self-evolving drug discovery framework, and analyze the true capabilities of general-purpose large models on classic bioinformatics problems.</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">AI Drug Discovery</div>
+                <div class="quarto-category">Bioinformatics</div>
+                <div class="quarto-category">Large Language Models</div>
+                <div class="quarto-category">Generative AI</div>
+                <div class="quarto-category">Multimodal</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Wednesday, the 17th of September, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#table-of-contents" id="toc-table-of-contents" class="nav-link active" data-scroll-target="#table-of-contents">Table of Contents</a></li>
+  <li><a href="#aido.modelgenerator-legos-for-multimodal-biology-models" id="toc-aido.modelgenerator-legos-for-multimodal-biology-models" class="nav-link" data-scroll-target="#aido.modelgenerator-legos-for-multimodal-biology-models">1. AIDO.ModelGenerator: LEGOs for Multimodal Biology Models</a></li>
+  <li><a href="#chatmdv-bioinformatics-analysis-without-the-code" id="toc-chatmdv-bioinformatics-analysis-without-the-code" class="nav-link" data-scroll-target="#chatmdv-bioinformatics-analysis-without-the-code">2. ChatMDV: Bioinformatics Analysis Without the Code</a></li>
+  <li><a href="#diffgui-building-molecules-like-an-architect-drawing-the-skeleton-before-adding-the-flesh" id="toc-diffgui-building-molecules-like-an-architect-drawing-the-skeleton-before-adding-the-flesh" class="nav-link" data-scroll-target="#diffgui-building-molecules-like-an-architect-drawing-the-skeleton-before-adding-the-flesh">3. DiffGui: Building Molecules Like an Architect, Drawing the Skeleton Before Adding the Flesh</a></li>
+  <li><a href="#ai-drug-discovery-a-machine-that-can-evolve-itself" id="toc-ai-drug-discovery-a-machine-that-can-evolve-itself" class="nav-link" data-scroll-target="#ai-drug-discovery-a-machine-that-can-evolve-itself">4. AI Drug Discovery: A Machine That Can Evolve Itself</a></li>
+  <li><a href="#ai-takes-a-bioinformatics-exam-with-surprising-results" id="toc-ai-takes-a-bioinformatics-exam-with-surprising-results" class="nav-link" data-scroll-target="#ai-takes-a-bioinformatics-exam-with-surprising-results">5. AI Takes a Bioinformatics Exam, With Surprising Results</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-09-17/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="table-of-contents" class="level2">
+<h2 class="anchored" data-anchor-id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li>An open-source toolkit uses simple YAML files to turn building complex, reproducible multimodal biology foundation models from an engineering challenge into something like playing with LEGOs.</li>
+<li>ChatMDV translates a researcher’s natural language directly into executable code, making complex bioinformatics data visualization a tool for everyone in the lab, not just a skill for a few experts.</li>
+<li>DiffGui builds chemical bonds while generating atoms, guided by binding affinity and drug-likeness. This makes the AI-generated molecules chemically valid structures, not just clouds of atoms.</li>
+<li>An AI framework optimizes molecules through a “Darwinian” evolutionary loop and simultaneously optimizes its own drug discovery process through a “Gödelian” meta-learning loop.</li>
+<li>General large models can solve many standard bioinformatics problems, but they are more like well-read students than researchers capable of independent thought.</li>
+</ol>
+</section>
+<section id="aido.modelgenerator-legos-for-multimodal-biology-models" class="level2">
+<h2 class="anchored" data-anchor-id="aido.modelgenerator-legos-for-multimodal-biology-models">1. AIDO.ModelGenerator: LEGOs for Multimodal Biology Models</h2>
+<p><a href="post_all_image/image_20250709_223537_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/image_20250709_223537_1.jpg" class="img-fluid"></a></p>
+<p>Biologists are often held back by computation and engineering. In the era of large models, building a model that combines data like DNA, RNA, and protein is a complex process. Researchers need to be machine learning engineers and software specialists just to start their real biology work. The whole process is tedious, the results are hard to reproduce, and it slows down scientific discovery.</p>
+<p>AIDO.ModelGenerator is a new tool that tackles this problem head-on. Its core idea is to standardize and modularize the complex process, like creating a LEGO set for biology foundation models. Users don’t need to write code from scratch to build, fuse, and train models. They just need to prepare a YAML configuration file.</p>
+<p>For example, if you want to use cross-attention fusion with a 3-billion-parameter DNA model and a 500-million-parameter RNA model, you just declare it in the YAML file. If you want to run a large model on a single A100 GPU using Parameter-Efficient Fine-Tuning (PEFT), that also just takes a few lines of configuration. This lowers the technical barrier from a machine learning expert to a scientist who can write a config file.</p>
+<p>In a case study on Crohn’s disease, the tool showed what it can do. Traditional differential expression analysis ranked the known clinical target SOX4 at position 6,068 out of nearly 19,000 genes—like finding a needle in a haystack. Using in-silico knockout, AIDO.ModelGenerator moved SOX4’s rank up to 14. This is a huge leap, providing a clear lead for finding targets.</p>
+<p>The tool also performed well in an RNA splicing prediction task. Using only a single modality is like trying to predict real-time traffic from a static map. By fusing DNA (the static genomic blueprint) and RNA (the dynamic expression messenger) data, the model’s prediction performance improved by over 10%, achieving a new state-of-the-art (SOTA). This multimodal approach offers a more complete view for understanding complex biological systems.</p>
+<p>The tool’s focus on <strong>reproducibility</strong> solves a key problem in computational biology. In academic research, it’s often difficult to reproduce experimental results. AIDO.ModelGenerator uses locked configuration files and deterministic runs to ensure every experiment produces the exact same result, down to the byte. This makes research findings reliable and verifiable. It also allows peers and reviewers to easily reproduce the entire workflow, reflecting scientific rigor.</p>
+<p>AIDO.ModelGenerator is essentially an accelerator and a toolkit. It frees biologists from heavy engineering work so they can focus on the biology itself—forming hypotheses, designing experiments, and validating discoveries, without spending too much time debugging code and configuring environments.</p>
+<p>📜Title: Rapid and Reproducible Multimodal Biological Foundation Model Development with AIDO.ModelGenerator 📜Paper: https://www.biorxiv.org/content/10.1101/2025.06.30.662437v1 💻Code: https://github.com/genbio-ai/ModelGenerator</p>
+</section>
+<section id="chatmdv-bioinformatics-analysis-without-the-code" class="level2">
+<h2 class="anchored" data-anchor-id="chatmdv-bioinformatics-analysis-without-the-code">2. ChatMDV: Bioinformatics Analysis Without the Code</h2>
+<p><a href="post_all_image/chat_mdv_democratisi_2025_08_29_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/chat_mdv_democratisi_2025_08_29_image_1.jpg" class="img-fluid"></a></p>
+<p>Bioinformatics analysis has a high barrier to entry. It requires researchers to know both biology and programming, which slows down research. ChatMDV offers a solution. It acts like a translator, using a Large Language Model (LLM) and Retrieval-Augmented Generation (RAG) to turn a natural language request like “Show the expression of gene A in these cell clusters with a UMAP plot” directly into Python code that generates the chart. Data analysis becomes a conversation. Wet-lab scientists can explore data and test ideas themselves, quickly, without having to wait in line for a bioinformatician.</p>
+<hr>
+<p>There’s an invisible wall in biology labs. On one side is hard-won single-cell sequencing data. On the other are the charts and statistics that reveal biological insights. In between stands a high wall built of Python, R, and complex software packages.</p>
+<p>To get over this wall, a researcher can either spend years learning to code or hand their precious data to the bioinformatician whose schedule is always full, and then wait.</p>
+<p>ChatMDV aims to tear down that wall.</p>
+<section id="ai-as-a-translator-you-just-ask-questions" class="level4">
+<h4 class="anchored" data-anchor-id="ai-as-a-translator-you-just-ask-questions">AI as a Translator, You Just Ask Questions</h4>
+<p>ChatMDV’s approach is simple: teach AI the language of biologists. It positions itself as a top-tier simultaneous interpreter.</p>
+<p>Here’s how it works:</p>
+<p>A researcher makes a request in plain language, like, “Show these cells in a UMAP plot and color them by cell type.”</p>
+<p>ChatMDV’s internal “planning agent” breaks this sentence into a clear action plan: “The user wants a UMAP plot, colored by the data in the ‘cell_type’ column.”</p>
+<p>Next, a “code generation” module gets to work. It doesn’t write code from scratch. Instead, it uses a Retrieval-Augmented Generation (RAG) process to find the most relevant code snippets and function usages from a predefined “code library” and “knowledge base.” This is like a student taking an open-book exam. They don’t need to memorize every detail, just know where to look things up and how to assemble the information correctly.</p>
+<p>Finally, it generates a piece of Python code, runs it automatically, and presents the UMAP plot you asked for.</p>
+</section>
+<section id="more-than-just-chatting-its-interactive" class="level4">
+<h4 class="anchored" data-anchor-id="more-than-just-chatting-its-interactive">More Than Just Chatting, It’s Interactive</h4>
+<p>The charts ChatMDV generates appear in an interactive viewer (MDV). After the AI creates the initial plot, you can fine-tune it just like in regular software—clicking, zooming, and filtering with your mouse.</p>
+<p>This combination of natural language input and graphical interface fine-tuning lowers the barrier to entry and hints at the future of scientific software.</p>
+</section>
+<section id="is-it-reliable" class="level4">
+<h4 class="anchored" data-anchor-id="is-it-reliable">Is It Reliable?</h4>
+<p>The research team tested ChatMDV on three real-world datasets of increasing complexity, from simple PBMC data to a complex lung cancer atlas. It showed a high success rate on all of them, reaching 100% on the simplest tasks.</p>
+<p>This shows it can handle the imperfect data found in real research.</p>
+<p>While AI can’t yet understand every vague research idea, ChatMDV proves that code-free, conversational interaction between scientists and their data is possible.</p>
+<p>It will free bioinformaticians from many repetitive, basic visualization tasks, allowing them to focus on solving scientific problems that require more ingenuity and creativity.</p>
+<p>📜Title: ChatMDV: Democratising Bioinformatics Analysis Using Large Language Models 📜Paper: https://www.biorxiv.org/content/10.1101/2025.08.26.671083v1</p>
+</section>
+</section>
+<section id="diffgui-building-molecules-like-an-architect-drawing-the-skeleton-before-adding-the-flesh" class="level2">
+<h2 class="anchored" data-anchor-id="diffgui-building-molecules-like-an-architect-drawing-the-skeleton-before-adding-the-flesh">3. DiffGui: Building Molecules Like an Architect, Drawing the Skeleton Before Adding the Flesh</h2>
+<p><a href="post_all_image/target_aware_3d_mole_2025_08_29_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/target_aware_3d_mole_2025_08_29_image_1.jpg" class="img-fluid"></a></p>
+<p>Anyone who has worked with 3D molecular generation models knows the reality: these AIs are good at arranging atoms but not so good at chemistry.</p>
+<p>Given a protein pocket, an AI can generate a cloud of atoms that fills the 3D space well. But when you try to convert that cloud into a 2D structure diagram with chemical bonds, problems appear: five-bonded carbons, non-existent chemical bonds, and other structures that violate basic chemistry. It’s like an architect marking where the columns go but ignoring the beams and floors, making the building impossible to construct.</p>
+<p>A paper in Nature Communications introduces a method designed to make AI build the chemical bond framework at the same time it places the atoms.</p>
+<section id="first-the-skeleton-then-the-flesh" class="level4">
+<h4 class="anchored" data-anchor-id="first-the-skeleton-then-the-flesh">First the Skeleton, Then the Flesh</h4>
+<p>The new model is called DiffGui, and its core idea is to <strong>generate atoms and chemical bonds at the same time</strong>.</p>
+<p>It’s a type of diffusion model. Traditional diffusion models start with a blurry “pixel cloud” of atoms and gradually make it clearer. DiffGui starts with a blurry “pixel cloud” <strong>and</strong> blurry “connecting lines” at the same time.</p>
+<p>At each step of the generation, the model determines the type and position of the atoms, as well as the chemical bonds between them.</p>
+<p>This way, chemical bonds become an inherent constraint in the generation process, not an afterthought. This ensures the final molecule is chemically sound from the ground up.</p>
+</section>
+<section id="giving-the-ai-a-compass" class="level4">
+<h4 class="anchored" data-anchor-id="giving-the-ai-a-compass">Giving the AI a “Compass”</h4>
+<p>Just having a chemically valid skeleton isn’t enough. The goal is to generate a <strong>good</strong> molecule.</p>
+<p>DiffGui introduces a <strong>property guidance</strong> mechanism. At each step of molecule generation, multiple property estimators provide feedback.</p>
+<p>For instance, a “binding affinity” estimator judges whether the current step improves the molecule’s binding to the target and guides it toward a tighter fit. A “drug-likeness” estimator reviews the molecule’s chemical properties, like solubility or hydrogen bond features, and makes adjustments.</p>
+<p>With this continuous, multi-dimensional guidance, the generation process shifts from simply imitating training data to an active, goal-oriented optimization toward a “good molecule.”</p>
+</section>
+<section id="does-this-actually-work" class="level4">
+<h4 class="anchored" data-anchor-id="does-this-actually-work">Does This Actually Work?</h4>
+<p>Building the skeleton and using a compass at the same time has improved the quality of molecules generated by DiffGui.</p>
+<p>In a series of benchmark tests, DiffGui outperformed existing methods.</p>
+<p>In a real-world drug design case, researchers used the tool to successfully design new molecules that could adaptively bind to a mutated protein pocket. This shows that DiffGui can understand and respond to subtle changes in the chemical environment, making it a practical design tool.</p>
+<p>📜Title: Target-aware 3D Molecular Generation Based on Guided Equivariant Diffusion 📜Paper: https://www.nature.com/articles/s41467-025-63245-0 💻Code: https://github.com/QiaoyuHu89/DiffGui</p>
+</section>
+</section>
+<section id="ai-drug-discovery-a-machine-that-can-evolve-itself" class="level2">
+<h2 class="anchored" data-anchor-id="ai-drug-discovery-a-machine-that-can-evolve-itself">4. AI Drug Discovery: A Machine That Can Evolve Itself</h2>
+<p><a href="post_all_image/the_darwin_godel_dru_2025_08_29_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="post_all_image/the_darwin_godel_dru_2025_08_29_image_1.jpg" class="img-fluid"></a></p>
+<p>AI drug discovery tools can generate molecules and predict properties, but most of them are <strong>static</strong>. Once a model is built, its performance is fixed. Improving it requires manual intervention and retraining. It’s like having a good car, but to make it faster, you have to modify the engine yourself.</p>
+<p>A new framework called the Darwin–Gödel Drug Discovery Machine (DGDM) aims to build a car that can <strong>modify its own engine</strong>.</p>
+<section id="two-loops-two-kinds-of-evolution" class="level4">
+<h4 class="anchored" data-anchor-id="two-loops-two-kinds-of-evolution">Two Loops, Two Kinds of Evolution</h4>
+<p>The framework’s core is two nested loops.</p>
+<p><strong>The Inner Loop: Darwin’s World</strong></p>
+<p>The inner loop optimizes the <strong>molecules</strong>. It works like a miniature Darwinian evolution.</p>
+<p>First, a generative model creates a diverse batch of candidate molecules. These molecules then enter a simulated “natural environment” for screening, which includes computational assessments like molecular docking, binding affinity prediction, and ADMET property analysis. The best-performing molecules are selected as “parents” to generate the next generation.</p>
+<p>This cycle repeats, and with each generation, the molecules evolve to better meet the predefined goals, such as stronger binding affinity.</p>
+<p><strong>The Outer Loop: Gödel’s Ghost</strong></p>
+<p>The outer loop doesn’t optimize molecules. It optimizes the <strong>discovery process itself</strong>.</p>
+<p>It’s inspired by the “Gödel machine,” a concept from mathematician Kurt Gödel for a machine that could theoretically inspect and modify its own code to improve itself.</p>
+<p>In reality, you can’t use strict mathematical logic to prove a process is better, so this framework uses <strong>statistics</strong>. The outer loop periodically suggests changes to the entire drug discovery process, such as swapping out a docking score function or adjusting the molecule generation strategy. The system then uses statistical tests to see if these changes improve overall performance. A change is only adopted if the data proves it is effective. This is a data-driven, risk-managed form of self-evolution.</p>
+</section>
+<section id="what-were-the-results" class="level4">
+<h4 class="anchored" data-anchor-id="what-were-the-results">What Were the Results?</h4>
+<p>The researchers ran a proof-of-concept with the system.</p>
+<p>After optimization by the dual-loop system, the median binding affinity of candidate molecules improved, while their drug-likeness and novelty remained at 100%. This shows the system improved performance while still following basic chemical rules.</p>
+<p>This is still a small-scale proof-of-concept focused on a single target. Integrating wet-lab data into a closed loop is the next challenge.</p>
+<p>DGDM shows a possible direction for AI drug discovery: moving from using AI tools to building autonomous AI scientists that can improve themselves.</p>
+<p>📜Title: The Darwin–Gödel Drug Discovery Machine (DGDM): A Self-Improving AI Framework 📜Paper: https://www.biorxiv.org/content/10.1101/2025.08.21.671415v1 💻Code: https://github.com/deep-geo/DGDM</p>
+</section>
+</section>
+<section id="ai-takes-a-bioinformatics-exam-with-surprising-results" class="level2">
+<h2 class="anchored" data-anchor-id="ai-takes-a-bioinformatics-exam-with-surprising-results">5. AI Takes a Bioinformatics Exam, With Surprising Results</h2>
+<p><a href="post_all_image/out_of_the_box_bioin_2025_08_29_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="post_all_image/out_of_the_box_bioin_2025_08_29_image_1.jpg" class="img-fluid"></a></p>
+<p>The Rosalind platform is a training ground for bioinformatics students. It has hundreds of classic computational problems, from calculating the GC content of DNA to finding the secondary structure of RNA. Most people who study bioinformatics have practiced on it.</p>
+<p>Researchers in a new paper took three major Large Language Models (LLMs)—GPT-3.5, Llama-3-70B, and GPT-4o—to this exam room and tested them on 104 problems.</p>
+<p>The results were unexpected.</p>
+<section id="is-older-better" class="level4">
+<h4 class="anchored" data-anchor-id="is-older-better">Is Older Better?</h4>
+<p><strong>GPT-3.5</strong> came out on top, getting 58% of the problems right. GPT-4o and Llama-3, two newer and more powerful models, had lower success rates of just 47%.</p>
+<p>This doesn’t mean GPT-3.5 is smarter than GPT-4o. One possible explanation is that Rosalind’s problems are “textbook exercises” with standard answers, and GPT-3.5’s training data might have just happened to include more of these ready-made solutions. The newer models, when faced with these problems, might overthink them, trying to solve them with more general but less optimal logic.</p>
+</section>
+<section id="what-is-ai-good-at-and-what-isnt-it" class="level4">
+<h4 class="anchored" data-anchor-id="what-is-ai-good-at-and-what-isnt-it">What is AI Good At, and What Isn’t It?</h4>
+<p>This exam mapped out the “competence circle” of today’s general large models.</p>
+<p>They performed well on tasks with clear rules and direct calculations, like calculating various statistical properties of DNA. This is like giving a student a math problem that just requires plugging numbers into a formula. As long as they’ve memorized the formula, they’re unlikely to get it wrong.</p>
+<p>But when it came to open-ended problems requiring higher-level reasoning, like genome assembly and sequence alignment, the AIs all failed. This is like asking a student to solve a proof that requires multiple lines of thought and creativity. The isolated formulas in their head are no longer enough.</p>
+<p>One finding from this paper is very telling: the AI’s performance on a problem was highly correlated with the number of times humans had attempted that problem on the Rosalind platform.</p>
+<p>It’s like a student whose best performance on a practice test is on the exact same questions they’ve seen countless times in their review books.</p>
+<p>This reveals how these AIs learn: they are closer to performing efficient pattern matching and information retrieval from a massive memory bank than they are to reasoning about bioinformatics from first principles.</p>
+<p>So, these general large models are still useful. For students learning basic concepts, they are good teaching assistants. For researchers who need to quickly generate template code for standard analysis tasks, they are highly efficient interns.</p>
+<p>📜Title: Out-of-the-box bioinformatics capabilities of large language models (LLMs) 📜Paper: https://www.biorxiv.org/content/10.1101/2025.08.22.671610v1</p>
+
+
+</section>
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-09-17/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

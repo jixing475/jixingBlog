@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="af2rave 利用 AlphaFold2 的不确定性为分子动力学模拟生成多样化起点，高效捕捉蛋白质动态构象。一种新方法将溶解度拆解为基本物理过程并用机器学习逐个击破，实现了更精准的预测。最后，一种结合量子化学与机器学习的新技术，能在 5 分钟内完成高精度的结合力排序，为药物筛选带来革命性提速。">
+
+<title>加速分子模拟、破解溶解度与精准结合力排序 – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="加速分子模拟、破解溶解度与精准结合力排序 – MPU">
+<meta property="og:description" content="af2rave 利用 AlphaFold2 的不确定性为分子动力学模拟生成多样化起点，高效捕捉蛋白质动态构象。一种新方法将溶解度拆解为基本物理过程并用机器学习逐个击破，实现了更精准的预测。最后，一种结合量子化学与机器学习的新技术，能在 5 分钟内完成高精度的结合力排序，为药物筛选带来革命性提速。">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-08-11/post_all_image/accurate_and_rapid_r_2025_08_10_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="一种结合量子化学与机器学习新方法的概念图，展示了一个大型蛋白质 - 配体复合物被分解成多个小片段进行计算，然后通过机器学习模型修正关键物理作用力，最终在极短时间内得到高度准确的结合力排序结果。
+">
+<meta name="twitter:title" content="加速分子模拟、破解溶解度与精准结合力排序 – MPU">
+<meta name="twitter:description" content="af2rave 利用 AlphaFold2 的不确定性为分子动力学模拟生成多样化起点，高效捕捉蛋白质动态构象。一种新方法将溶解度拆解为基本物理过程并用机器学习逐个击破，实现了更精准的预测。最后，一种结合量子化学与机器学习的新技术，能在 5 分钟内完成高精度的结合力排序，为药物筛选带来革命性提速。">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-08-11/post_all_image/accurate_and_rapid_r_2025_08_10_image_1.jpg">
+<meta name="twitter:image:alt" content="一种结合量子化学与机器学习新方法的概念图，展示了一个大型蛋白质 - 配体复合物被分解成多个小片段进行计算，然后通过机器学习模型修正关键物理作用力，最终在极短时间内得到高度准确的结合力排序结果。
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">加速分子模拟、破解溶解度与精准结合力排序</h1>
+                  <div>
+        <div class="description">
+          <p>af2rave 利用 AlphaFold2 的不确定性为分子动力学模拟生成多样化起点，高效捕捉蛋白质动态构象。一种新方法将溶解度拆解为基本物理过程并用机器学习逐个击破，实现了更精准的预测。最后，一种结合量子化学与机器学习的新技术，能在 5 分钟内完成高精度的结合力排序，为药物筛选带来革命性提速。</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">计算化学</div>
+                <div class="quarto-category">分子动力学</div>
+                <div class="quarto-category">机器学习</div>
+                <div class="quarto-category">药物筛选</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Monday, the 11th of August, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#目录" id="toc-目录" class="nav-link active" data-scroll-target="#目录">目录</a></li>
+  <li><a href="#ai-给分子模拟装上传送门告别龟速" id="toc-ai-给分子模拟装上传送门告别龟速" class="nav-link" data-scroll-target="#ai-给分子模拟装上传送门告别龟速">1. AI 给分子模拟装上”传送门”，告别龟速</a></li>
+  <li><a href="#ai-预测溶解度不再是玄学而是物理学" id="toc-ai-预测溶解度不再是玄学而是物理学" class="nav-link" data-scroll-target="#ai-预测溶解度不再是玄学而是物理学">2. AI 预测溶解度：不再是玄学，而是物理学</a></li>
+  <li><a href="#ai-算药快准狠5-分钟内搞定结合力排序" id="toc-ai-算药快准狠5-分钟内搞定结合力排序" class="nav-link" data-scroll-target="#ai-算药快准狠5-分钟内搞定结合力排序">3. AI 算药快准狠：5 分钟内搞定结合力排序</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-08-11/post_all.zh.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="目录" class="level2">
+<h2 class="anchored" data-anchor-id="目录">目录</h2>
+<ol type="1">
+<li>这个开源工具巧妙地让 AlphaFold2 故意”犯错”来生成多个起点，再用物理模拟去探索，极大地加速了我们捕捉蛋白质动态”快照”的效率。</li>
+<li>通过将溶解度这个大难题拆解为更基本的物理过程，并用机器学习逐个击破，这个新方法为我们提供了一张迄今为止最清晰的溶解度预测路线图。</li>
+<li>这个新方法将量子化学大卸八块，再用机器学习修正关键的物理作用力，最终在 5 分钟内实现了极其准确的结合力排序，这是计算药物筛选的一大步。</li>
+</ol>
+</section>
+<section id="ai-给分子模拟装上传送门告别龟速" class="level2">
+<h2 class="anchored" data-anchor-id="ai-给分子模拟装上传送门告别龟速">1. AI 给分子模拟装上”传送门”，告别龟速</h2>
+<p><a href="post_all_image/af2rave_protein_ens_2025_08_10_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/af2rave_protein_ens_2025_08_10_image_1.jpg" class="img-fluid"></a></p>
+<p>在结构生物学的世界里，AlphaFold 给了我们蛋白质的静态”照片”，清晰、漂亮，像一本制作精美的产品目录。但这还不够。蛋白质在细胞里，可不是一动不动的雕塑。它们在扭动、在呼吸、在变形。一个药物分子，常常是结合在某个转瞬即逝的、在静态照片里根本看不到的”激活”或”失活”构象上。</p>
+<p>想看蛋白质”动”起来，我们就得求助于分子动力学（MD）模拟。</p>
+<p>MD 就像是一台能拍摄分子世界”电影”的超级计算机。问题是，这部电影的播放速度，慢得能让你怀疑人生。跑一个几百纳秒的模拟，可能就要耗掉一个计算集群好几周的时间。而且你常常会发现，你的蛋白质主角，在整个模拟过程中，就一直在某个能量最低的”舒适区”里打瞌睡，根本没挪过窝。而那个我们最想看的、能结合药物的”隐藏口袋”，可能就在隔壁那座需要巨大能量才能翻越的”山”后面。</p>
+<p>所以，我们一直被困在这个尴尬的境地：我们有能力拍电影，但我们拍不起，也等不起。</p>
+<p>这篇论文里的 <code>af2rave</code>，给电影摄制组配了一个极其聪明的场记和一堆传送门。</p>
+<p>它的逻辑是这样的：我们知道 AlphaFold2 预测结构很准，但那是我们给它提供了海量的”多重序列比对”（MSA）信息之后的结果。如果我们故意不给它那么多信息呢？如果我们只给它一小部分线索，让它去”猜”呢？这时候，AlphaFold2 就会变得有点不确定，它可能会给出好几个不同的、但看起来都还算合理的结构。</p>
+<p>这正是 <code>af2rave</code> 的精髓所在！它利用了 AI 的这种”不确定性”。它生成的这些不同的初始结构，就像是分布在蛋白质能量地貌图上不同”山谷”里的探险家。然后，<code>af2rave</code> 在每个山谷里，都开始一段相对较短的 MD 模拟。这就像是在地图上的好几个地方，同时开始探索。相比于只派一个探险家，让他从唯一的入口出发，花上一年时间去翻山越岭，这种”多点出发”的策略，显然能以快得多的速度，绘制出整个地图的全貌。</p>
+<p>他们在一个叫 DDR1 激酶的靶点上试了一下，这是一个我们知道有不同功能状态的蛋白。结果 <code>af2rave</code> 没费多大劲，就把那些已知的状态都给找到了。在新冠病毒的刺突蛋白上，它的采样效率也和那些需要耗费巨大计算资源的超长时程模拟不相上下。</p>
+<p>这个工具开源了，一些复杂的参数选择也自动化了。现在一个药物化学家或者生物学家，不再需要成为计算物理学博士，也能用上这个强大的工具，去看看他感兴趣的那个蛋白，除了我们天天在 PDB 数据库里看到的那个”标准照”之外，还有没有别的”生活照”。</p>
+<p>我们能靠它找到所有可能的蛋白构象吗？</p>
+<p>当然不能。它找到的起点，仍然受限于 AlphaFold2 的能力。如果某个极其罕见的构象，AI 连想都想不到，那它自然也模拟不出来。但我们正在从盲目地、长时间地等待，转向有策略地、高效地探索。</p>
+<p>💻Code:https://github.com/tiwarylab/af2rave<br>
+📜Paper: https://pubs.rsc.org/en/content/articlelanding/2025/dd/d5dd00201j</p>
+</section>
+<section id="ai-预测溶解度不再是玄学而是物理学" class="level2">
+<h2 class="anchored" data-anchor-id="ai-预测溶解度不再是玄学而是物理学">2. AI 预测溶解度：不再是玄学，而是物理学</h2>
+<p><a href="post_all_image/accurately_predictin_2025_08_10_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/accurately_predictin_2025_08_10_image_1.jpg" class="img-fluid"></a></p>
+<p>预测一个新分子在水或其他溶剂中的溶解度，其难度几乎与预测下周二的彩票中奖号码相当。尽管我们拥有多种计算模型，但大多数模型要么是粗略的经验法则，要么是难以理解的黑箱，您将分子输入其中，模型便输出一个数值，其准确性完全依赖于运气。</p>
+<p>作者们并未试图通过一个庞大且综合的人工智能模型直接解决”溶解度”这一方程。相反，他们的方法更类似于一位经验丰富的老技工，他不会直接用大锤，而是首先将机器拆解，以确定哪个部件出现了故障。</p>
+<p>他们把溶解度这个过程，还原成了它最本质的热力学斗争。一个分子要溶解，它必须做两个决定：第一，它得下定决心离开自己温暖舒适的晶体老家。这个”离家”的难度，就取决于它的熔点和熔融焓。一个熔点像钻石一样高的分子，说明它的晶体结构极其稳定，分子之间抱得特别紧，你想把它拆散，门儿都没有。第二，它得觉得外面的世界（也就是溶剂）足够吸引人。这种吸引力的大小，就是所谓的”活度系数”。</p>
+<p>这篇论文的漂亮之处就在于，它用机器学习模型，分别去预测这几个独立的物理量，然后再用一个经典的热力学循环公式，把它们组合起来，最终算出溶解度。这是一个无比聪明的”分而治之”策略。</p>
+<p>而这里面有一个叫做”参考系综”的技巧。简直是神来之笔。它的逻辑是这样的：假如我已经知道我的分子在”水”这个溶剂里的溶解度了，现在我想预测它在”乙醇”里的溶解度。传统的做法是完全重新算一遍。而这个新方法会说：“等等，我们已经有了一些关于这个分子的宝贵实验信息，别浪费了！”它会把在水里的那个已知数据作为一个强大的”锚点”，然后在这个基础上，去校准和预测在乙醇里的表现。这极大地提高了预测的鲁棒性和准确性，因为它利用了所有可用的信息。</p>
+<p>结果在一个包含了超过十万个实验数据点的巨大数据集上，这个方法的表现相当出色，尤其是在不同温度下的预测能力，这是很多老方法都做不好的地方。而且，它还能顺便预测油水分配系数（logP），而且是在没有专门用 logP 数据训练过的情况下。这强烈地暗示，这个模型可能不仅仅是在做曲线拟合，它可能真的学到了一些底层的、普适的物理化学规律。</p>
+<p>这个模型仍然依赖于高质量的训练数据，而熔点、熔融焓这些实验数据本身就可能不那么靠谱。它能处理我们日常工作中遇到的那些奇形怪状、带一堆电荷、柔性又特别大的”丑陋”分子吗？这还有待验证。</p>
+<p>📜Title: Accurately Predicting Solubility Curves via a Thermodynamic Cycle, Machine Learning, and Solvent Ensembles<br>
+📜Paper: https://doi.org/10.26434/chemrxiv-2025-jd8zw</p>
+</section>
+<section id="ai-算药快准狠5-分钟内搞定结合力排序" class="level2">
+<h2 class="anchored" data-anchor-id="ai-算药快准狠5-分钟内搞定结合力排序">3. AI 算药快准狠：5 分钟内搞定结合力排序</h2>
+<p><a href="post_all_image/accurate_and_rapid_r_2025_08_10_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/accurate_and_rapid_r_2025_08_10_image_1.jpg" class="img-fluid"></a></p>
+<p>如何从成千上万个候选分子中筛选出能够与我们靶点蛋白结合的唯一真命天子？为了避免无效的努力，我们借助计算化学的力量，希望电脑能够提前告知我们哪些分子更具潜力。然而，我们手头的工具，要么是迅速如闪电但几乎依赖于猜测的分子对接，要么是准确得令人震惊但缓慢到让人等到退休的自由能微扰（FEP）。我们一直渴望拥有一个既快速又准确的工具。</p>
+<p>Lao 和 Wang 的论文把一个复杂的问题拆分为两个部分。</p>
+<p>首先，他们用了一种叫做”密度矩阵碎片化”（GMBE-DM）的方法。这个名字听起来吓人，但它的核心思想非常简单粗暴，就是”把大象放进冰箱分几步？“。面对一个包含几千个原子的蛋白质 - 配体复合物，直接用高精度的量子化学去算，计算量能让超级计算机都哭出来。所以，他们就把这个大体系”大卸八块”，分解成无数个小的、可计算的片段，然后用一种聪明的方式把这些碎片化的计算结果再拼起来。这是一种典型的”分而治之”策略。</p>
+<p>但这还不是全部。仅仅把问题分解，还不足以保证准确性。药物分子和蛋白质之间的相互作用力，有一种极其重要但又特别难算的成分，叫做”范德华力”或者”色散力”。你可以把它想象成两个不带电的毛球靠在一起时，彼此之间产生的那种微弱的、模糊的吸引力。它无处不在，却又极难精确描述。很多计算方法的失败，都栽在了这个上面。</p>
+<p>而这篇论文的点睛之笔，就是他们用一个专门的、基于物理的机器学习模型（D3-ML），来给这个色散力的计算”打补丁”。这个 AI 模型看过海量数据，知道传统的计算方法在什么时候、什么地方会算错，然后它就精准地把这个错误给修正过来。这就像一个经验丰富的老技工，听一下引擎的声音，就知道是哪个螺丝松了，然后上去拧紧。</p>
+<p>结果怎么样？结果好得有点出人意料。在几个经典的激酶靶点上，这套组合拳下来，对一系列配体的结合力排序，和真实的实验数据达到了 0.87 的相关性（R²）。在我们的领域里，这是一个能让所有人从椅子上站起来的数字。而且，完成一个复合物的计算，只需要不到 5 分钟。这意味着，我们终于有了一个可以真正在项目中大规模使用的、而不是仅仅停留在学术论文里的中高精度工具。</p>
+<p>更有趣的是，他们发现，如果在计算时故意忽略掉那些晶体结构里烦人的水分子，甚至不去计算配体的去溶剂化能，排序的准确性反而<strong>更高</strong>了！这简直是在打做计算化学的脸。我们花了那么多年，小心翼翼地建模每一个水分子，试图搞清楚它们的作用，结果到头来，最好的策略居然是”眼不见为净”？这再次提醒我们，有时候，一个更简单的、抓住了问题主要矛盾的模型，要比一个试图面面俱到但却引入更多噪音的复杂模型要好得多。</p>
+<p>当然，我们得冷静。这个方法是在几个相当”乖巧”的体系上验证的。它能否处理那些柔性极高、构象变化剧烈的靶点？我们还不知道。但它指明了一条无比清晰的道路：将基于第一性原理的物理模型，和由数据驱动的机器学习巧妙地结合起来，才是计算辅助药物发现的未来。我们可能离真正的”设计”药物还很远，但至少，我们现在有了一个更好的筛子，来更快地淘出那些闪光的金子。</p>
+<p>📜Title: Accurate and Rapid Ranking of Protein–Ligand Binding Affinities Using Density Matrix Fragmentation and Physics-Informed Machine Learning Dispersion Potentials<br>
+📜Paper: https://chemistry-europe.onlinelibrary.wiley.com/doi/10.1002/cphc.202500094</p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-08-11/post_all.zh.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="SmilesT5 shows that smart training beats brute-force data. A Nature paper presents a “virtual lab” run by AI agents that successfully designed a COVID nanobody. At the same time, research reveals AlphaFold3’s fundamental limits in handling conformational ambiguity, while SKiM-GPT and sequence-based prediction models offer powerful new tools for validating literature hypotheses and discovering PPI drugs.">
+
+<title>From Molecular Language and Virtual Labs to AlphaFold3’s Stumble – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="From Molecular Language and Virtual Labs to AlphaFold3’s Stumble – MPU">
+<meta property="og:description" content="SmilesT5 shows that smart training beats brute-force data. A Nature paper presents a “virtual lab” run by AI agents that successfully designed a COVID nanobody. At the same time, research reveals AlphaFold3’s fundamental limits in handling conformational ambiguity, while SKiM-GPT and sequence-based prediction models offer powerful new tools for validating literature hypotheses and discovering PPI drugs.">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-08-08_b/post_all_image/structure_prediction_2025_08_04_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="When predicting a protein designed to fold into two different conformations, AlphaFold3 often tries to cram both structures together, generating a physically impossible stitched-together monster and revealing its fundamental limitation in handling sequence ambiguity.
+">
+<meta name="twitter:title" content="From Molecular Language and Virtual Labs to AlphaFold3’s Stumble – MPU">
+<meta name="twitter:description" content="SmilesT5 shows that smart training beats brute-force data. A Nature paper presents a “virtual lab” run by AI agents that successfully designed a COVID nanobody. At the same time, research reveals AlphaFold3’s fundamental limits in handling conformational ambiguity, while SKiM-GPT and sequence-based prediction models offer powerful new tools for validating literature hypotheses and discovering PPI drugs.">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-08-08_b/post_all_image/structure_prediction_2025_08_04_image_1.jpg">
+<meta name="twitter:image:alt" content="When predicting a protein designed to fold into two different conformations, AlphaFold3 often tries to cram both structures together, generating a physically impossible stitched-together monster and revealing its fundamental limitation in handling sequence ambiguity.
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">From Molecular Language and Virtual Labs to AlphaFold3’s Stumble</h1>
+                  <div>
+        <div class="description">
+          <p>SmilesT5 shows that smart training beats brute-force data. A Nature paper presents a “virtual lab” run by AI agents that successfully designed a COVID nanobody. At the same time, research reveals AlphaFold3’s fundamental limits in handling conformational ambiguity, while SKiM-GPT and sequence-based prediction models offer powerful new tools for validating literature hypotheses and discovering PPI drugs.</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">AI Drug Discovery</div>
+                <div class="quarto-category">Large Language Models</div>
+                <div class="quarto-category">Protein Engineering</div>
+                <div class="quarto-category">Research Tools</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Wednesday, the 27th of August, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#table-of-contents" id="toc-table-of-contents" class="nav-link active" data-scroll-target="#table-of-contents">Table of Contents</a></li>
+  <li><a href="#smilest5-ai-pharma-moving-past-brute-force" id="toc-smilest5-ai-pharma-moving-past-brute-force" class="nav-link" data-scroll-target="#smilest5-ai-pharma-moving-past-brute-force">1. SmilesT5: AI Pharma, Moving Past Brute Force</a></li>
+  <li><a href="#ai-agent-teams-the-next-boss-in-drug-discovery" id="toc-ai-agent-teams-the-next-boss-in-drug-discovery" class="nav-link" data-scroll-target="#ai-agent-teams-the-next-boss-in-drug-discovery">2. AI Agent Teams: The Next Boss in Drug Discovery?</a></li>
+  <li><a href="#alphafold3-stumbles-when-ai-meets-a-protein-with-a-split-personality" id="toc-alphafold3-stumbles-when-ai-meets-a-protein-with-a-split-personality" class="nav-link" data-scroll-target="#alphafold3-stumbles-when-ai-meets-a-protein-with-a-split-personality">3. AlphaFold3 Stumbles: When AI Meets a Protein with a “Split Personality”</a></li>
+  <li><a href="#stop-drowning-in-literature-skim-gpt-intelligently-validates-hypotheses" id="toc-stop-drowning-in-literature-skim-gpt-intelligently-validates-hypotheses" class="nav-link" data-scroll-target="#stop-drowning-in-literature-skim-gpt-intelligently-validates-hypotheses">4. Stop Drowning in Literature: SKiM-GPT Intelligently Validates Hypotheses</a></li>
+  <li><a href="#ai-predicts-protein-interactions-a-new-rulebook-for-drug-discovery" id="toc-ai-predicts-protein-interactions-a-new-rulebook-for-drug-discovery" class="nav-link" data-scroll-target="#ai-predicts-protein-interactions-a-new-rulebook-for-drug-discovery">5. AI Predicts Protein Interactions: A New Rulebook for Drug Discovery?</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-08-08_b/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="table-of-contents" class="level2">
+<h2 class="anchored" data-anchor-id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li>SmilesT5 uses pretraining tasks designed for chemists, proving that “smarter” training is far more effective than “bigger” datasets for molecular language models.</li>
+<li>This Nature paper showcases a “virtual lab” framework led by AI agents and guided by human experts. It not only designed nanobodies against new COVID variants but also signals a new research paradigm that could upend traditional R&amp;D collaboration.</li>
+<li>When predicting a protein that can fold into two conformations, AlphaFold3 often forces both structures together, creating a physically impossible “stitched-together monster” and exposing its fundamental weakness in handling sequence ambiguity.</li>
+<li>SKiM-GPT cleverly combines traditional literature co-occurrence search with a large language model (LLM), offering a surprisingly practical solution for rapidly screening and validating vast numbers of biomedical hypotheses.</li>
+<li>Predicting protein-protein interactions (PPIs) from amino acid sequences alone is rapidly moving from a computational fantasy to a practical tool for drug discovery, and deep learning, especially Transformer models, is changing how we screen targets and design biologics.</li>
+</ol>
+</section>
+<section id="smilest5-ai-pharma-moving-past-brute-force" class="level2">
+<h2 class="anchored" data-anchor-id="smilest5-ai-pharma-moving-past-brute-force">1. SmilesT5: AI Pharma, Moving Past Brute Force</h2>
+<p><a href="post_all_image/smiles_t5_domain_spe_2025_08_04_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/smiles_t5_domain_spe_2025_08_04_image_1.jpg" class="img-fluid"></a></p>
+<p>Honestly, whenever I see the words “new language model,” my first thought is, do we really need another giant built by force-feeding it hundreds of millions of molecules? These models are like babies with nuclear weapons—immense power, but a laughably crude understanding of the world.</p>
+<p>But this paper on SmilesT5 from Hothouse Therapeutics doesn’t follow the “bigger is better” path. It asks a more fundamental question: how do we teach AI to speak like a chemist?</p>
+<p>Traditional Masked Language Modeling is like tearing up an organic chemistry textbook, randomly covering a few words, and asking a layperson to guess what’s missing. They might learn some basic word pairings, but they’ll have no idea about reaction mechanisms or the meaning of a molecular scaffold. SmilesT5’s approach is much more clever; its pretraining tasks are designed by insiders.</p>
+<p>For example, one task is “reconstruct the Murcko scaffold.” You give it a full molecule’s SMILES string and ask it to predict the core scaffold. This is brilliant. It’s essentially training the AI’s “medicinal chemistry intuition.” When an experienced chemist sees a new molecule, the first thing they look at is its core ring system and scaffold. This determines the molecule’s basic conformation, physicochemical properties, and potential target affinity. SmilesT5 learns this from the start, focusing not on random atomic connections but on the “soul” of the molecule.</p>
+<p>Another task is identifying molecular fragments from SMILES. This is what chemists do every day: break down a complex molecule into familiar building blocks—a benzene ring, an amide, a piperazine—to analyze its synthetic route and structure-activity relationship (SAR). By training this way, the model naturally learns which fragments are common “privileged scaffolds” and which are “toxicophores” to watch out for.</p>
+<p>What really impressed me was its data efficiency. It was pretrained on just one million molecules, yet its performance rivals models that have consumed tens or even hundreds of millions. This shows that how you teach matters more than how much you feed it. For teams without access to the computing resources of Google or NVIDIA, this is great news. You don’t need a supercomputing center; you can train a capable model on your own workstation.</p>
+<p>The model’s applications are also very practical. If you have the resources, you can fine-tune the entire model for a specific task, like predicting hERG inhibition or liver toxicity. But if your computational budget is limited, that’s fine too. You can use SmilesT5 as a “feature extractor.” Take the embeddings it generates for each molecule and use them to run familiar models like XGBoost or a random forest. The computational cost is much lower, but because these embeddings already contain rich chemical knowledge, the results can be surprisingly good. This significantly lowers the barrier to entry for AI-assisted drug discovery.</p>
+<p>📜Title: SmilesT5: Domain-specific pretraining for molecular language models<br>
+📜Paper: https://arxiv.org/abs/2507.22514v1<br>
+💻Code: https://github.comcom/hothousetx/smiles_t5</p>
+</section>
+<section id="ai-agent-teams-the-next-boss-in-drug-discovery" class="level2">
+<h2 class="anchored" data-anchor-id="ai-agent-teams-the-next-boss-in-drug-discovery">2. AI Agent Teams: The Next Boss in Drug Discovery?</h2>
+<p><a href="post_all_image/the_virtual_lab_of_a_2025_07_31_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/the_virtual_lab_of_a_2025_07_31_image_1.jpg" class="img-fluid"></a></p>
+<p>This <em>Nature</em> paper reads like science fiction becoming reality. It’s not about another “black box” algorithm for protein structure prediction. It’s about building a “virtual lab” run by AI, where a team of AI agents meets, divides tasks, argues, and ultimately designs nanobodies that can neutralize the latest COVID variants. This is a much wilder idea than just running a model.</p>
+<p>We all know the biggest headache in any project: communication.</p>
+<p>Biologists, chemists, and computational scientists each speak their own jargon, often talking past one another. A simple idea can get debated back and forth for weeks. The authors of this paper seem to be trying to solve this problem at its root. They used a large language model (LLM) as a “general manager” and gave it a team of “AI expert” subordinates.</p>
+<p>This team includes a “project lead AI” to define requirements, a “biologist AI” that understands protein design, and a “computational specialist AI” to run simulations.</p>
+<p>And what do the human researchers do? They act as hands-off supervisors, issuing a single high-level directive: “Hey, design me some nanobodies that can take down the latest coronavirus.”</p>
+<p>Then, the AI team gets to work. They call upon familiar heavy-duty tools, using ESMFold and AlphaFold-Multimer to predict structures and Rosetta for docking and optimization.</p>
+<p>It’s like hiring a super-smart project manager who not only understands your strategic goals but can also recruit and manage a team of top technical experts. You just wait for the results. In this process, the human role shifts from “doing the work” to “defining the problem” and “making the final call.”</p>
+<p>Let’s look at their report card. They came up with 92 new nanobody designs. That’s not the important part. The key is that in experimental validation, over 90% of the proteins could be expressed and remained soluble. Anyone who has done protein expression knows what this means—this is a success rate you can’t ignore. Many PhD projects get stuck because a protein won’t express or precipitates immediately. This shows that what the AI designed is, at the very least, feasible. Even better, two of the candidates showed unique binding modes, suggesting the AI might have found some opportunities that human experts could easily miss.</p>
+<p>Of course, seeing this, a hundred questions pop into my head. How strong is the affinity of these designs? What are the KD values? Besides binding to COVID, will they randomly hit other proteins in the body, causing off-target toxicity? Druggability is about more than just good solubility—what about stability, half-life, and immunogenicity? These are the huge gaps between a nice computational model and a real drug. The paper doesn’t go into detail, which is normal for a proof of concept.</p>
+<p>But the real value of this paper is in demonstrating a new “organizational structure” for R&amp;D.</p>
+<p>In the past, when we talked about AI-assisted drug discovery, AI was a tool, like an advanced calculator. Now, AI has become a “collaborator,” or even a “team leader.” It connects the knowledge and tools of different disciplines, compressing a complex workflow that would have taken a team of humans months into a single human-computer interaction framework.</p>
+<p>What does this mean? In the future, a brilliant biologist with little knowledge of computational chemistry could potentially lead an AI team like this to independently design and screen early-stage drug candidates. The walls between disciplines are being torn down by AI in a way we didn’t expect.</p>
+<p>So, will this put us out of a job? Not in the short term. The AI team still needs a human to ask the “great question.” But the way we work will likely change. When building a project team in the future, besides finding the right people, we might also have to consider which “AI team” to use. Your next project collaborator might not have a PhD, but it will have the knowledge of the entire internet and be on call 24/7.</p>
+<p>📜Title: The Virtual Lab of AI agents designs new SARS-CoV-2 nanobodies<br>
+📜Paper: https://www.nature.com/articles/s41586-025-09442-9</p>
+</section>
+<section id="alphafold3-stumbles-when-ai-meets-a-protein-with-a-split-personality" class="level2">
+<h2 class="anchored" data-anchor-id="alphafold3-stumbles-when-ai-meets-a-protein-with-a-split-personality">3. AlphaFold3 Stumbles: When AI Meets a Protein with a “Split Personality”</h2>
+<p><a href="post_all_image/structure_prediction_2025_08_04_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/structure_prediction_2025_08_04_image_1.jpg" class="img-fluid"></a></p>
+<p>AlphaFold3 is undoubtedly the new star of structural biology. But what happens when we stop feeding it well-behaved proteins with a single stable conformation and instead give it a truly tricky problem—a protein designed to fold into two different structures? This new study did just that, and the results are interesting. They also serve as a reality check for people in R&amp;D.</p>
+<p>The researchers designed what are called “alternate frame folding” systems. You can think of it like an English sentence that can be read in two completely different ways just by shifting where the spaces are. These protein sequences are similar. A repeating segment within them can pair and fold in two different ways, forming two distinct 3D structures. This is the ultimate test for any structure prediction algorithm.</p>
+<p>So what happened? AlphaFold3 often had a “breakdown.”</p>
+<p>Instead of choosing the most plausible of the two possibilities like a rational scientist, it tried to represent both conformations at once. The final model it generated was a “stitched-together monster” that forcibly superimposed the two structures.</p>
+<p>You can see a beta-sheet strand piercing right through the middle of what should be a barrel structure, or amino acid side chains crammed into a physically impossible position. It’s like asking an AI to draw a cat and a dog simultaneously, and instead of creating a “cat-dog” creature, it just overlays the line drawings of a cat and a dog, resulting in an unrecognizable mess.</p>
+<p>What’s more interesting is that this exposes a core difference between AlphaFold3 and AlphaFold2. Anyone who has used AF2 knows you can “trick” it by modifying the multiple sequence alignment (MSA) to make it explore different conformations. It’s like giving a detective different clues, which might lead him to different conclusions about the case. But AF3 reduces its reliance on MSAs, and this double-edged sword has cut itself here. It has become more of a “black box,” making it difficult to guide from the outside. It saw the inherent ambiguity in the sequence itself, got stuck, and output an erroneous result that represented its “indecision.”</p>
+<p>The paper also mentions a detail that drug developers often overlook in their daily work: the His-tag. This little “tail” we use to purify proteins has no fixed structure, and it also became a troublemaker in AF3’s predictions. The model tends to force a structure onto this flexible tail, which often leads to unreasonable steric clashes in the main protein region. This is another reminder that AI tools are far from “understanding” all of biochemistry. Every atom you input can become a variable that affects the outcome.</p>
+<p>The researchers also confirmed this with a calmodulin-based conformational switch, finding that the problem is widespread and not just a quirk specific to GFP.</p>
+<p>So, AlphaFold3 is a powerful tool, but it has its Achilles’ heel: ambiguity.</p>
+<p>When a sequence itself contains an internal conflict of “go left or go right,” AF3’s current architecture short-circuits. This work isn’t meant to diminish AF3, but to map out the boundaries of its capabilities. For anyone trying to design new drugs, new proteins, or understand disease mechanisms, knowing the limitations of your tools is far more important than blindly trusting their power. It tells us when we can rely on AI, and when we must return to the lab and find answers with our own chemical intuition and a flask.</p>
+<p>📜Title: Structure Prediction of Alternate Frame Folding Systems with AlphaFold3<br>
+📜Paper: https://pubs.acs.org/doi/full/10.1021/acs.jcim.4c00420</p>
+</section>
+<section id="stop-drowning-in-literature-skim-gpt-intelligently-validates-hypotheses" class="level2">
+<h2 class="anchored" data-anchor-id="stop-drowning-in-literature-skim-gpt-intelligently-validates-hypotheses">4. Stop Drowning in Literature: SKiM-GPT Intelligently Validates Hypotheses</h2>
+<p><a href="post_all_image/s_ki_m_gpt_combining_2025_08_04_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="post_all_image/s_ki_m_gpt_combining_2025_08_04_image_1.jpg" class="img-fluid"></a></p>
+<p>Every morning we open PubMed to a flood of new papers, and the one thing we lack is time. As a result, all sorts of “AI-powered research” tools have appeared. Frankly, most of them are just talk. They are either overconfident “black boxes” or just simple keyword searches repackaged as “intelligence.”</p>
+<p>The cleverness of the SKiM-GPT system lies in its deep understanding of the strengths and fatal flaws of large language models (LLMs).</p>
+<p>An LLM is like a brilliant but slightly unhinged intern. It’s incredibly knowledgeable, but if you give it too open-ended a task, it’s prone to “creative writing”—what we often call “hallucination.” If you ask it directly, “Is there a link between this gene and this disease?” the answer you get might be half fact and half a story it made up based on language patterns.</p>
+<p>SKiM-GPT’s process has two steps:</p>
+<p>First, it uses a tool called SKiM (Serial KinderMiner) for a broad search. This tool is nothing fancy. It’s a diligent bookkeeper that counts how often terms (like a gene name and a disease name) appear together in a massive database of PubMed abstracts, far more frequently than random chance would allow. It doesn’t understand biology, but it understands statistics. This is like sifting through thousands of reports to find all documents that mention both “fire” and “Building X.” This method is simple but highly effective at quickly identifying a highly relevant set of literature.</p>
+<p>Second, the LLM is brought in for a close read. At this point, the LLM’s task is no longer a boundless “exploration” but a very focused assignment: “Hey, here are 20 paper abstracts I’ve selected for you. Read them carefully and tell me if they support the hypothesis that ‘Gene X causes Disease Y’.”</p>
+<p>This is the right way to manage an LLM. You turn it from a “creative director” into a “senior due diligence analyst.” In a task with clear boundaries and a defined input source, the LLM’s hallucination problem is greatly suppressed, while its powerful text comprehension and summarization abilities can shine.</p>
+<p>And the results?</p>
+<p>In a benchmark test involving 14 “disease-gene-drug” hypotheses, its judgments were highly consistent with those of human experts, achieving a Cohen’s kappa score of 0.84. In statistics, this typically means “strong agreement.” In other words, the machine’s performance was almost the same as asking another domain expert for a second opinion.</p>
+<p>Crucially, it’s not an arrogant black box. It presents its score, conclusion, and the supporting paper abstracts right in front of you. You can personally check to see if its chain of logic holds up. This “glass box” design is an absolute necessity for people who have to spend real money and valuable time in the lab to validate hypotheses.</p>
+<p>Of course, it currently focuses on paper abstracts, and we all know the devil is often in the details of the methods section or a corner of the supplementary materials. Getting AI to accurately understand full texts, especially figures and experimental data, is the next challenge. Moreover, its foundation is still published literature. If the literature itself is biased or wrong (which happens a lot), then it can only produce a high-quality summary of that garbage information.</p>
+<p>Still, SKiM-GPT doesn’t boast about replacing scientists. It instead sets out to solve one of the most frustrating bottlenecks: how to quickly and efficiently validate whether a new idea is worth investing resources in, amidst an information deluge.</p>
+<p>The smartest AI applications are often not about using the flashiest technology to tackle the grandest problems, but about using the right combination of technologies to solve a specific, real, and painful problem.</p>
+<p>📜Title: SKiM-GPT: Combining Biomedical Literature-Based Discovery with Large Language Model Hypothesis Evaluation<br>
+📜Paper: <a href="https://www.biorxiv.org/content/10.1101/2025.07.28.664797v1" class="uri">https://www.biorxiv.org/content/10.1101/2025.07.28.664797v1</a><br>
+💻Code: <a href="https://github.com/stewart-lab/skimgpt" class="uri">https://github.com/stewart-lab/skimgpt</a></p>
+</section>
+<section id="ai-predicts-protein-interactions-a-new-rulebook-for-drug-discovery" class="level2">
+<h2 class="anchored" data-anchor-id="ai-predicts-protein-interactions-a-new-rulebook-for-drug-discovery">5. AI Predicts Protein Interactions: A New Rulebook for Drug Discovery?</h2>
+<p><a href="post_all_image/sequence_based_prote_2025_07_31_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="post_all_image/sequence_based_prote_2025_07_31_image_1.jpg" class="img-fluid"></a></p>
+<p>For decades, developing drugs that target protein-protein interactions (PPIs) has been like trying to catch smoke with your hands—full of promise, but incredibly difficult. The interfaces of PPIs are often large and flat, a nightmare for traditional small-molecule drugs. So, we are increasingly turning our attention to biologics.</p>
+<p>But here’s the problem: out of the vast number of PPIs, which one should we target? And when designing a biologic, where do we even start?</p>
+<p>This is where computational methods come in. Imagine you could feed the amino acid sequences of two proteins into a black box, and it would tell you the probability of them “clicking.” It sounds a bit like science fiction, but we are getting closer to this goal.</p>
+<p>Older methods were more like matchmaking based on resumes—looking for similarities in sequences or domains. They worked sometimes, but only to a certain extent.</p>
+<p>Now, deep learning models based on Transformers are on a completely different level. They don’t just compare “resumes”; they try to understand the unique language of proteins. By learning from massive amounts of sequence data, these models grasp the deep grammar and unwritten rules that govern the “chemical conversation” between proteins, determining if they are likely to physically connect.</p>
+<p>Of course, the biggest headache is data. Our existing PPI databases are severely biased. There are mountains of research on celebrity molecules like p53, but for thousands of “ordinary” proteins, we know almost nothing. Training a model on this kind of data is like showing an AI only pictures of cats and dogs and then expecting it to recognize a platypus. It’s bound to fail. Not to mention the persistent problem of class imbalance—after all, the vast majority of protein pairs in the universe do not interact. If a model gets lazy and always predicts “no interaction,” it can achieve 99% accuracy, but that is obviously useless.</p>
+<p>So, what can these tools actually do in the real world?</p>
+<p>First is target discovery. Let’s say you have a new cancer target and want to know who it “hangs out” with inside the cell. Instead of spending months doing yeast two-hybrid or co-immunoprecipitation experiments, you can now computationally screen the entire known proteome in an afternoon. This doesn’t replace wet lab experiments, but it gives you a prioritized list of hypotheses, allowing you to focus your precious lab resources where they matter most.</p>
+<p>Even more exciting is their application in biologic design. Want to design a peptide to block a specific PPI? These models can help you rapidly iterate through sequences and screen for candidates most likely to bind. This is a huge leap forward for the design process, freeing us from relying purely on brute-force screening. Whether designing therapeutic peptides or optimizing antibodies, this provides us with a powerful computational “co-pilot.”</p>
+<p>The pace of development in this field is astonishing. The entire academic community is calling for standardized benchmark datasets, and they are absolutely right. We need a fair playing field, not a situation where everyone is reporting scores on their own backyard racetracks. As protein language models (PLMs) get smarter, their ability to predict the complex “handshakes” between proteins will only improve.</p>
+<p>📜Title: Sequence-based protein-protein interaction prediction and its applications in drug discovery<br>
+📜Paper: <a href="https://arxiv.org/abs/2507.19805" class="uri">https://arxiv.org/abs/2507.19805</a></p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-08-08_b/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

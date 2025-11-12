@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="Research shows that while unconditional 3D molecular generation has improved, it still lacks physical realism. For handling imbalanced data, a 1:10 ratio of active to inactive compounds is key for boosting model performance. AI is also evolving from a single black box into a mature toolbox; the CROP architecture gives Large Language Models the ability to see 2D and 3D molecular structures, while a reality check on AlphaFold 3 highlights the importance of providing accurate biological context.">
+
+<title>3D Generation, Data Ratios, and a Reality Check for AlphaFold 3 – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="3D Generation, Data Ratios, and a Reality Check for AlphaFold 3 – MPU">
+<meta property="og:description" content="Research shows that while unconditional 3D molecular generation has improved, it still lacks physical realism. For handling imbalanced data, a 1:10 ratio of active to inactive compounds is key for boosting model performance. AI is also evolving from a single black box into a mature toolbox; the CROP architecture gives Large Language Models the ability to see 2D and 3D molecular structures, while a reality check on AlphaFold 3 highlights the importance of providing accurate biological context.">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-08-18/post_all_image/crop_integrating_to_2025_08_16_image_1.png">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:height" content="490">
+<meta property="og:image:width" content="834">
+<meta property="og:image:alt" content="A concept diagram of the CROP architecture, showing how a Large Language Model (LLM), through an efficient prefix mechanism, can process a one-dimensional SMILES text sequence while also receiving and integrating a molecule's two-dimensional topological graph and three-dimensional spatial conformation. This gives it a more complete and deeper understanding of the chemical world.
+">
+<meta name="twitter:title" content="3D Generation, Data Ratios, and a Reality Check for AlphaFold 3 – MPU">
+<meta name="twitter:description" content="Research shows that while unconditional 3D molecular generation has improved, it still lacks physical realism. For handling imbalanced data, a 1:10 ratio of active to inactive compounds is key for boosting model performance. AI is also evolving from a single black box into a mature toolbox; the CROP architecture gives Large Language Models the ability to see 2D and 3D molecular structures, while a reality check on AlphaFold 3 highlights the importance of providing accurate biological context.">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-08-18/post_all_image/crop_integrating_to_2025_08_16_image_1.png">
+<meta name="twitter:image-height" content="490">
+<meta name="twitter:image-width" content="834">
+<meta name="twitter:image:alt" content="A concept diagram of the CROP architecture, showing how a Large Language Model (LLM), through an efficient prefix mechanism, can process a one-dimensional SMILES text sequence while also receiving and integrating a molecule's two-dimensional topological graph and three-dimensional spatial conformation. This gives it a more complete and deeper understanding of the chemical world.
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">3D Generation, Data Ratios, and a Reality Check for AlphaFold 3</h1>
+                  <div>
+        <div class="description">
+          <p>Research shows that while unconditional 3D molecular generation has improved, it still lacks physical realism. For handling imbalanced data, a 1:10 ratio of active to inactive compounds is key for boosting model performance. AI is also evolving from a single black box into a mature toolbox; the CROP architecture gives Large Language Models the ability to see 2D and 3D molecular structures, while a reality check on AlphaFold 3 highlights the importance of providing accurate biological context.</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">AI Drug Discovery</div>
+                <div class="quarto-category">Computational Chemistry</div>
+                <div class="quarto-category">Large Language Models</div>
+                <div class="quarto-category">Protein Structure Prediction</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Monday, the 18th of August, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#table-of-contents" id="toc-table-of-contents" class="nav-link active" data-scroll-target="#table-of-contents">Table of Contents</a></li>
+  <li><a href="#ai-molecular-design-looks-good-physics-disagrees" id="toc-ai-molecular-design-looks-good-physics-disagrees" class="nav-link" data-scroll-target="#ai-molecular-design-looks-good-physics-disagrees">1. AI Molecular Design: Looks Good, Physics Disagrees</a></li>
+  <li><a href="#aidd-the-110-data-ratio-is-the-sweet-spot" id="toc-aidd-the-110-data-ratio-is-the-sweet-spot" class="nav-link" data-scroll-target="#aidd-the-110-data-ratio-is-the-sweet-spot">2. AIDD: The 1:10 Data Ratio is the Sweet Spot</a></li>
+  <li><a href="#ai-drug-design-evolving-from-a-black-box-to-a-toolbox" id="toc-ai-drug-design-evolving-from-a-black-box-to-a-toolbox" class="nav-link" data-scroll-target="#ai-drug-design-evolving-from-a-black-box-to-a-toolbox">3. AI Drug Design: Evolving from a Black Box to a Toolbox</a></li>
+  <li><a href="#ai-molecular-models-get-eyes" id="toc-ai-molecular-models-get-eyes" class="nav-link" data-scroll-target="#ai-molecular-models-get-eyes">4. AI Molecular Models Get Eyes</a></li>
+  <li><a href="#a-reality-check-for-alphafold-3-its-not-magic" id="toc-a-reality-check-for-alphafold-3-its-not-magic" class="nav-link" data-scroll-target="#a-reality-check-for-alphafold-3-its-not-magic">5. A Reality Check for AlphaFold 3: It’s Not Magic</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-08-18/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="table-of-contents" class="level2">
+<h2 class="anchored" data-anchor-id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li>The latest AI models have made great strides in generating 3D molecules from scratch. But they are still like enthusiastic yet inexperienced architects, designing molecules that look good on paper but often defy basic laws of physics and chemistry, requiring a lot of “post-renovation” to be usable.</li>
+<li>In drug screening data, which is full of “inactive” compounds, adjusting the ratio of active to inactive compounds to 1:10 can significantly improve an AI model’s predictive power, helping it find real signals in the noise.</li>
+<li>The use of AI in drug discovery is moving beyond the “one-size-fits-all” hype and evolving into a mature toolbox with specialized instruments. These tools are built to solve specific problems, from target identification and molecular docking to drug-likeness prediction and chemical synthesis.</li>
+<li>CROP uses a “prefix” mechanism that lets a Large Language Model “see” a molecule’s 2D topology and 3D conformation while “reading” its sequence. This greatly enhances its understanding of the chemical world.</li>
+<li>AlphaFold 3 is an amazing structure prediction tool. But this study makes it clear that it’s a precision instrument that needs to be given the right biological context, not a magic box that can read your mind.</li>
+</ol>
+</section>
+<section id="ai-molecular-design-looks-good-physics-disagrees" class="level2">
+<h2 class="anchored" data-anchor-id="ai-molecular-design-looks-good-physics-disagrees">1. AI Molecular Design: Looks Good, Physics Disagrees</h2>
+<p><a href="post_all_image/an_evaluation_of_unc_2025_08_16_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/an_evaluation_of_unc_2025_08_16_image_1.jpg" class="img-fluid"></a></p>
+<p>Can you get an AI program to act like a chemist with endless inspiration and just “imagine” new, drug-like small molecules from nothing?</p>
+<p>This is what’s known as unconditional generation. You don’t give it a target or any constraints. You just say, “Go, create a drug-like molecule for me,” and then wait for the magic to happen.</p>
+<p>This paper, presented at an ICLR workshop, put five of the most advanced “dream machines” (EQGAT-diff, FlowMol, GCDM, GeoLDM, and SemlaFlow) to a rigorous test.</p>
+<p>The good news is, we’ve definitely made progress.</p>
+<p>A few years ago, the things these programs produced were mostly random collections of atoms and bonds that would make any organic chemist want to smash their computer. Now, the best performer, SemlaFlow, can generate molecules that are 87% “valid” without any human intervention.</p>
+<p>“Valid” here basically means that, at least on a 2D drawing, it looks like a proper molecule with correct atom valencies and no messed-up bonds.</p>
+<p>The core contribution of this paper is a very strict quality control process. It doesn’t just check if the 2D drawings are reasonable. It uses tools like RDKit and PoseBusters to check the physical reality of the 3D structures: Are bond lengths too long or too short? Are bond angles twisted into impossible positions? Are two atoms jammed together, creating a steric clash?</p>
+<p>It’s like reviewing an architect’s blueprints. You don’t just look at the floor plan to see if the rooms and windows are in the right place (2D validity). You also have to check the 3D model to see if the stairs are so steep you could fall down them, or if the load-bearing walls are as thin as paper (3D physical plausibility).</p>
+<p>Under this tough inspection, the AIs’ “first drafts” revealed a lot of problems. This also explains why post-processing is so important. Post-processing is basically having an expert—like using RDKit for energy minimization—take the AI’s wild designs and bend them back into a physically plausible state. After this “renovation,” the success rate for almost all models went up. For example, GCDM’s success rate jumped from a so-so level to 95.2%. But this just shows how rough its initial work was.</p>
+<p>Another interesting finding is that while these AIs have learned a lot of statistics about what drugs “should” look like (like Lipinski’s Rule of Five), they seem a bit timid. The molecules they generate look a lot like the ones in the training set (the GEOM Drugs dataset). They don’t dare to explore broader, more novel chemical spaces. They are like artists who can only imitate the masters, not ones who can create their own school of art.</p>
+<p>Unconditional 3D molecular generation is developing fast, but we’re still a long way from a “one-click-to-perfect-drug-candidate” button. For now, AI is a powerful idea generator. It can give you a lot of seemingly good ideas. But to turn those ideas into reality, you still need an experienced chemist, with a healthy respect for the laws of physics, to review, revise, and ultimately decide which ideas are worth spending months of time and effort to actually make in a lab.</p>
+<p>📜Title: An Evaluation of Unconditional 3D Molecular Generation Methods 📜Paper: https://openreview.net/forum?id=ZU1m9Y4tYy</p>
+</section>
+<section id="aidd-the-110-data-ratio-is-the-sweet-spot" class="level2">
+<h2 class="anchored" data-anchor-id="aidd-the-110-data-ratio-is-the-sweet-spot">2. AIDD: The 1:10 Data Ratio is the Sweet Spot</h2>
+<p><a href="post_all_image/adjusted_imbalance_r_2025_08_16_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/adjusted_imbalance_r_2025_08_16_image_1.jpg" class="img-fluid"></a></p>
+<p>We have a love-hate relationship with high-throughput screening (HTS) data. We love that we finally have massive amounts of data points, making it feel like we’re in the “big data” era. We hate that most of this data is junk. After screening hundreds of thousands of compounds, you’re lucky if you find a few decent hits. It’s like panning for gold in a river full of mud. Most of what you find is mud (inactive compounds), and the real gold (active compounds) is extremely rare.</p>
+<p>Everyone is talking about using AI to speed up this gold-panning process. But what happens if you feed this raw, muddy data directly to a machine learning model?</p>
+<p>The model will learn a very simple but completely useless strategy: predict that everything it sees is “mud.” By doing this, it can easily achieve 99.9% accuracy, because it’s correct most of the time. But for someone looking for gold, this model is worthless.</p>
+<p>We need to figure out how to adjust the ratio of “gold” to “mud” in the training data.</p>
+<p>The researchers used a method called “K-ratio random undersampling.”</p>
+<p>Simply put, they kept all the precious active compounds and then randomly sampled different proportions of the massive number of inactive compounds to create the training set. They tested various ratios, from 1:1 (completely balanced) to 1:1000 (close to the original data).</p>
+<p>The results showed that when the ratio was set to 1:10—one active compound for every ten inactive compounds—the performance of almost all models peaked.</p>
+<p>If there were too many inactive compounds (like 1:1000), the model was overwhelmed and couldn’t learn the fine features of active molecules. If there were too few inactive compounds (like 1:1), the model lost a lot of valuable negative information about “what we don’t want,” causing it to mistake a lot of brass for gold (false positives). The 1:10 ratio gives the model just enough negative examples to learn the boundaries without getting misled by the noise.</p>
+<p>The researchers also looked deeper into why the models made mistakes. They found that when an active molecule and an inactive molecule were very similar chemically (what we call an “activity cliff”), the model was easily confused. This isn’t the algorithm’s fault; it’s the reality of medicinal chemistry. A tiny structural change can turn a drug from a “miracle cure” into a “dud.”</p>
+<p>Data balancing isn’t a cure-all. The diversity of your compound library itself is crucial. If your library is stuffed with thousands of similar-looking analogs, you’re just making the AI’s job harder.</p>
+<p>📜Title: Adjusted Imbalance Ratio Leads to Effective AI-Based Drug Discovery Against Infectious Disease 📜Paper: https://www.nature.com/articles/s41598-025-15265-5</p>
+</section>
+<section id="ai-drug-design-evolving-from-a-black-box-to-a-toolbox" class="level2">
+<h2 class="anchored" data-anchor-id="ai-drug-design-evolving-from-a-black-box-to-a-toolbox">3. AI Drug Design: Evolving from a Black Box to a Toolbox</h2>
+<p><a href="post_all_image/advanced_machine_lea_2025_08_16_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/advanced_machine_lea_2025_08_16_image_1.jpg" class="img-fluid"></a></p>
+<p>Our feelings about artificial intelligence (AI) right now are pretty mixed. On one hand, we see its disruptive potential. On the other, we’ve seen too much hype. Every few years, a new computational method claims it will make medicinal chemists obsolete, but the next day, we’re back at the fume hood, dealing with sticky, uncooperative chemical reactions.</p>
+<p>This special issue on “AI in Drug Discovery” from the <em>Journal of Cheminformatics</em> feels different. It’s not another grand narrative about “AI will rule the world.” Instead, it’s more like a group of experienced engineers showing you the specialized tools they’ve built to solve specific problems.</p>
+<p>AI is changing from a mysterious “black box” into a “toolbox” that we can understand and use.</p>
+<section id="the-first-drawer-redefining-how-we-look-at-targets" class="level4">
+<h4 class="anchored" data-anchor-id="the-first-drawer-redefining-how-we-look-at-targets"><strong>The First Drawer: Redefining How We Look at Targets</strong></h4>
+<p>Traditionally, structure-based drug design (SBDD) requires a 3D structure of a protein, preferably a crystal structure with a ligand bound. Without it, most computational tools are blind. But the CLAPE-SMB method mentioned in this issue tries to get around that. It can predict DNA binding sites using only a protein’s amino acid sequence. It’s like figuring out where the keyhole is on a lock just by looking at its blueprint (the sequence), without ever seeing the lock itself. This opens up new doors for targets that are hard to crystallize.</p>
+<p>In the more familiar field of molecular docking, the tools are also getting better. We all know how unreliable traditional docking scoring functions can be. Gnina v1.3 applies a convolutional neural network (CNN) to this step. It’s like going from using a ruler to crudely measure the fit between a ligand and a pocket to having an experienced carpenter (the CNN) use their feel and experience to judge if the joint fits perfectly. It even has a scoring function for covalent docking, which used to be a major challenge.</p>
+<p>Tools like PoLiGenX are even more interesting, reflecting a new philosophy of collaboration. It lets you give the AI a “reference molecule” and say, “I know molecules that look like this fit well in this pocket. Can you build on this and come up with some better new molecules for me?” This acknowledges that computers are not all-knowing and that the intuition and experience of human chemists are still valuable. AI is no longer the all-powerful “designer” but more like a tireless “senior assistant” that can build on existing ideas.</p>
+</section>
+<section id="the-second-drawer-from-fortune-telling-to-weather-forecasting" class="level4">
+<h4 class="anchored" data-anchor-id="the-second-drawer-from-fortune-telling-to-weather-forecasting"><strong>The Second Drawer: From Fortune-Telling to Weather Forecasting</strong></h4>
+<p>ADMET (Absorption, Distribution, Metabolism, Excretion, Toxicity) prediction was one of the first areas where AI really shined, but there’s always been a problem: the model gives you an answer but doesn’t tell you how confident it is.</p>
+<p>One model says a molecule is “non-toxic,” and another says it’s “toxic.” Which one do you believe?</p>
+<p>New models in this issue like AttenhERG and CardioGenAI are tackling this. They don’t just predict hERG toxicity or cardiotoxicity; more importantly, they are starting to include uncertainty quantification. It’s like the weather forecast evolving from a simple “It will be sunny tomorrow” to “It will be sunny tomorrow with a 10% chance of rain.” The second one is obviously more useful because it tells you the level of risk. By using methods like Bayesian approaches, these models can tell you, “I predict this molecule is non-toxic, and I’m 95% confident in that prediction.” A prediction with a confidence level is worth a lot when you’re deciding whether to invest millions of dollars in a project.</p>
+</section>
+<section id="the-third-drawer-ai-is-finally-thinking-about-how-to-make-the-dish" class="level4">
+<h4 class="anchored" data-anchor-id="the-third-drawer-ai-is-finally-thinking-about-how-to-make-the-dish"><strong>The Third Drawer: AI is Finally Thinking About How to Make the Dish</strong></h4>
+<p>This has been the biggest weakness of all AI design software in the past. An AI could design a molecule that, in theory, could cure cancer and look beautiful, but when you show it to a synthetic chemist, they might throw the design back in your face because it’s impossible to make on Earth.</p>
+<p>Now, AI is finally starting to address the issue of synthetic feasibility. The special issue discusses new reaction prediction benchmarks and strategies. But that’s not all. Some research is starting to use Large Language Models (LLMs) to “read” massive amounts of chemical patents and literature. It’s like having AI study all the “recipes” in human history, not just learning how to follow them but understanding the “cooking principles” behind them. This allows it to plan a realistic “cooking route” for the new molecules it designs.</p>
+<p>AI drug discovery is shedding its flashy exterior and becoming more grounded. It’s no longer trying to be an all-powerful god, but instead breaking itself down into a series of tools that can solve real-world problems.</p>
+<p>📜Title: Advanced machine learning for innovative drug discovery 📜Paper: https://jcheminf.biomedcentral.com/articles/10.1186/s13321-025-01061-w</p>
+</section>
+</section>
+<section id="ai-molecular-models-get-eyes" class="level2">
+<h2 class="anchored" data-anchor-id="ai-molecular-models-get-eyes">4. AI Molecular Models Get Eyes</h2>
+<p><a href="post_all_image/crop_integrating_to_2025_08_16_image_1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="post_all_image/crop_integrating_to_2025_08_16_image_1.png" class="img-fluid"></a></p>
+<p>Over the past few years, Large Language Models (LLMs) have taken over almost every field. In chemistry, we naturally want these “linguists” to help us understand the language of molecules. The molecular language we use most often is the SMILES string—a line of text that describes a molecule’s structure.</p>
+<p>But there’s always been a fundamental problem. Using SMILES is like trying to describe Van Gogh’s <em>The Starry Night</em> to a blind person using only text. You can tell them, “There are lots of yellow swirls in the painting, and the background is dark blue.” But they can never truly “see” the composition, brushstrokes, and spatial sense of the painting.</p>
+<p>Similarly, an LLM that only reads SMILES knows which atoms are connected to which, but it has no idea what the molecule actually looks like in 3D space, which group points up, and which points down.</p>
+<p>The CROP architecture is an attempt to give this “blind linguist” a pair of eyes.</p>
+<p>The idea is, before the LLM reads the text description of <em>The Starry Night</em> (SMILES), what if we first show it a sketch of the painting (the molecule’s 2D topological graph) and then let it feel a 3D relief version of it (the molecule’s 3D spatial conformation)?</p>
+<p>The real challenge, of course, is in the engineering.</p>
+<p>An LLM’s “working memory” (its context window) is limited. You can’t just shove a high-resolution image and a complex network graph into a program that’s used to handling text.</p>
+<p>CROP designed a very efficient “preprocessor” called the “SMILES-guided resampler.” What this does is intelligently compress the sketch and the relief into a very short summary containing the most critical information, which we call a “prefix.” Then, it places this “summary” in front of the SMILES string and feeds them both to the LLM.</p>
+<p>This way, before the LLM starts reading the dry text description, it already has a general sense of the painting’s overall composition and spatial layout. This compression process is also “guided” by the SMILES itself. This means the LLM uses its initial understanding of the text to tell the preprocessor, “Hey, I think that big swirl in the top left corner is important. Give it a little more attention in your summary.” It’s a very elegant feedback loop.</p>
+<p>So, how does an LLM with eyes perform?</p>
+<p>The result is that it becomes a better chemist in almost every task.</p>
+<p>For example, in “molecule captioning,” where the model looks at a molecule and describes its features in natural language, CROP performed far better than other models. This shows that when it sees both the molecule’s connectivity and its shape, it can understand the molecule’s “personality” more deeply and describe it more accurately.</p>
+<p>The authors also did “ablation studies” to test their idea. They tried giving the model just the sketch or just letting it feel the relief. They found that neither worked as well as giving it both. This proves that the 2D topology and 3D space are like the left and right eyes. They provide complementary information that is essential. Only when combined can they form a complete, three-dimensional understanding.</p>
+<p>📜Title: CROP: Integrating Topological and Spatial Structures via Cross-View Prefixes for Molecular LLMs 📜Paper: https://arxiv.org/abs/2508.06917v1</p>
+</section>
+<section id="a-reality-check-for-alphafold-3-its-not-magic" class="level2">
+<h2 class="anchored" data-anchor-id="a-reality-check-for-alphafold-3-its-not-magic">5. A Reality Check for AlphaFold 3: It’s Not Magic</h2>
+<p><a href="post_all_image/alpha_fold_3_accurate_2025_08_16_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="post_all_image/alpha_fold_3_accurate_2025_08_16_image_1.jpg" class="img-fluid"></a></p>
+<p>Since AlphaFold first appeared, people in structural biology and drug discovery have felt like they’ve jumped from the Stone Age to the Space Age. Protein structures that used to take years of work, huge amounts of money, and the mental energy of PhD students to solve can now, it seems, be obtained by just plugging a sequence into a computer and grabbing a cup of coffee, resulting in a “scarily good” model. The release of AlphaFold 3 has extended this capability to interactions between proteins and other molecules.</p>
+<p>But there’s always been a nagging question: these models predict the most standard, pure proteins you’d find in a textbook. The real world is messy. The same protein can have small amino acid differences between different strains, species, or even individuals. We call these “natural variants.”</p>
+<p>So, can AlphaFold 3 handle this real-world complexity? Can it tell how a single amino acid change subtly affects a protein’s local conformation?</p>
+<p>This study tried to answer that question. They chose a well-studied old friend: catalase KatA from <em>Helicobacter pylori</em>. We already have a high-resolution crystal structure of KatA from strain 26695. The researchers then went to the trouble of solving the crystal structure of KatA from another strain (SS1), which has a few amino acid differences from the old version.</p>
+<p>This created a perfect experimental setup. They had a brand new “test question” that wasn’t in AlphaFold 3’s training set. More importantly, they had a 100% correct “answer key” from their experiment.</p>
+<p>Then, they started the test.</p>
+<p>When they fed the sequence of the SS1 strain into the model along with the correct biological information—“Hey AlphaFold, this thing is a tetramer in the cell”—the results were impressive. The predicted structure matched their hard-won crystal structure very well, both overall and in most details. This once again proved how powerful AlphaFold 3 is.</p>
+<p>But the real show was yet to come.</p>
+<p>They then did a small “destructive” test. They deliberately “tricked” AlphaFold 3 by telling it that KatA was a monomer, not a tetramer. This is like giving an architect the blueprints for a four-sided courtyard house but telling him you only want to build a small hut.</p>
+<p>The model’s overall predicted fold still looked about right. But when you zoomed in on the key areas where the mutations occurred and where the tetramer interface should have been, everything was a mess. The orientations of the amino acid side chains were off by just a little, but it made all the difference.</p>
+<p>This is the core contribution of the study. It’s not saying AlphaFold 3 is bad. On the contrary, it’s teaching us how to use this powerful tool correctly. It shows with direct evidence that AI hasn’t made biologists obsolete. In fact, it has made deep biological knowledge more important than ever. You first need to know what your protein is actually doing inside the cell—is it working alone, or is it teaming up with three buddies?—before you can ask the AI a meaningful question.</p>
+<p>This work also serves as a validation for traditional experimental structural biology. Without the new SS1 crystal structure that the researchers solved to serve as “ground truth,” the entire paper’s discussion would have been built on sand. We still need people in the lab, day in and day out, doing the seemingly tedious work of purification, crystallization, and X-ray diffraction. Because it’s this experimental data that forms the foundation for training and validating AI models.</p>
+<p>📜Title: AlphaFold 3 accurately models natural variants of Helicobacter pylori catalase KatA 📜Paper: https://journals.asm.org/doi/10.1128/spectrum.00670-25</p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-08-18/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

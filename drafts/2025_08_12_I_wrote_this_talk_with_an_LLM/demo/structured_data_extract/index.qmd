@@ -1,7 +1,7 @@
 ---
 title: "AI With R"
 ---
-In this chapter, I’ll show you how to send data from data.frames to an AI. And the best part is that you don’t even have to pay for any of the AI vendors like ChatGPT to do so. Instead we’ll use local LLMs with help from the `{mall}` package. And in case you’re wondering what “local” means here, well, it means that we don’t use a paid LLM like ChatGPT. Instead, we can run our own LLM on our computer.
+In this chapter, I’ll show you how to send data from data.frames to an AI. And the best part is that you don’t even have to pay for any of the AI vendors like ChatGPT to do so. Instead we’ll use local LLMs with help from the `{mall}` package. And in case you’re wondering what "local" means here, well, it means that we don’t use a paid LLM like ChatGPT. Instead, we can run our own LLM on our computer.
 
 And while this may sound like a cheap knock-off, it turns out that open-source LLMs have become pretty powerful and less resource intensive over the last couple of months. So using a local LLM may be perfectly well-suited for your purposes. Let’s give them a try.
 
@@ -25,11 +25,11 @@ But wait, there is more. All LLMs will be served locally via [ollama](https://ol
 
 Well, in that case, let me explain. All LLMs (yes, ChatGPT too) are basically a very large neural network. Sounds biological but can in fact be represented by a VEEEERY large matrix of so called weights (I’m oversimplifying here but bear with me.) These weights will be used to determine what kind of response the LLM produces. So, if you have that matrix, you can run your own ChatGPT.
 
-Of course, openAI keeps its matrix under wraps but there are other open-source folks who say: *“Here, stranger, take my matrix and run your own calculations with that.”* Cool beans but we hate doing calculations manually, right? That’s where ollama comes in.
+Of course, openAI keeps its matrix under wraps but there are other open-source folks who say: *"Here, stranger, take my matrix and run your own calculations with that."* Cool beans but we hate doing calculations manually, right? That’s where ollama comes in.
 
-It’s a tool that can run on your computer and download all the matrices from all kinds of other vendors. So if you, or rather your R code, wants to send a prompt to an LLM, then you (or your R code) will knock at ollama’s door (which is running in the background) and say *“Hey, run this prompt against <LLM-Model-XYZ>!”* And then ollama is hopefully nice and says: *“Lucky you, I’ve got <LLM-Model-XYZ> in store. I’m serving you that nice ~~dish~~ LLM.”*
+It’s a tool that can run on your computer and download all the matrices from all kinds of other vendors. So if you, or rather your R code, wants to send a prompt to an LLM, then you (or your R code) will knock at ollama’s door (which is running in the background) and say *"Hey, run this prompt against <LLM-Model-XYZ>!"* And then ollama is hopefully nice and says: *"Lucky you, I’ve got <LLM-Model-XYZ> in store. I’m serving you that nice ~~dish~~ LLM."*
 
-Okay, so hopefully this dumb little explainer demystified this stuff about “serving LLMs” a little bit. So with that said, head over to the [ollama](https://ollama.com/) and install it for your operating system.
+Okay, so hopefully this dumb little explainer demystified this stuff about "serving LLMs" a little bit. So with that said, head over to the [ollama](https://ollama.com/) and install it for your operating system.
 
 ![](https://air.albert-rapp.de/imgs/00a_ollama.png)
 
@@ -37,7 +37,7 @@ Okay, so hopefully this dumb little explainer demystified this stuff about “se
 
 Nicey, nicey! We have `{mall}` installed for R and we have ollama installed on our computer. Time to get an LLM. That’s where the `{ollamar}` package comes in. It’s one of the packages that is also installed when you install `{mall}`. This handles the interaction between R and ollama.
 
-Inside of R, we can run the `pull()` command to download an LLM (you know, the matrix that represents the fancy neural network). You can find a whole list of LLMs that ollama can download for you on their [website](https://ollama.com/search). Here, we’re just going to use a tiny model called “llama3.2”.
+Inside of R, we can run the `pull()` command to download an LLM (you know, the matrix that represents the fancy neural network). You can find a whole list of LLMs that ollama can download for you on their [website](https://ollama.com/search). Here, we’re just going to use a tiny model called "llama3.2".
 
 ```
 ollamar::pull('llama3.2')
@@ -107,7 +107,7 @@ tib <- tibble::tibble(
 )
 ```
 
-We can take this data and run it against our LLM to try to determine whether our adjectives are “negative”, “neutral” or “positive”. This is called a sentiment analysis and is available in `{mall}` via the `llm_sentiment()` function.
+We can take this data and run it against our LLM to try to determine whether our adjectives are "negative", "neutral" or "positive". This is called a sentiment analysis and is available in `{mall}` via the `llm_sentiment()` function.
 
 ```{r}
 tib |> 
@@ -125,7 +125,7 @@ Wow, that was easy. And it was fast too. Since llama3.2 is quite a small model t
 
 ## 1.3 Classification
 
-The next use case is pretty similar. Instead of grouping things into “neutral”, “positive” and “negative”, we can group things into other kinds of categories. Let’s take fruits and assigning them to colors.
+The next use case is pretty similar. Instead of grouping things into "neutral", "positive" and "negative", we can group things into other kinds of categories. Let’s take fruits and assigning them to colors.
 
 ```{r}
 tibble::tibble(
@@ -316,7 +316,7 @@ For example, Azure mostly hosts OpenAI’s LLMs and you’ll not find Claude the
 
 The good news is that you can chat with any of these models via a very similar interface. The function for chatting is always `chat_*()`. For example, there’s `chat_openai()` and there’s `chat_claude()`.
 
-So let’s call gpt-4o with a system prompt that “initializes” the LLM to its task in this chat window. This is the perfect chance to do something silly. Let’s say that gpt-4o should only reply with “BANANA” at all costs.
+So let’s call gpt-4o with a system prompt that "initializes" the LLM to its task in this chat window. This is the perfect chance to do something silly. Let’s say that gpt-4o should only reply with "BANANA" at all costs.
 
 ```{r}
 library(ellmer)
@@ -556,9 +556,9 @@ chat_oai$get_turns(include_system_prompt = TRUE)
 
 Oh wow. That’s a lot of information. So let me break it down for you.
 
-What you see here is a list of “Turn” objects. That’s something that the `{ellmer}` package uses to describe the chat. Basically, just like in a real conversation, participants take turns to “speak”.
+What you see here is a list of "Turn" objects. That’s something that the `{ellmer}` package uses to describe the chat. Basically, just like in a real conversation, participants take turns to "speak".
 
-In our LLM settings, the participants can be either “system”, “user” or “assistant”. The first one is the system prompt which typically appears only once. The “user” is us and the “assistant” is the LLM. That’s why each Turn object has a property called “role” filled with one of these three options.
+In our LLM settings, the participants can be either "system", "user" or "assistant". The first one is the system prompt which typically appears only once. The "user" is us and the "assistant" is the LLM. That’s why each Turn object has a property called "role" filled with one of these three options.
 
 Similarly, there are many more properties:
 
@@ -1007,7 +1007,7 @@ Hooray! This looks correct.
 
 In this chapter, we continue to talk about `{ellmer}`. You see, `{ellmer}` still has a pretty cool trick up its sleeves. And that trick has to do with structured output. Namely, `{ellmer}` (or rather the LLMs it talks with) allows you to extract data from unstructured texts in a **structured format**.
 
-That’s huge! One of the most fundamental problems with regular prompting is that you can never be sure that you get output in the form that you wish. But for these kinds of situations, OpenAI and other vendors nowadays allow you to use so-called “structured output”.
+That’s huge! One of the most fundamental problems with regular prompting is that you can never be sure that you get output in the form that you wish. But for these kinds of situations, OpenAI and other vendors nowadays allow you to use so-called "structured output".
 
 And the best part: `{ellmer}` has built-in functionalities that allow you to use this structured mode really easily. In this chapter, I’ll show you how. And as always: There’s a video associated with this book chapter:
 
@@ -1136,7 +1136,7 @@ chat$last_turn('assistant')@text |>
 
 Sweet. This worked pretty great. But the thing with LLMs is that we can never be sure that it will actually adhere to this specific format.
 
-For example, it’s easy to imagine that the LLM might also add introductory sentences like *“Sure, here’s your data”*. That might not be great if we rely on the structure of the reply.
+For example, it’s easy to imagine that the LLM might also add introductory sentences like *"Sure, here’s your data"*. That might not be great if we rely on the structure of the reply.
 
 Enter structured outputs. With the `extract_data()` method, we can enforce a certain output. For that, let’s create a new chat with a shorter system prompt.
 
@@ -1287,7 +1287,7 @@ type_entity <- type_object(
 )
 ```
 
-But of course we don’t want to find just a single entity. We want our LLM to extract all entities. Thus, let’s make sure that we ask our LLM to extract an **array** (or “vector” as we’d say in the R world).
+But of course we don’t want to find just a single entity. We want our LLM to extract all entities. Thus, let’s make sure that we ask our LLM to extract an **array** (or "vector" as we’d say in the R world).
 
 ```{r}
 chat$extract_data(

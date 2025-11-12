@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="AI is reshaping drug discovery. From the bioSBM model predicting 3D genome structures to the BioLab agent system designing novel antibodies that outperform existing drugs, and Graph Neural Networks (GNNs) being applied across molecular property prediction and target discovery, artificial intelligence is accelerating the process at an unprecedented depth and scale. However, challenges in data, models, and interpretability remain.">
+
+<title>BioLab: An AI Agent System for End-to-End Drug Discovery – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="BioLab: An AI Agent System for End-to-End Drug Discovery – MPU">
+<meta property="og:description" content="AI is reshaping drug discovery. From the bioSBM model predicting 3D genome structures to the BioLab agent system designing novel antibodies that outperform existing drugs, and Graph Neural Networks (GNNs) being applied across molecular property prediction and target discovery, artificial intelligence is accelerating the process at an unprecedented depth and scale. However, challenges in data, models, and interpretability remain.">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-09-25/post_all_image/bio_lab_end_to_end_a_2025_09_14_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="BioLab integrates multiple specialized foundation models and agents to achieve the first end-to-end, fully autonomous antibody design, from target discovery to wet lab validation, successfully optimizing Pembrolizumab.
+">
+<meta name="twitter:title" content="BioLab: An AI Agent System for End-to-End Drug Discovery – MPU">
+<meta name="twitter:description" content="AI is reshaping drug discovery. From the bioSBM model predicting 3D genome structures to the BioLab agent system designing novel antibodies that outperform existing drugs, and Graph Neural Networks (GNNs) being applied across molecular property prediction and target discovery, artificial intelligence is accelerating the process at an unprecedented depth and scale. However, challenges in data, models, and interpretability remain.">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-09-25/post_all_image/bio_lab_end_to_end_a_2025_09_14_image_1.jpg">
+<meta name="twitter:image:alt" content="BioLab integrates multiple specialized foundation models and agents to achieve the first end-to-end, fully autonomous antibody design, from target discovery to wet lab validation, successfully optimizing Pembrolizumab.
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">BioLab: An AI Agent System for End-to-End Drug Discovery</h1>
+                  <div>
+        <div class="description">
+          <p>AI is reshaping drug discovery. From the bioSBM model predicting 3D genome structures to the BioLab agent system designing novel antibodies that outperform existing drugs, and Graph Neural Networks (GNNs) being applied across molecular property prediction and target discovery, artificial intelligence is accelerating the process at an unprecedented depth and scale. However, challenges in data, models, and interpretability remain.</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">AI Drug Discovery</div>
+                <div class="quarto-category">Graph Neural Networks</div>
+                <div class="quarto-category">AI Agents</div>
+                <div class="quarto-category">Antibody Design</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Thursday, the 25th of September, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#table-of-contents" id="toc-table-of-contents" class="nav-link active" data-scroll-target="#table-of-contents">Table of Contents</a></li>
+  <li><a href="#biosbm-using-a-graph-model-to-connect-epigenetics-and-the-3d-genome" id="toc-biosbm-using-a-graph-model-to-connect-epigenetics-and-the-3d-genome" class="nav-link" data-scroll-target="#biosbm-using-a-graph-model-to-connect-epigenetics-and-the-3d-genome">1. bioSBM: Using a Graph Model to Connect Epigenetics and the 3D Genome</a></li>
+  <li><a href="#biolab-an-ai-agent-system-for-end-to-end-drug-discovery" id="toc-biolab-an-ai-agent-system-for-end-to-end-drug-discovery" class="nav-link" data-scroll-target="#biolab-an-ai-agent-system-for-end-to-end-drug-discovery">2. BioLab: An AI Agent System for End-to-End Drug Discovery</a></li>
+  <li><a href="#the-gnn-drug-discovery-landscape-progress-models-and-challenges" id="toc-the-gnn-drug-discovery-landscape-progress-models-and-challenges" class="nav-link" data-scroll-target="#the-gnn-drug-discovery-landscape-progress-models-and-challenges">3. The GNN Drug Discovery Landscape: Progress, Models, and Challenges</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-09-25/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="table-of-contents" class="level2">
+<h2 class="anchored" data-anchor-id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li>The bioSBM model integrates epigenetic data into a stochastic block model, providing a new tool for predicting 3D chromatin structure and understanding its biochemical regulation.</li>
+<li>BioLab integrates multiple specialized foundation models and agents to achieve the first end-to-end, fully autonomous antibody design, from target discovery to wet lab validation, successfully optimizing Pembrolizumab.</li>
+<li>Graph Neural Networks (GNNs) are being used in all stages of drug discovery, from target identification to molecular design, but they must overcome challenges in data, modeling, and interpretability to be truly effective.</li>
+</ol>
+</section>
+<section id="biosbm-using-a-graph-model-to-connect-epigenetics-and-the-3d-genome" class="level2">
+<h2 class="anchored" data-anchor-id="biosbm-using-a-graph-model-to-connect-epigenetics-and-the-3d-genome">1. bioSBM: Using a Graph Model to Connect Epigenetics and the 3D Genome</h2>
+<p><a href="post_all_image/bio_sbm_a_random_gra_2025_09_14_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/bio_sbm_a_random_gra_2025_09_14_image_1.jpg" class="img-fluid"></a></p>
+<p>If you study 3D genome structure, you probably work with two sets of maps. One comes from Hi-C data, which shows you the “road network” of the genome—which DNA segments are physically close to each other. The other comes from epigenetic data like ChIP-seq, which tells you the “building types” along each road—for instance, where the active promoters (commercial districts) and silent heterochromatin (industrial zones) are. We’ve always wanted to know the relationship between these two maps. Why does the road network connect different functional areas the way it does?</p>
+<p>Now, researchers have developed a new model called bioSBM to try and answer this question.</p>
+<p>At the model’s core is the <code>Stochastic Block Model (SBM)</code>. SBM is a classic tool in network science that works on a simple principle: it groups nodes in a network (in this case, genomic regions) based on their connection patterns. For example, nodes in group A might be tightly connected to each other but rarely connect to nodes in group B. In the genome, this can help us find communities like <code>Topologically Associating Domains (TADs)</code>.</p>
+<p>The clever part of bioSBM is that it doesn’t just look at the “who connects with whom” network information. It also incorporates the second map—the biochemical features (like histone modifications)—as covariates. When the model decides whether two genomic regions should interact, it considers not only their past interaction frequency but also their “identity.” Are they active enhancers or repressed regions? It’s like a city planner who looks at both traffic flow and land-use functions to design a road network.</p>
+<p>The model has another key feature called “mixed memberships.” Traditional classification methods are rigid; a genomic region is either in compartment A (active) or B (inactive). But biology is more complex. A gene might be active under some conditions and silent under others. bioSBM allows a genomic region to belong to multiple communities at once. For example, it might be 70% “active transcription zone” and 30% “polycomb-repressed zone.” This is much closer to reality.</p>
+<p>To test the model, researchers applied it to the well-known GM12878 cell line. The results were good. The model not only identified the traditional A/B compartments but also found 7 more detailed biological communities with very clear functional annotations (like their relationships to CTCF binding sites and enhancers). It’s like upgrading from a black-and-white map to a full-color functional zone map.</p>
+<p>Its predictive power is the most impressive part. The researchers trained the model on data from some chromosomes and then asked it to predict the Hi-C interaction map of a chromosome it had never seen. The results were quite accurate. They also ran a more challenging experiment: using data from one cell line to predict the structure of a completely different one (HCT116), where a key structural protein, RAD21, had been knocked down. Even then, bioSBM performed robustly.</p>
+<p>This shows that bioSBM isn’t just fitting data; it has learned some of the underlying rules connecting epigenetics and 3D structure. Understanding these rules is very important for drug development. If we can accurately predict how a change in an epigenetic modification will affect the 3D structure and, in turn, the expression of an oncogene, we can design more precise epigenetic drugs. This model gives us a powerful, interpretable computational tool to move in that direction.</p>
+<p>📜Paper: https://arxiv.org/abs/2409.14425v2</p>
+</section>
+<section id="biolab-an-ai-agent-system-for-end-to-end-drug-discovery" class="level2">
+<h2 class="anchored" data-anchor-id="biolab-an-ai-agent-system-for-end-to-end-drug-discovery">2. BioLab: An AI Agent System for End-to-End Drug Discovery</h2>
+<p><a href="post_all_image/bio_lab_end_to_end_a_2025_09_14_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/bio_lab_end_to_end_a_2025_09_14_image_1.jpg" class="img-fluid"></a></p>
+<p>An AI-designed antibody performed better in experiments than Merck’s Keytruda® (Pembrolizumab).</p>
+<p>It sounds like science fiction, but a new preprint from the BioLab team has made it a reality. As a research scientist, I always get excited when I see work that perfectly closes the loop between computational design and wet lab validation.</p>
+<p>This wasn’t achieved by a single Large Language Model (LLM). BioLab’s architecture is more like an efficient research group. The system has eight AI agents, each with a specific role. For instance, a “PI” Planner agent sets the overall research plan, a “postdoc” Reasoner agent executes specific tasks, and even a “reviewer” Critic agent evaluates and revises the results. They share information and iterate through a Memory Agent, making the whole process well-organized.</p>
+<p>The “brains” of these agents are not generic. They are based on a model library called xTrimo Universe, which contains 104 foundation models trained specifically for life sciences, covering proteins, RNA, DNA, and cells. You wouldn’t ask a historian to solve a protein structure, and here, each task is handled by the most suitable “expert” model. This specialization allowed BioLab to outperform general models like GPT-4 on biomedical reasoning tasks like PubMedQA.</p>
+<p>Of course, benchmark scores are secondary. The real test is solving a real-world problem.</p>
+<p>The researchers gave BioLab a tough assignment: design an antibody targeting macrophages from scratch. BioLab autonomously completed the entire computational workflow, from mining the literature for targets to multi-objective antibody optimization. Through molecular dynamics simulations, the system not only found variants with better affinity but also revealed the structural mechanisms behind the improvement—something drug developers value highly.</p>
+<p>The most critical step was closing the loop with validation. No matter how good a computational design is, it has to be tested on the bench. The team expressed and purified the optimized antibodies (Pem-MOO-1, Pem-MOO-2) and tested their activity. The results showed that the new antibodies bound to PD-1 with IC50 values of 0.01–0.016 nM, better than the parent Pembrolizumab’s 0.027 nM.</p>
+<p>The data doesn’t lie. The AI-designed molecules truly surpassed a blockbuster drug in biological activity. Functional experiments also confirmed that the new antibodies not only bind tighter but also perform better in blocking signaling pathways and across multiple performance metrics.</p>
+<p>BioLab’s work demonstrates an AI-native research paradigm. It shows us that combining multiple “expert” AIs, letting them autonomously propose hypotheses, design experiments, analyze results, and finally validate them in the wet lab, is a viable path. This is no longer just computational simulation; it’s true end-to-end scientific discovery.</p>
+<p>📜Paper: <a href="https://www.biorxiv.org/content/10.1101/2025.09.03.674085v1" class="uri">https://www.biorxiv.org/content/10.1101/2025.09.03.674085v1</a></p>
+</section>
+<section id="the-gnn-drug-discovery-landscape-progress-models-and-challenges" class="level2">
+<h2 class="anchored" data-anchor-id="the-gnn-drug-discovery-landscape-progress-models-and-challenges">3. The GNN Drug Discovery Landscape: Progress, Models, and Challenges</h2>
+<p><a href="post_all_image/a_survey_of_graph_ne_2025_09_14_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/a_survey_of_graph_ne_2025_09_14_image_1.jpg" class="img-fluid"></a></p>
+<p>Anyone in drug development knows that a molecule is itself a graph. Atoms are nodes, and chemical bonds are edges. In the past, we had to compress this 3D structural information into a 1D SMILES string, a process that inevitably loses information. The arrival of Graph Neural Networks (GNNs) changed the game. They don’t need this compression and can learn and reason directly on the molecular graph, making them a tool you can’t ignore in drug discovery.</p>
+<p>This review by Katherine Berry and Liang Cheng does a great job of summarizing how GNNs are being used in our field.</p>
+<p><strong>GNNs first proved themselves in molecular property prediction</strong></p>
+<p>This was the first area where GNNs succeeded, and it’s relatively easy to understand. It involves tasks like predicting a molecule’s ADMET (absorption, distribution, metabolism, excretion, toxicity) properties. The model learns from a large number of known molecules to find correlations between structure and properties. Early models were simple, but later ones like Attentive FP and MolGIN went a step further. They introduced an attention mechanism, allowing the model to decide for itself which functional group in a molecule is most important for a specific property, like toxicity. This is a bit like an experienced chemist who can glance at a structure and spot the key features.</p>
+<p><strong>Predicting drug-target binding affinity is the really tough problem</strong></p>
+<p>Predicting whether a molecule will bind to a protein target, and how strongly, is central to drug discovery. The difficulty here is that you have to consider not only the structure of the drug molecule but also the 3D structure of the protein’s binding pocket. It’s like trying to figure out if a key (the drug) will fit a lock (the target); you need a clear view of both. Models like GraphDTA and MGraphDTA started trying to merge these two types of information. They create separate graph encodings for the drug and the target protein and then learn the interaction between them. The goal of this research is to have computers find the one “chosen” molecule from massive libraries faster and more accurately than high-throughput screening.</p>
+<p><strong>Drug combination and synergy prediction</strong></p>
+<p>In treating complex diseases like cancer, a single drug is often not enough; combination therapy is the standard. But when you put two drugs together, will the effect be synergistic (1+1&gt;2) or antagonistic (1+1&lt;2)? This is very hard to predict. Models like DeepDDS and SynerGNet use GNNs to analyze complex biological networks, such as gene regulatory or protein-protein interaction networks. They try to understand how drugs affect the cell at a systems level to predict the outcome of drug combinations. This is critical for developing new combination therapies.</p>
+<p><strong>GNNs are used for much more</strong></p>
+<p>The review also mentions GNN applications in other areas. For example, predicting interactions between drugs and the gut microbiome, which is useful for understanding personalized medicine. There’s also drug repositioning—finding new uses for old drugs—where GNNs can find new possibilities by analyzing networks of drug-disease associations. GNNs are even useful in retrosynthesis, helping chemists design better synthetic routes.</p>
+<p><strong>The challenges are still serious</strong></p>
+<p>Although GNNs look promising, those of us on the front lines know there’s a long way to go from a paper to a practical application.</p>
+<p>The first problem is data. “Garbage in, garbage out” is especially true in AI. Many public bioactivity datasets are full of noise, and the amount of data isn’t always sufficient. We need more high-quality, diverse experimental data to feed these models. Otherwise, a trained model might just look good on paper but fail in real-world chemical space.</p>
+<p>The second is the models themselves. There is a huge variety of GNN architectures, and there’s no consensus on which one is best for a specific chemical or biological problem. This leads to a lot of “alchemy”—endless tweaking of model parameters and structures without systematic guidance.</p>
+<p>The last, and most critical, challenge is interpretability. The model tells you a molecule has high activity. Why? Which substructure played the key role? If the model can’t answer this, it’s a black box to a medicinal chemist. We can’t learn from it or use its judgment to rationally design the next, better molecule. We are doing science, not fortune-telling. If we can’t open this black box, AI will only ever be a screening tool, not a driver of true innovation.</p>
+<p>This review provides a clear map of GNNs in drug discovery. GNNs have evolved from an academic concept into an increasingly important part of the drug development toolbox. The next steps are clear: gather better data, design smarter models, and find a way to make the models talk.</p>
+<p>📜Title: A Survey of Graph Neural Networks for Drug Discovery: Recent Developments and Challenges 📜Paper: https://arxiv.org/abs/2509.07887</p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-09-25/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

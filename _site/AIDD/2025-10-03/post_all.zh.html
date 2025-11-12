@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="本文深度解读了三款前沿的 AI 计算生物学工具。MolSculptor 结合扩散模型与进化算法，实现多靶点、高选择性药物的从头设计；OTMol 运用最优传输理论，解决了分子比对中的化学合理性难题；PertFormer 作为一个多组学基础模型，能「零样本」预测基因扰动的细胞后果。这些工具正从不同维度加速新药靶点的发现和药物研发进程。">
+
+<title>AI 驱动药物发现：MolSculptor、OTMol 与 PertFormer 的前沿解读 – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="AI 驱动药物发现：MolSculptor、OTMol 与 PertFormer 的前沿解读 – MPU">
+<meta property="og:description" content="本文深度解读了三款前沿的 AI 计算生物学工具。MolSculptor 结合扩散模型与进化算法，实现多靶点、高选择性药物的从头设计；OTMol 运用最优传输理论，解决了分子比对中的化学合理性难题；PertFormer 作为一个多组学基础模型，能「零样本」预测基因扰动的细胞后果。这些工具正从不同维度加速新药靶点的发现和药物研发进程。">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-10-03/post_all_image/mol_sculptor_an_adap_2025_09_14_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="一张展示 MolSculptor
+工作流程的示意图。图中描绘了一个分子结构被'雕刻'和优化的过程，周围环绕着代表扩散模型、进化算法和主动学习等概念的图标，形象地说明了该框架如何通过迭代生成、评估和筛选来设计满足复杂约束的药物分子。
+">
+<meta name="twitter:title" content="AI 驱动药物发现：MolSculptor、OTMol 与 PertFormer 的前沿解读 – MPU">
+<meta name="twitter:description" content="本文深度解读了三款前沿的 AI 计算生物学工具。MolSculptor 结合扩散模型与进化算法，实现多靶点、高选择性药物的从头设计；OTMol 运用最优传输理论，解决了分子比对中的化学合理性难题；PertFormer 作为一个多组学基础模型，能「零样本」预测基因扰动的细胞后果。这些工具正从不同维度加速新药靶点的发现和药物研发进程。">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-10-03/post_all_image/mol_sculptor_an_adap_2025_09_14_image_1.jpg">
+<meta name="twitter:image:alt" content="一张展示 MolSculptor
+工作流程的示意图。图中描绘了一个分子结构被'雕刻'和优化的过程，周围环绕着代表扩散模型、进化算法和主动学习等概念的图标，形象地说明了该框架如何通过迭代生成、评估和筛选来设计满足复杂约束的药物分子。
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">AI 驱动药物发现：MolSculptor、OTMol 与 PertFormer 的前沿解读</h1>
+                  <div>
+        <div class="description">
+          <p>本文深度解读了三款前沿的 AI 计算生物学工具。MolSculptor 结合扩散模型与进化算法，实现多靶点、高选择性药物的从头设计；OTMol 运用最优传输理论，解决了分子比对中的化学合理性难题；PertFormer 作为一个多组学基础模型，能「零样本」预测基因扰动的细胞后果。这些工具正从不同维度加速新药靶点的发现和药物研发进程。</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">AI 制药</div>
+                <div class="quarto-category">计算生物学</div>
+                <div class="quarto-category">扩散模型</div>
+                <div class="quarto-category">最优传输</div>
+                <div class="quarto-category">基础模型</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Friday, the 3rd of October, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#目录" id="toc-目录" class="nav-link active" data-scroll-target="#目录">目录</a></li>
+  <li><a href="#molsculptor用扩散---进化模型雕刻多靶点药物" id="toc-molsculptor用扩散---进化模型雕刻多靶点药物" class="nav-link" data-scroll-target="#molsculptor用扩散---进化模型雕刻多靶点药物">1. MolSculptor：用扩散 - 进化模型雕刻多靶点药物</a></li>
+  <li><a href="#otmol用最优传输重新定义分子比对" id="toc-otmol用最优传输重新定义分子比对" class="nav-link" data-scroll-target="#otmol用最优传输重新定义分子比对">2. OTMol：用最优传输重新定义分子比对</a></li>
+  <li><a href="#pertformer零样本预测细胞命运ai-加速新药靶点发现" id="toc-pertformer零样本预测细胞命运ai-加速新药靶点发现" class="nav-link" data-scroll-target="#pertformer零样本预测细胞命运ai-加速新药靶点发现">3. PertFormer：零样本预测细胞命运，AI 加速新药靶点发现</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-10-03/post_all.zh.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="目录" class="level2">
+<h2 class="anchored" data-anchor-id="目录">目录</h2>
+<ol type="1">
+<li>MolSculptor 将扩散模型的生成能力和进化算法的优化能力结合，创造了一个无需针对特定靶点训练，就能设计多靶点、高选择性分子的新范式。</li>
+<li>OTMol 利用最优传输理论，解决了传统分子比对中原子排序不一致和手性翻转的核心痛点，提供了一个更稳健、化学意义更明确的框架。</li>
+<li>PertFormer 是一个多组学基础模型，它能「零样本」预测基因扰动的后果，加速生物学发现和新药靶点的识别。</li>
+</ol>
+</section>
+<section id="molsculptor用扩散---进化模型雕刻多靶点药物" class="level2">
+<h2 class="anchored" data-anchor-id="molsculptor用扩散---进化模型雕刻多靶点药物">1. MolSculptor：用扩散 - 进化模型雕刻多靶点药物</h2>
+<p><a href="post_all_image/mol_sculptor_an_adap_2025_09_14_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/mol_sculptor_an_adap_2025_09_14_image_1.jpg" class="img-fluid"></a></p>
+<p>在药物研发中，设计一个只作用于单一靶点的分子已很困难。若想让一个分子同时作用于靶点 A 和 B，还要避开结构相似的靶点 C，难度会指数级上升。这正是多靶点药物和高选择性抑制剂设计的核心挑战。</p>
+<p>一个名为 MolSculptor 的新计算框架，为解决此问题提供了思路。</p>
+<section id="扩散模型当锤子进化算法当刻刀" class="level4">
+<h4 class="anchored" data-anchor-id="扩散模型当锤子进化算法当刻刀">扩散模型当锤子，进化算法当刻刀</h4>
+<p>我们可以把这个过程想象成一位雕塑家。扩散模型（Diffusion Model）像一把神奇的锤子。它先将一个分子结构「打碎」成一团随机的原子（noising），然后再学习如何从这团随机的原子中「恢复」出一个合理的分子（denoising）。这个「打碎再恢复」的过程，为分子结构的变化提供了巨大的随机性和可能性，是创造力的来源。</p>
+<p>但只有锤子不行，还需要一双精准的眼睛和一把刻刀来引导。这就是进化算法（Evolutionary Algorithm）和主动学习（Active Learning）发挥作用的地方。在每一次分子生成后，系统会用一个代理模型（Surrogate Model）快速评估这个新分子的表现：它和靶点 A、B 的结合能力怎么样？会不会和靶点 C 结合？成药性参数如何？</p>
+<p>这些评估分数就像雕塑家的审美判断。表现好的分子被保留下来，进入下一轮「雕琢」；表现差的则被淘汰。通过一轮又一轮的「生成 - 评估 - 筛选」循环，分子结构被逐步优化，最终得到一个满足所有复杂约束的「作品」。</p>
+</section>
+<section id="最大的亮点摆脱对训练数据的依赖" class="level4">
+<h4 class="anchored" data-anchor-id="最大的亮点摆脱对训练数据的依赖">最大的亮点：摆脱对训练数据的依赖</h4>
+<p>传统的人工智能（AI）制药模型，通常需要针对特定靶点进行大量训练。如果靶点很新，或者已知的活性分子数据很少，这些模型就派不上用场。</p>
+<p>MolSculptor 绕开了这个瓶颈。它不需要预先知道哪些分子对目标靶点有效。相反，它在「进化」过程中，通过主动学习动态地构建一个代理模型来预测亲和力。只要你能提供靶点的三维结构，理论上 MolSculptor 就可以为任何靶点组合设计分子。这对于探索全新生物学靶点来说，价值很高。</p>
+</section>
+<section id="一个工具两种用法" class="level4">
+<h4 class="anchored" data-anchor-id="一个工具两种用法">一个工具，两种用法</h4>
+<p>这个框架的灵活性还体现在其两种工作模式上：</p>
+<ol type="1">
+<li><strong>从头设计（De Novo Design</strong>） ：当你只有一个或多个靶点，没有任何初始分子时，MolSculptor 可以从零开始，生成全新的、具有理想亲和力和选择性的分子骨架。<br>
+</li>
+<li><strong>先导化合物优化（Lead Optimization</strong>） ：当你已有一个活性还不错的分子，但它可能选择性不好，或有其他缺陷。你可以把这个分子作为起点，让 MolSculptor 在其基础上进行「微调」，改善目标属性，同时保持其核心骨架。</li>
+</ol>
+<p>论文中的案例展示了其效果。在针对双靶点和高选择性抑制剂的设计任务中，MolSculptor 生成的分子在对接分数上优于现有方法。特别是在区分两个结构高度相似的蛋白口袋时，它依然能找到实现选择性结合的分子方案。</p>
+</section>
+<section id="未来方向" class="level4">
+<h4 class="anchored" data-anchor-id="未来方向">未来方向</h4>
+<p>目前，MolSculptor 主要依赖对接分数作为亲和力的评估标准。它的模块化设计为未来的扩展留下了空间。未来可以轻松地将更精确的物理计算方法（如自由能微扰（Free Energy Perturbation, FEP））或 ADMET（吸收、分布、代谢、排泄和毒性）性质预测模型整合进去。</p>
+<p>这个框架不是一个黑盒子，更像一个开放的平台，让我们能更高效地在广阔的化学空间中探索和雕刻理想的药物分子。</p>
+<p>📜Title: MolSculptor: An Adaptive Diffusion-Evolution Framework Enabling Generative Drug Design for Multi-Target Affinity and Selectivity<br>
+📜Paper: https://doi.org/10.26434/chemrxiv-2025-v4758-v2<br>
+💻Code: https://github.com/egg5154/MolSculptor</p>
+</section>
+</section>
+<section id="otmol用最优传输重新定义分子比对" class="level2">
+<h2 class="anchored" data-anchor-id="otmol用最优传输重新定义分子比对">2. OTMol：用最优传输重新定义分子比对</h2>
+<p><a href="post_all_image/ot_mol_robust_molecu_2025_09_14_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/ot_mol_robust_molecu_2025_09_14_image_1.jpg" class="img-fluid"></a></p>
+<p>在药物研发中，分子结构比对是我们日常工作的基础。我们想知道两个分子有多像，一个配体如何与不同的蛋白构象结合，或一个柔性分子有哪些优势构象。表面上看，这似乎是个简单的几何问题：把两个分子叠在一起，计算它们重合得有多好。</p>
+<p>传统的金标准是计算均方根偏差（Root-Mean-Square Deviation, RMSD）。这个方法简单直接，就是计算两组原子坐标之间的平均距离。但它有个致命缺陷：RMSD 只关心空间位置，它不懂化学。它把原子看作无差别的点，只要距离近，就认为匹配得好。这就导致了两个经典问题。第一，原子排序。给<strong>同一个分子的原子编上不同的序号</strong>，RMSD 算出的结果可能天差地别。第二，化学合理性。为了得到一个数学上「好看」的低 RMSD 值，算法可能会把一个手性中心硬生生地翻转过来，或者把一个苯环匹配到一个环己烷上。这种匹配在化学家眼里，是无稽之谈。</p>
+<p>这篇文章提出的 OTMol 方法，尝试从一个全新的角度解决这个老问题。它的核心思想是借用最优传输（Optimal Transport, OT）理论。你可以把最优传输想象成一个「搬沙子」的问题。假设你有两堆形状不同的沙子（代表两个分子构象）。最优传输要做的，就是找到一个最高效的搬运方案，把第一堆沙子变成第二堆的形状，同时让总的「搬运成本」（如距离乘以沙子量）最小。</p>
+<p>OTMol 的聪明之处在于，它定义的「搬运成本」不仅是原子间的欧几里得距离。它将分子比对构建成一个「融合监督格罗莫夫 - 瓦瑟斯坦」（fused supervised Gromov-Wasserstein, fsGW）问题。这个复杂的名词，其实是在做一件符合化学直觉的事：它不仅看原子 A 和原子 B 之间的距离，还看它们各自「邻里关系」的相似性。也就是说，在分子 1 里与原子 A 成键的原子，应该被匹配到在分子 2 里与原子 B 成键的原子。这样，算法就不再是简单地叠坐标了，而是在比较两个分子的内部连接图谱。</p>
+<p>这种方法带来的直接好处是，它不再需要我们去手动定义一个复杂的成本函数来告诉算法「这个不能动，那个不能翻」。算法通过学习分子内在的几何和拓扑信息，自己就能想明白怎么匹配最合理。结果就是，OTMol 在对齐分子的同时，能够天然地保持化学键的连接性和手性中心的构型。这才是我们想要的、有化学意义的比对。</p>
+<p>研究者们用一系列复杂的分子验证了这个方法，包括柔性很大的 ATP、经典药物分子伊马替尼（Imatinib）、脂质、多肽，甚至水分子簇。在这些体系里，OTMol 的表现稳定地超过了像 ArbAlign 这样的现有顶尖方法，无论是在准确性还是计算速度上。特别是在处理大分子和柔性分子时，它的优势更加明显，因为它能保证原子间的一一对应，不会出现「张冠李戴」的混乱匹配。</p>
+<p>所以，OTMol 提供了一个一个更可靠的分子比对工具，意味着更准确的虚拟筛选结果、更可信的构象分析和更深刻的结构 - 活性关系理解。</p>
+<p>📜Title: OTMol: Robust Molecular Structure Comparison via Optimal Transport<br>
+📜Paper: https://arxiv.org/abs/2509.01550v1</p>
+</section>
+<section id="pertformer零样本预测细胞命运ai-加速新药靶点发现" class="level2">
+<h2 class="anchored" data-anchor-id="pertformer零样本预测细胞命运ai-加速新药靶点发现">3. PertFormer：零样本预测细胞命运，AI 加速新药靶点发现</h2>
+<p><a href="post_all_image/multimodal_foundatio_2025_09_14_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/multimodal_foundatio_2025_09_14_image_1.jpg" class="img-fluid"></a></p>
+<p>在药物研发中，一个核心问题是：如果敲除某个基因或激活某个蛋白，细胞会发生什么？理解这一点，就可能找到下一个新药的靶点。传统上，我们只能通过耗时费力的湿实验逐一尝试。PertFormer 这个计算模型，让我们看到了用「计算」替代「实验」的可能。</p>
+<section id="这东西是怎么工作的" class="level4">
+<h4 class="anchored" data-anchor-id="这东西是怎么工作的">这东西是怎么工作的？</h4>
+<p>要了解一个城市的交通系统，不能只看地图（基因组），还需要看实时路况（转录组）、地铁线路（表观遗传学）等。PertFormer 就是这样做的。它整合了 9 种不同的生物学数据，即「多组学」（multiomics），来构建一个关于细胞内部运作的详尽数字模型。</p>
+<p>这个模型有两个关键模块：<br>
+1. <strong>PertFormer-Elementary</strong> ：负责分析基因附近的「邻里关系」。它关注基因启动子、增强子这些近距离的调控元件，弄清它们如何直接影响基因表达。<br>
+2. <strong>PertFormer-Regulatory</strong> ：负责观察「城市级别的交通规划」。它能看到长达 30 万个碱基对范围内的远距离调控。很多时候，一个基因的开关并不在它旁边，而在很远的地方，这个模块就是用来捕捉这些远距离互作的。</p>
+<p>有了这两部分，PertFormer 就能描绘出一张复杂的基因调控网络（Gene Regulatory Networks, GRNs）地图。</p>
+</section>
+<section id="真正的亮点零样本预测" class="level4">
+<h4 class="anchored" data-anchor-id="真正的亮点零样本预测">真正的亮点：「零样本」预测</h4>
+<p>多数 AI 模型需要先看过「标准答案」才能做题。例如，你得先用敲除基因 A 的实验数据去训练它，它才能学会预测敲除基因 A 的后果。</p>
+<p>PertFormer 具备「零样本」（zero-shot）预测能力。这意味着，即便模型在训练中从未见过对某个特定基因的扰动，它也能根据自己学到的通用生物学规律，准确预测出扰动这个新基因会发生什么。</p>
+<p>这如同一个经验丰富的老医生，他没见过你得的这种罕见病，但他能根据自己对人体生理学和病理学的深刻理解，推断出你的病因和可能的治疗方案。这种能力让 PertFormer 的应用范围很广，因为我们不可能用实验去测试所有两万多个基因的每一种扰动组合。</p>
+</section>
+<section id="它真的有用吗" class="level4">
+<h4 class="anchored" data-anchor-id="它真的有用吗">它真的有用吗？</h4>
+<p>模型再好，也要看实际效果。研究者用 PertFormer 做了几件有说服力的事情：</p>
+<p>首先，他们让模型预测从普通体细胞到诱导多能干细胞（induced pluripotent stem cells, iPSCs）的转化过程。这是一个复杂的细胞重编程过程，涉及到大量基因的协同变化，PertFormer 准确地模拟了这个转变。</p>
+<p>更重要的是，他们将模型用在了我们最关心的领域——癌症。研究者利用 PertFormer 在三阴性乳腺癌和卵巢癌细胞中寻找新的治疗靶点。模型给出了一份预测清单，然后他们回到实验室，对清单上排名靠前的几个靶点进行了实验验证。结果发现，这些由 AI 预测出的新靶点，确实能有效抑制肿瘤细胞的生长。</p>
+<p>这一下就把 PertFormer 从一个学术工具，变成了有潜力改变药物研发流程的利器。我们未来可以先在电脑上对成千上万个潜在靶点进行筛选和排序，然后只把最有希望的几个拿到实验室里验证。这能节省大量的时间和研发成本。</p>
+<p>对于研发人员，PertFormer 这类工具的出现，它不仅能帮我们更快地找到靶点，还能通过它的注意力机制告诉我们「为什么」这个靶点重要，为理解疾病机理提供了全新的视角。模型还有优化的空间，但它展示的方向是确定的：未来的药物发现，计算和实验的结合会越来越紧密。</p>
+<p>📜Title: Multimodal foundation model predicts zero-shot functional perturbations and cell fate dynamics<br>
+📜Paper: https://www.biorxiv.org/content/10.1101/2024.12.19.629561v2<br>
+💻Website: https://pertformer.ibreed.cn</p>
+
+
+</section>
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-10-03/post_all.zh.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

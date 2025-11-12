@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="This article explores five AI models that are speeding up drug discovery and chemical research. We’ll look at how CAMT5 generates molecules by thinking like a chemist, how FragAtlas-62M is building an open-source fragment library, and how combining a large language model’s knowledge with molecular structure improves property prediction. We’ll also cover how the Eigen-1 multi-agent framework refines scientific reasoning and how ExMolRL blends phenotypic screening with target-based design to create new molecules that are both bioactive and drug-like.">
+
+<title>AI in Drug Discovery: 5 New Models from Molecule Generation to Scientific Reasoning – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="AI in Drug Discovery: 5 New Models from Molecule Generation to Scientific Reasoning – MPU">
+<meta property="og:description" content="This article explores five AI models that are speeding up drug discovery and chemical research. We’ll look at how CAMT5 generates molecules by thinking like a chemist, how FragAtlas-62M is building an open-source fragment library, and how combining a large language model’s knowledge with molecular structure improves property prediction. We’ll also cover how the Eigen-1 multi-agent framework refines scientific reasoning and how ExMolRL blends phenotypic screening with target-based design to create new molecules that are both bioactive and drug-like.">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-10-18/post_all_image/eigen_1_adaptive_mu_2025_10_09_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="A flowchart showing the 'Hierarchical Solution Refinement' process of the
+Eigen-1 framework. It shows multiple initial solutions, with one selected
+as the 'anchor.' Other solutions act as 'peers' to review and revise it,
+ultimately producing a more refined solution through multiple iterations.
+">
+<meta name="twitter:title" content="AI in Drug Discovery: 5 New Models from Molecule Generation to Scientific Reasoning – MPU">
+<meta name="twitter:description" content="This article explores five AI models that are speeding up drug discovery and chemical research. We’ll look at how CAMT5 generates molecules by thinking like a chemist, how FragAtlas-62M is building an open-source fragment library, and how combining a large language model’s knowledge with molecular structure improves property prediction. We’ll also cover how the Eigen-1 multi-agent framework refines scientific reasoning and how ExMolRL blends phenotypic screening with target-based design to create new molecules that are both bioactive and drug-like.">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-10-18/post_all_image/eigen_1_adaptive_mu_2025_10_09_image_1.jpg">
+<meta name="twitter:image:alt" content="A flowchart showing the 'Hierarchical Solution Refinement' process of the
+Eigen-1 framework. It shows multiple initial solutions, with one selected
+as the 'anchor.' Other solutions act as 'peers' to review and revise it,
+ultimately producing a more refined solution through multiple iterations.
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">AI in Drug Discovery: 5 New Models from Molecule Generation to Scientific Reasoning</h1>
+                  <div>
+        <div class="description">
+          <p>This article explores five AI models that are speeding up drug discovery and chemical research. We’ll look at how CAMT5 generates molecules by thinking like a chemist, how FragAtlas-62M is building an open-source fragment library, and how combining a large language model’s knowledge with molecular structure improves property prediction. We’ll also cover how the Eigen-1 multi-agent framework refines scientific reasoning and how ExMolRL blends phenotypic screening with target-based design to create new molecules that are both bioactive and drug-like.</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">Drug Discovery</div>
+                <div class="quarto-category">AI Pharma</div>
+                <div class="quarto-category">Large Language Models</div>
+                <div class="quarto-category">Molecule Generation</div>
+                <div class="quarto-category">Reinforcement Learning</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Saturday, the 18th of October, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#table-of-contents" id="toc-table-of-contents" class="nav-link active" data-scroll-target="#table-of-contents">Table of Contents</a></li>
+  <li><a href="#camt5s-new-approach-teaching-ai-to-build-molecules-with-a-chemists-intuition" id="toc-camt5s-new-approach-teaching-ai-to-build-molecules-with-a-chemists-intuition" class="nav-link" data-scroll-target="#camt5s-new-approach-teaching-ai-to-build-molecules-with-a-chemists-intuition">1. CAMT5’s New Approach: Teaching AI to Build Molecules with a Chemist’s Intuition</a></li>
+  <li><a href="#fragatlas-62m-a-new-box-of-building-blocks-for-chemists-or-just-an-empty-promise" id="toc-fragatlas-62m-a-new-box-of-building-blocks-for-chemists-or-just-an-empty-promise" class="nav-link" data-scroll-target="#fragatlas-62m-a-new-box-of-building-blocks-for-chemists-or-just-an-empty-promise">2. FragAtlas-62M: A New Box of Building Blocks for Chemists, or Just an Empty Promise?</a></li>
+  <li><a href="#aidd-fusing-a-large-models-knowledge-with-molecular-structure" id="toc-aidd-fusing-a-large-models-knowledge-with-molecular-structure" class="nav-link" data-scroll-target="#aidd-fusing-a-large-models-knowledge-with-molecular-structure">3. AIDD: Fusing a Large Model’s Knowledge with Molecular Structure</a></li>
+  <li><a href="#eigen-1-a-new-take-on-ai-multi-agents-makes-scientific-reasoning-more-accurate-and-efficient" id="toc-eigen-1-a-new-take-on-ai-multi-agents-makes-scientific-reasoning-more-accurate-and-efficient" class="nav-link" data-scroll-target="#eigen-1-a-new-take-on-ai-multi-agents-makes-scientific-reasoning-more-accurate-and-efficient">4. Eigen-1, a New Take on AI Multi-Agents, Makes Scientific Reasoning More Accurate and Efficient</a></li>
+  <li><a href="#ai-drug-discovery-exmolrl-unites-phenotype-and-target-in-a-two-pronged-attack" id="toc-ai-drug-discovery-exmolrl-unites-phenotype-and-target-in-a-two-pronged-attack" class="nav-link" data-scroll-target="#ai-drug-discovery-exmolrl-unites-phenotype-and-target-in-a-two-pronged-attack">5. AI Drug Discovery: ExMolRL Unites Phenotype and Target in a Two-Pronged Attack</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-10-18/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="table-of-contents" class="level2">
+<h2 class="anchored" data-anchor-id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li>The CAMT5 model mimics how chemists think in terms of “motifs,” generating more accurate molecules from text descriptions with less training data.</li>
+<li>FragAtlas-62M is an open-source chemical language model that can generate a massive library of novel and chemically valid drug fragments, offering starting points for drug development.</li>
+<li>Combining the chemical knowledge of large language models with a molecule’s structural information improves the accuracy of property predictions.</li>
+<li>The Eigen-1 framework improves the accuracy and efficiency of AI for complex scientific reasoning through seamless knowledge retrieval and hierarchical collaboration, much like how real research works.</li>
+<li>The ExMolRL framework uses reinforcement learning to combine the results-driven approach of phenotypic screening with the precision of target-based design, generating new molecules that are both bioactive and drug-like.</li>
+</ol>
+</section>
+<section id="camt5s-new-approach-teaching-ai-to-build-molecules-with-a-chemists-intuition" class="level2">
+<h2 class="anchored" data-anchor-id="camt5s-new-approach-teaching-ai-to-build-molecules-with-a-chemists-intuition">1. CAMT5’s New Approach: Teaching AI to Build Molecules with a Chemist’s Intuition</h2>
+<p><a href="post_all_image/training_text_to_mol_2025_09_14_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/training_text_to_mol_2025_09_14_image_1.jpg" class="img-fluid"></a></p>
+<p>In drug discovery, we often have a thought like, “I need a small molecule that selectively targets a specific protein pocket and is also water-soluble.” Turning this kind of natural language description directly into a specific molecular structure is an attractive goal for AI in pharma. But many past models worked like someone trying to assemble chemical structures from an alphabet (C, H, O, N…) without knowing chemistry. The result was often that the grammar (chemical bonds) was correct, but the sentence (the whole molecule) made little chemical sense.</p>
+<p>The CAMT5 model from this paper takes a different approach. It’s more like teaching an AI to think in the “jargon” of a chemist.</p>
+<p><strong>A Mental Leap from “Atoms” to “Motifs</strong>”</p>
+<p>When a medicinal chemist looks at a molecule, they don’t see a cloud of isolated atoms. They see functional groups: a benzene ring, an amide bond, a piperidine ring. These “motifs” are the smallest units of chemical function and the foundation of how we communicate and think.</p>
+<p>CAMT5’s core idea is to teach this way of thinking to an AI. Instead of using atoms as the basic building blocks, it first breaks down thousands of molecules from a library into the common structural fragments and functional groups that chemists recognize. So, the AI learns not just that “a carbon connects to a nitrogen,” but that “this is an amide bond, it usually connects two fragments, and it’s quite stable.”</p>
+<p>This motif-based tokenization has a direct benefit: it comes with built-in chemical context. The AI gets a better grasp of the molecule’s overall structure and chemical properties, rather than getting lost in the details of individual atoms.</p>
+<p><strong>Helping the AI Focus on What Matters</strong></p>
+<p>CAMT5 has another feature called “importance-based pre-training.” In simple terms, during training, the model prioritizes learning the motifs that play key roles in a molecule. For example, a molecule’s pharmacophore or core scaffold is obviously more important than a simple methylene group.</p>
+<p>This is like training a new chemist. You’d have them memorize the most critical and common functional group reactions first, not every obscure reaction in the book. It’s a more efficient and effective way to learn.</p>
+<p>The results were striking. CAMT5 used only 2% of the training data of the previous best model and still achieved better performance on multiple tasks. This shows that the right learning method is far more important than just throwing more data at the problem. The efficiency gain means lower computational costs and faster iteration, which is crucial for practical applications.</p>
+<p><strong>What This Means for Drug R&amp;D</strong></p>
+<p>Intuitively, the molecules this model generates have more “chemical sense.” Because they are built from the familiar “building blocks” of chemists, they are more likely to have good drug-like properties and be easier to synthesize.</p>
+<p>Of course, the method has its limits. For instance, is its “vocabulary” (the motif library) rich enough to cover truly novel chemical space? What happens when it encounters a completely new scaffold it has never seen before? These are questions for the next steps.</p>
+<p>But CAMT5 offers an important insight: teaching AI to think like a domain expert might be the right path toward more powerful and practical tools. It’s not creating from scratch; it’s learning and combining the chemical wisdom that human chemists have accumulated over centuries.</p>
+<p>📜Title: Training Text-to-Molecule Models with Context-Aware Tokenization 📜Paper: https://arxiv.org/abs/2509.04476</p>
+</section>
+<section id="fragatlas-62m-a-new-box-of-building-blocks-for-chemists-or-just-an-empty-promise" class="level2">
+<h2 class="anchored" data-anchor-id="fragatlas-62m-a-new-box-of-building-blocks-for-chemists-or-just-an-empty-promise">2. FragAtlas-62M: A New Box of Building Blocks for Chemists, or Just an Empty Promise?</h2>
+<p><a href="post_all_image/a_foundation_chemica_2025_10_09_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/a_foundation_chemica_2025_10_09_image_1.jpg" class="img-fluid"></a></p>
+<p>Fragment-Based Drug Discovery (FBDD) is like building a model with Legos. Chemists first find small molecular “bricks,” or fragments, that weakly bind to a target protein. Then they link or optimize these fragments to build a potent drug. The strategy has been successful, but finding high-quality initial “bricks” is the first hurdle. Chemical space is vast, and searching it with human intuition and traditional methods is slow.</p>
+<p>FragAtlas-62M is a tool designed to make this search for “bricks” smarter.</p>
+<p>It is a Large Language Model (LLM), similar to GPT-4, but instead of learning human language, it learns chemical structures. Researchers trained it on over 62 million molecular fragments from the ZINC-22 database, teaching it the rules of “chemical grammar.” Once trained, the model can “write” new molecular fragments that follow these rules.</p>
+<p><strong>How Well Does It Work</strong>?</p>
+<p>The model learned its “grammar” well. 99.9% of the molecular fragments it generates are chemically valid, so it doesn’t just invent structures that violate the principles of chemistry. A tool is useless if most of its output is noise.</p>
+<p>The model also strikes a balance between “review” and “innovation.” Of the fragments it generated, 53.55% were known fragments from the ZINC database, proving it mastered existing core chemical patterns. At the same time, it created 22.04% entirely new structures. A t-SNE visualization analysis (see image above) shows that the chemical space distribution of these new fragments (Novel) highly overlaps with the known ones (Rediscovered). This suggests the new fragments have chemical properties similar to known high-quality fragments, giving them potential as starting points. It’s like a musician who can play the classics but also improvise.</p>
+<p><strong>The Value of Being Open-Source</strong></p>
+<p>The model’s biggest advantage is that it’s open-source. The research team has made the model, code, and data public. This means anyone with moderate computing resources, whether at a large company or a university lab, can deploy and use it. Researchers can use it to quickly generate virtual libraries with tens of thousands of novel fragments for virtual screening or to inspire synthesis targets. It acts like a tireless and creative assistant.</p>
+<p><strong>Limitations</strong></p>
+<p>The model has its limitations. First, it works with SMILES strings, a one-dimensional representation of chemistry that doesn’t capture a molecule’s 3D conformation or stereochemistry. In drug discovery, a molecule’s 3D shape determines whether it can bind to a target. The model provides a 2D “blueprint,” but a chemist still needs to figure out the 3D structure. Second, the model only generates the “bricks,” not instructions on how to build with them. It doesn’t offer strategies for linking fragments. The leap from fragments to a lead compound remains the art of medicinal chemistry.</p>
+<p>Overall, FragAtlas-62M is positioned as a powerful tool to assist chemists, not replace them. It expands the search for drug starting points, revealing possibilities that would be difficult to find with human effort alone. The model frees chemists from the tedious search for “bricks,” allowing them to focus on combining high-quality fragments into effective drugs.</p>
+<p>📜Title: A Foundation Chemical Language Model for Comprehensive Fragment-Based Drug Discovery 🌐Paper: https://arxiv.org/abs/2509.19586</p>
+</section>
+<section id="aidd-fusing-a-large-models-knowledge-with-molecular-structure" class="level2">
+<h2 class="anchored" data-anchor-id="aidd-fusing-a-large-models-knowledge-with-molecular-structure">3. AIDD: Fusing a Large Model’s Knowledge with Molecular Structure</h2>
+<p><a href="post_all_image/enhancing_molecular_2025_10_09_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/enhancing_molecular_2025_10_09_image_1.jpg" class="img-fluid"></a></p>
+<p>In computer-aided drug discovery, there are typically two ways to predict a molecule’s properties. The first uses models like Graph Neural Networks (GNNs) to directly analyze a molecule’s 2D or 3D structure. This approach is good at finding patterns in structures, but it’s like a mathematician who understands geometry but not chemistry; it lacks the “chemical intuition” for higher-level concepts like functional groups or reactivity.</p>
+<p>The second approach uses a Large Language Model (LLM) to read chemical literature. It can understand many chemical concepts but sometimes “hallucinates,” making up facts, and doesn’t have a deep understanding of specific molecular structures.</p>
+<p>This paper proposes a method that combines the strengths of both.</p>
+<p>Instead of asking an LLM to directly predict a molecule’s properties, the researchers first use it as a “consultant.” They prompt the LLM (like GPT-4o) to generate relevant chemical knowledge about a specific molecule, or even generate Python code to calculate molecular descriptors. This is like asking a senior chemist to write down their key thoughts upon seeing a molecule, such as, “This structure contains a Michael acceptor, which could cause off-target toxicity,” or “This fused ring system is planar and might have hERG issues.”</p>
+<p>Then, the researchers take these “knowledge features” generated by the LLM and combine them with traditional “structural features” extracted from the molecule’s graph structure. This fused feature vector is then fed into a simple predictive model.</p>
+<p>This approach covers the blind spots of both methods. The molecular structure information acts as a safety net, providing a solid physical basis for the prediction that can correct for an LLM’s flights of fancy. The chemical knowledge from the LLM adds rich chemical context to the otherwise cold structural data. The improvement is especially noticeable when dealing with properties like biological activity or ADMET (absorption, distribution, metabolism, excretion, and toxicity), where data is sparse and the patterns are complex.</p>
+<p>The researchers tested their method on several public datasets. The results showed that this dual-source “knowledge + structure” approach consistently outperformed methods that used only a single source of information. They also compared the quality of knowledge generated by different LLMs (GPT-4o, GPT-4.1, and DeepSeek-R1).</p>
+<p>This framework provides a practical example of how to use LLMs to empower drug R&amp;D. It turns the AI into an assistant that can translate vast amounts of literature knowledge into usable computational features, rather than a replacement for scientists.</p>
+<p>📜Title: Enhancing Molecular Property Prediction with Knowledge from Large Language Models 🌐Paper: https://arxiv.org/abs/2509.20664</p>
+</section>
+<section id="eigen-1-a-new-take-on-ai-multi-agents-makes-scientific-reasoning-more-accurate-and-efficient" class="level2">
+<h2 class="anchored" data-anchor-id="eigen-1-a-new-take-on-ai-multi-agents-makes-scientific-reasoning-more-accurate-and-efficient">4. Eigen-1, a New Take on AI Multi-Agents, Makes Scientific Reasoning More Accurate and Efficient</h2>
+<p><a href="post_all_image/eigen_1_adaptive_mu_2025_10_09_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="post_all_image/eigen_1_adaptive_mu_2025_10_09_image_1.jpg" class="img-fluid"></a></p>
+<p>Large Language Models (LLMs) do well on general problems, but they often struggle with complex scientific reasoning tasks in areas like biochemistry. They may lack specific domain knowledge or get lost during multi-step reasoning. A new paper introduces the Eigen-1 framework, which offers a new solution.</p>
+<section id="letting-ai-access-knowledge-unconsciously-like-an-expert" class="level4">
+<h4 class="anchored" data-anchor-id="letting-ai-access-knowledge-unconsciously-like-an-expert">Letting AI Access Knowledge “Unconsciously,” Like an Expert</h4>
+<p>In scientific work, knowledge becomes second nature. When you think about a problem, relevant facts just come to mind; you don’t have to stop and look things up every step of the way. Traditional Retrieval-Augmented Generation (RAG) is like the latter—it requires the AI to explicitly call a tool to find information, which interrupts its train of thought.</p>
+<p>Eigen-1 is designed differently. It uses a “Monitor-based RAG” mechanism. This system works at the token level, acting like an always-on monitor that constantly detects “knowledge gaps” in the AI’s reasoning process. As soon as a gap is found, it seamlessly supplies external knowledge without disrupting the AI’s main reasoning flow.</p>
+<p>This is like an experienced scientist solving a problem. Relevant information naturally surfaces in their mind to support the next step, without them having to stop and ask what they need to look up. This approach makes the AI’s reasoning process smoother and deeper.</p>
+</section>
+<section id="from-democratic-voting-to-peer-review" class="level4">
+<h4 class="anchored" data-anchor-id="from-democratic-voting-to-peer-review">From “Democratic Voting” to “Peer Review”</h4>
+<p>When faced with a complex problem, people often come up with several possible solutions. Traditional multi-agent systems have each agent generate a solution and then vote for the best one. This is simple, but it often selects the most “average” answer, not the most correct one.</p>
+<p>Eigen-1 uses a model closer to scientific collaboration: “Hierarchical Solution Refinement” (HSR). Here’s how it works: 1. The system generates multiple candidate solutions. 2. It takes each solution in turn and designates it as the “anchor.” 3. The other solutions act as “peers” to review and correct the anchor solution.</p>
+<p>This process is similar to a paper’s peer review. Each reviewer (the other solutions) points out the strengths and weaknesses of the current paper (the anchor solution) from its own perspective and suggests revisions. Through this structured cross-review and repair, the quality of each solution is systematically improved, resulting in a more rigorous and reliable final solution that has been refined through multiple rounds.</p>
+</section>
+<section id="knowing-when-to-stop-smart-efficient-iteration" class="level4">
+<h4 class="anchored" data-anchor-id="knowing-when-to-stop-smart-efficient-iteration">Knowing When to Stop: Smart, Efficient Iteration</h4>
+<p>Research requires knowing when not to spend too much time on a problem that’s already good enough. Eigen-1 addresses this with its “Quality-Aware Iterative Reasoning” (QAIR) mechanism.</p>
+<p>After each round of solution refinement, QAIR assesses the quality of the result. If the solution is good enough, or if the marginal benefit of further refinement is low, the system stops iterating. This adaptive approach ensures that computational resources are spent where they matter most.</p>
+<p>On the HLE bio/chem gold-standard benchmark, Eigen-1 achieved an accuracy of 48.3%, surpassing previous models. At the same time, it reduced token usage by 53.5% and agent execution steps by 43.7%. It is not only more accurate but also faster and more cost-effective.</p>
+<p>For fields like drug R&amp;D, which require extensive computation and reasoning, this kind of efficiency gain is significant. It means more possibilities can be explored in less time and at a lower cost. Eigen-1’s approach of mimicking how human experts seamlessly access knowledge and collaborate through peer review offers a promising direction for AI in solving frontier scientific problems.</p>
+<p>📜<strong>Title</strong>: Eigen-1: Adaptive Multi-Agent Refinement with Monitor-Based RAG for Scientific Reasoning 🌐<strong>Paper</strong>: https://arxiv.org/abs/2509.21193</p>
+</section>
+</section>
+<section id="ai-drug-discovery-exmolrl-unites-phenotype-and-target-in-a-two-pronged-attack" class="level2">
+<h2 class="anchored" data-anchor-id="ai-drug-discovery-exmolrl-unites-phenotype-and-target-in-a-two-pronged-attack">5. AI Drug Discovery: ExMolRL Unites Phenotype and Target in a Two-Pronged Attack</h2>
+<p><a href="post_all_image/ex_mol_rl_phenotype_t_2025_10_09_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="post_all_image/ex_mol_rl_phenotype_t_2025_10_09_image_1.jpg" class="img-fluid"></a></p>
+<p>In drug discovery, the search for new medicines has long followed two separate paths.</p>
+<p>The first path is “phenotypic screening.” This is like the ancient method of testing herbs—you apply a large number of compounds to cells and see which ones produce the desired effect, like killing cancer cells. The advantage of this approach is that it’s results-oriented; you can find an effective molecule even if you don’t know its target. The downside is its “black box” nature, which makes it difficult to understand the mechanism and optimize the molecule later.</p>
+<p>The second path is “target-based drug design.” This is like precision guidance. You first identify a key protein (the target) involved in a disease and then design or screen for molecules that bind to it, like making a key for a specific lock. This approach has a clear goal, but it’s risky. If you pick the wrong target, or if a single target isn’t enough to treat a complex disease, all subsequent work may be for nothing.</p>
+<p>Ideally, drug discovery should combine the strengths of both strategies: the guaranteed results of phenotypic screening and the precision of target-based design. The ExMolRL framework was designed to do just that.</p>
+<p>Its design involves two steps.</p>
+<p>First, it trains a molecule generator on massive amounts of “drug-transcriptome” data. The AI learns how different drugs cause changes in gene expression in cells, essentially mastering a “drug-effect fingerprint library.” Through this learning, the AI can predict the likely cellular phenotype for a given molecular structure. For example, it can learn to recognize the molecular features that might kill A549 lung cancer cells.</p>
+<p>Second, it uses Multi-Objective Reinforcement Learning to fine-tune the model. Reinforcement learning is like training an AI to play a game: you set the rules and give rewards based on performance. Here, the goal of the game is to generate an ideal drug molecule, and the reward is determined by a composite function that balances several key metrics:</p>
+<ol type="1">
+<li><strong>Docking Affinity</strong>: The molecule must bind tightly to the specified target protein for a “precision strike.”</li>
+<li><strong>Phenotypic Match (Ranking Loss</strong>): The molecule’s predicted gene expression profile must closely match the desired “anti-cancer” phenotypic profile to ensure it is “results-oriented.”</li>
+<li><strong>Drug-likeness</strong>: The molecule’s physicochemical properties (like solubility and stability) must meet the standards for a drug.</li>
+<li><strong>Synthetic Accessibility</strong>: The molecule must be chemically synthesizable, not just a theoretical construct.</li>
+<li><strong>Diversity (Entropy Maximization</strong>): The model is encouraged to generate structurally diverse molecules to increase the chance of success.</li>
+</ol>
+<p>This reward system guides ExMolRL to find the optimal balance. The molecules it generates are not just champions in a single category but are candidates with excellent all-around performance.</p>
+<p>The results show that the molecules generated by ExMolRL are superior in target binding affinity, drug-likeness, and synthetic accessibility compared to traditional methods that focus only on the target or the phenotype. Furthermore, the computationally designed molecules showed stronger anti-cancer activity in cell experiments. This confirms the effectiveness of the dual “phenotype + target” strategy in discovering potential drug molecules.</p>
+<p>Tools like ExMolRL offer a new paradigm for exploring chemical space in drug R&amp;D. The molecules it designs are built from the ground up to have both target precision (hitting the right spot) and biological effectiveness (hitting hard), which could improve the success rate of early-stage drug discovery.</p>
+<p>📜Title: ExMolRL: Phenotype–Target Joint Generation of De Novo Molecules via Multi-Objective Reinforcement Learning 🌐Paper: https://arxiv.org/abs/2509.21010v1</p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-10-18/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

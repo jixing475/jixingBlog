@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="This article introduces three computational tools designed to accelerate early-stage drug discovery. ProteinWeaver helps researchers quickly understand target function by visualizing protein interaction networks. A High-Performance Computing (HPC) workflow significantly shortens molecular docking and dynamics simulation times for Alzheimer’s drugs using parallel computing. And PlasmoDocking simplifies the complex virtual screening process for anti-malarial drugs into an easy-to-use, open-source web tool, making it much more accessible.">
+
+<title>AI in Drug Discovery: Three New Tools to Speed Up Target Screening and Drug Simulation – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="AI in Drug Discovery: Three New Tools to Speed Up Target Screening and Drug Simulation – MPU">
+<meta property="og:description" content="This article introduces three computational tools designed to accelerate early-stage drug discovery. ProteinWeaver helps researchers quickly understand target function by visualizing protein interaction networks. A High-Performance Computing (HPC) workflow significantly shortens molecular docking and dynamics simulation times for Alzheimer’s drugs using parallel computing. And PlasmoDocking simplifies the complex virtual screening process for anti-malarial drugs into an easy-to-use, open-source web tool, making it much more accessible.">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-10-04/post_all_image/parallelizing_drug_d_2025_09_14_image_1.png">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:height" content="656">
+<meta property="og:image:width" content="894">
+<meta property="og:image:alt" content="A flowchart showing a parallel workflow using High-Performance Computing (HPC) to accelerate Alzheimer's drug discovery. The diagram includes steps like molecular docking, molecular dynamics simulation, and energy minimization, using arrows and icons to illustrate how parallel processing shortens computation time.
+">
+<meta name="twitter:title" content="AI in Drug Discovery: Three New Tools to Speed Up Target Screening and Drug Simulation – MPU">
+<meta name="twitter:description" content="This article introduces three computational tools designed to accelerate early-stage drug discovery. ProteinWeaver helps researchers quickly understand target function by visualizing protein interaction networks. A High-Performance Computing (HPC) workflow significantly shortens molecular docking and dynamics simulation times for Alzheimer’s drugs using parallel computing. And PlasmoDocking simplifies the complex virtual screening process for anti-malarial drugs into an easy-to-use, open-source web tool, making it much more accessible.">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-10-04/post_all_image/parallelizing_drug_d_2025_09_14_image_1.png">
+<meta name="twitter:image-height" content="656">
+<meta name="twitter:image-width" content="894">
+<meta name="twitter:image:alt" content="A flowchart showing a parallel workflow using High-Performance Computing (HPC) to accelerate Alzheimer's drug discovery. The diagram includes steps like molecular docking, molecular dynamics simulation, and energy minimization, using arrows and icons to illustrate how parallel processing shortens computation time.
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">AI in Drug Discovery: Three New Tools to Speed Up Target Screening and Drug Simulation</h1>
+                  <div>
+        <div class="description">
+          <p>This article introduces three computational tools designed to accelerate early-stage drug discovery. ProteinWeaver helps researchers quickly understand target function by visualizing protein interaction networks. A High-Performance Computing (HPC) workflow significantly shortens molecular docking and dynamics simulation times for Alzheimer’s drugs using parallel computing. And PlasmoDocking simplifies the complex virtual screening process for anti-malarial drugs into an easy-to-use, open-source web tool, making it much more accessible.</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">Drug Discovery</div>
+                <div class="quarto-category">Computational Biology</div>
+                <div class="quarto-category">Virtual Screening</div>
+                <div class="quarto-category">HPC</div>
+                <div class="quarto-category">Bioinformatics</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Saturday, the 4th of October, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#table-of-contents" id="toc-table-of-contents" class="nav-link active" data-scroll-target="#table-of-contents">Table of Contents</a></li>
+  <li><a href="#proteinweaver-a-new-tool-for-visualizing-protein-interaction-networks" id="toc-proteinweaver-a-new-tool-for-visualizing-protein-interaction-networks" class="nav-link" data-scroll-target="#proteinweaver-a-new-tool-for-visualizing-protein-interaction-networks">1. ProteinWeaver: A New Tool for Visualizing Protein Interaction Networks</a></li>
+  <li><a href="#using-hpc-to-accelerate-alzheimers-drug-development-trading-compute-for-time" id="toc-using-hpc-to-accelerate-alzheimers-drug-development-trading-compute-for-time" class="nav-link" data-scroll-target="#using-hpc-to-accelerate-alzheimers-drug-development-trading-compute-for-time">2. Using HPC to Accelerate Alzheimer’s Drug Development: Trading Compute for Time</a></li>
+  <li><a href="#plasmodocking-virtual-screening-for-malaria-drugs-with-just-a-few-clicks" id="toc-plasmodocking-virtual-screening-for-malaria-drugs-with-just-a-few-clicks" class="nav-link" data-scroll-target="#plasmodocking-virtual-screening-for-malaria-drugs-with-just-a-few-clicks">3. PlasmoDocking: Virtual Screening for Malaria Drugs with Just a Few Clicks</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-10-04/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="table-of-contents" class="level2">
+<h2 class="anchored" data-anchor-id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li>A new tool visually links proteins to specific biological pathways, helping us quickly form new hypotheses about target function.</li>
+<li>High-Performance Computing (HPC) can speed up early-stage drug discovery, but linearly scaling computational power for complex molecular dynamics simulations remains a challenge.</li>
+<li>PlasmoDocking is an open-source web tool that simplifies the complex virtual screening process for <em>Plasmodium falciparum</em> to just uploading a molecule and clicking “run,” significantly lowering the barrier to entry for early-stage anti-malarial drug discovery.</li>
+</ol>
+</section>
+<section id="proteinweaver-a-new-tool-for-visualizing-protein-interaction-networks" class="level2">
+<h2 class="anchored" data-anchor-id="proteinweaver-a-new-tool-for-visualizing-protein-interaction-networks">1. ProteinWeaver: A New Tool for Visualizing Protein Interaction Networks</h2>
+<p><a href="post_all_image/protein_weaver_a_web_2025_09_14_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/protein_weaver_a_web_2025_09_14_image_1.jpg" class="img-fluid"></a></p>
+<p>In drug development, we often face a common problem: we find a promising protein target, but what role does it actually play in a complex disease pathway? How does it “talk” to other members of that pathway? Figuring this out traditionally means reading a lot of papers, which is time-consuming and it’s easy to miss key information.</p>
+<p>A new tool called ProteinWeaver offers a more intuitive solution.</p>
+<p>It works simply. Let’s say you’re interested in a protein, “Protein X,” and you suspect it’s involved in “apoptosis.” You just enter the name of Protein X and the corresponding Gene Ontology (GO) term for apoptosis into ProteinWeaver. It automatically pulls data from databases and draws a network map for you. This map clearly shows which “middlemen” connect Protein X to the broader “apoptosis” family.</p>
+<p>The value of this map is its clarity. You can see at a glance whether Protein X is a central hub in the network or just a peripheral player. This is critical for assessing a target’s importance.</p>
+<p>ProteinWeaver also does something other interactive tools don’t: it displays two different types of interactions at the same time. One is “physical binding,” where two proteins fit together like LEGO bricks. The other is “genetic regulation,” where a transcription factor protein “tells” another gene to start or stop transcription. Putting both types of information on one map is like having both a circuit wiring diagram and a control flowchart. It gives us a much deeper understanding of how the system works.</p>
+<p>This network-building approach helps us quickly generate testable hypotheses. For instance, if the map shows that Protein X connects to a key pathway through a previously overlooked protein, “Protein Y,” then Protein Y might be a new potential target or a useful biomarker.</p>
+<p>What if you’re dealing with a protein of completely unknown function? ProteinWeaver also has a prediction feature. It uses an algorithm called a “random walk.” Imagine someone blindfolded, starting at your unknown protein and wandering randomly across the network map. The algorithm calculates where they are most likely to end up in known “functional areas” (i.e., GO terms). The area with the highest probability is the best guess for your unknown protein’s function. Researchers have verified that this method is highly accurate across several model organisms.</p>
+<p>For scientists on the front lines of R&amp;D, ProteinWeaver is a useful tool. It consolidates vast, scattered biological data into an intuitive, interactive map, making it easier to explore target function and understand mechanisms of action. It requires no complex programming skills; you can use it with a few clicks. During early-stage target screening and validation, it can help clarify thinking and avoid detours.</p>
+<p>📜Paper: https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0331280 💻Code: https://github.com/Reed-CompBio/protein-weaver</p>
+</section>
+<section id="using-hpc-to-accelerate-alzheimers-drug-development-trading-compute-for-time" class="level2">
+<h2 class="anchored" data-anchor-id="using-hpc-to-accelerate-alzheimers-drug-development-trading-compute-for-time">2. Using HPC to Accelerate Alzheimer’s Drug Development: Trading Compute for Time</h2>
+<p><a href="post_all_image/parallelizing_drug_d_2025_09_14_image_1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/parallelizing_drug_d_2025_09_14_image_1.png" class="img-fluid"></a></p>
+<p>Developing drugs for Alzheimer’s disease (AD) is like finding a needle in a haystack. Potential targets like Aβ and Tau proteins are structurally complex, and potential compound libraries can contain millions or even billions of molecules. Testing them one by one would take forever, so computational simulation has become our “fish finder.”</p>
+<p>Molecular docking and molecular dynamics (MD) simulations are two of the main tools.</p>
+<p>Molecular docking is like trying to fit small molecules (drug candidates) into the pockets of a target protein to see which one fits best, like testing keys in a lock. This process is computationally intensive because you have to try a huge number of “keys.”</p>
+<p>Molecular dynamics simulation goes a step further. It simulates every move a molecule makes in a realistic physiological environment, like filming an ultra-high-definition slow-motion movie of the molecule. This movie lets us see if the drug molecule remains stable after binding to the target protein and how they interact. The computational load for this is orders of magnitude greater than for docking.</p>
+<p>Both of these steps are time-consuming and create a bottleneck in the early stages of drug discovery.</p>
+<p>The work in this study wasn’t about discovering a new drug, but about building a faster “engine” to speed up the entire screening process. The researchers turned to High-Performance Computing (HPC), what we often call supercomputing. The idea is straightforward: if one computer is too slow, use thousands of them to compute in parallel.</p>
+<p>The researchers built a parallel workflow.</p>
+<p>First, let’s look at molecular dynamics simulation. They used the industry-standard software GROMACS and parallelized it with a hybrid MPI–OpenMP strategy. This is like managing a large construction crew. MPI assigns large tasks to different teams (compute nodes), while OpenMP lets the workers (CPU cores) within each team collaborate to finish their part of the job. In the initial stages of the simulation, like energy minimization (finding a comfortable starting position for the molecule), this “many hands make light work” approach was immediately effective, showing a clear speedup.</p>
+<p>But it’s not that simple. For larger and longer simulations, adding more compute cores led to diminishing returns in speed. This is known as a “scalability bottleneck.” When there are too many workers, the cost of communication and coordination between them increases, which can slow down the overall progress. The paper candidly points out this limitation.</p>
+<p>Now let’s look at molecular docking. This is where parallel computing really shines. High-Throughput Virtual Screening (HTVS) is essentially about testing a huge number of molecules against a single target. This task is naturally divisible. You can split one million molecules among 1,000 compute cores, and each core just has to handle 1,000 molecules. They need almost no communication with each other; they just do their work and report the results at the end. The docking prototype developed by the researchers proved this: moving from serial to parallel processing drastically reduced the runtime, especially when handling a large number of molecules.</p>
+<p>To prove the effectiveness of this workflow, they tested it on two real-world AD cases: targeting Aβ protein with prolinamide derivatives and targeting Tau protein with baicalein. The results showed that the workflow could effectively reproduce known binding modes. This means the new “engine” is not only fast but also points in the right direction.</p>
+<p>The value of this research is that it provides a complete, reproducible HPC pipeline for drug discovery and makes all the code public. For any lab looking to build a similar platform, this is a ready-made blueprint and performance report. It shows us where HPC can be a huge help (like in high-throughput docking) and where we still need to focus on optimization (like the scalability of large-scale MD simulations).</p>
+<p>The researchers also looked to the future, mentioning things like integrating GPU acceleration (GPUs are more efficient at this type of parallel computing), moving toward exascale computing, and even exploring quantum computing. These are all potential paths to solving the current bottlenecks.</p>
+<p>📜Title: Parallelizing Drug Discovery: HPC Pipelines for Alzheimer’s Molecular Docking and Simulation 📜Paper: <a href="https://arxiv.org/abs/2509.00937v1" class="uri">https://arxiv.org/abs/2509.00937v1</a> 💻Code: <a href="https://github.com/RestartDK/alzheimer-hpc" class="uri">https://github.com/RestartDK/alzheimer-hpc</a> <a href="https://github.com/albipuliga/molecular-docking-hpc" class="uri">https://github.com/albipuliga/molecular-docking-hpc</a></p>
+</section>
+<section id="plasmodocking-virtual-screening-for-malaria-drugs-with-just-a-few-clicks" class="level2">
+<h2 class="anchored" data-anchor-id="plasmodocking-virtual-screening-for-malaria-drugs-with-just-a-few-clicks">3. PlasmoDocking: Virtual Screening for Malaria Drugs with Just a Few Clicks</h2>
+<p><a href="post_all_image/plasmo_docking_a_use_2025_09_14_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/plasmo_docking_a_use_2025_09_14_image_1.jpg" class="img-fluid"></a></p>
+<p>In anti-malarial drug discovery, virtual screening is an essential tool. It can help us quickly identify promising lead molecules from massive compound libraries. But the process is usually a hassle. You have to download the crystal structure of the target protein, clean up water molecules and extra chains, identify the active site, validate docking parameters… For someone without a background in computational chemistry, just setting up the environment can take days.</p>
+<p>Now, someone has packaged this entire workflow into a web tool called PlasmoDocking.</p>
+<p>Think of it as a meal prep kit. The ingredients (38 validated <em>Plasmodium falciparum</em> targets) and the cooking tools (the docking engine AutodockGPU) are all prepared for you. All you have to do is put in your own “food” (an SDF file with up to 10 molecules) and click “start cooking.”</p>
+<p>This is a huge benefit for many labs. Teams focused on biology or traditional medicinal chemistry might have a great new molecule and want to see which malarial targets it might have activity against, but they don’t have a dedicated computational chemist. With PlasmoDocking, they can get a preliminary, multi-target activity assessment in minutes.</p>
+<p>Here’s how it works: 1. You go to the website and upload an <code>.sdf</code> file containing the structures of your designed molecules. 2. The system uses AutodockGPU to perform molecular docking against the 38 pre-set malarial enzyme targets simultaneously. 3. When it’s done, it gives you a clear dashboard showing the binding energy and best conformation of your molecule for each target.</p>
+<p>This multi-target screening feature is very practical. It can help you quickly determine if a molecule acts specifically on one target or is a broad-spectrum inhibitor. This provides valuable clues for later optimization and analysis of potential off-target effects.</p>
+<p>Of course, as careful scientists, we have to ask: is this thing reliable?</p>
+<p>The researchers did their validation work. They took the original ligands (the small molecules already bound in the crystal structures) from the 38 target proteins, removed them, and then used PlasmoDocking to “dock” them back in. The results showed that in most cases, the predicted binding poses were close to the actual poses in the crystal structures, with a Root-Mean-Square Deviation (RMSD) of less than or equal to 2.00 Å. In the field of docking, that’s considered good accuracy, suggesting the platform’s predictions are trustworthy.</p>
+<p>Finally, the project is open-source. All the code is on GitHub. This means you can not only use it for free, but if you have the expertise, you can also download the code, deploy it on your own server, and even modify it to suit your needs, such as by adding new targets. This openness helps advance research in the entire field.</p>
+<p>Overall, PlasmoDocking won’t replace the detailed design and simulation work of an experienced computational chemist, but it successfully brings the barrier to entry for virtual screening down to earth. It allows more researchers to quickly and easily test their ideas, accelerating the early exploration phase of anti-malarial drug discovery.</p>
+<p>📜Paper: https://onlinelibrary.wiley.com/doi/full/10.1002/jcc.70225 💻Code: https://github.com/LABIOQUIM/PlasmoDocking-Client</p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-10-04/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

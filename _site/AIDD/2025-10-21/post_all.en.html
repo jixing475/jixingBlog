@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="How do protein language models (like ESM) “think” like experts? This article explores how we can analyze their “attention” mechanism to identify the key amino acid sites (HA sites) that determine a protein’s family and function. This method not only reveals the deep biological rules learned by AI models but also offers new ideas for annotating proteins of unknown function, designing drugs, and studying drug resistance mutations. It’s helping turn AI from a prediction tool into an interpretable “research partner.”">
+
+<title>A New Way to Use AI: Decoding Protein Function with Attention – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="A New Way to Use AI: Decoding Protein Function with Attention – MPU">
+<meta property="og:description" content="How do protein language models (like ESM) “think” like experts? This article explores how we can analyze their “attention” mechanism to identify the key amino acid sites (HA sites) that determine a protein’s family and function. This method not only reveals the deep biological rules learned by AI models but also offers new ideas for annotating proteins of unknown function, designing drugs, and studying drug resistance mutations. It’s helping turn AI from a prediction tool into an interpretable “research partner.”">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-10-21/post_all_image/paying_attention_to_2025_09_14_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="A conceptual image showing an AI analyzing a protein amino acid sequence.
+The AI's 'eyes' are focused on specific residues in the sequence, which are
+highlighted to represent the High Attention sites the model has identified
+as key regions determining the protein's function.
+">
+<meta name="twitter:title" content="A New Way to Use AI: Decoding Protein Function with Attention – MPU">
+<meta name="twitter:description" content="How do protein language models (like ESM) “think” like experts? This article explores how we can analyze their “attention” mechanism to identify the key amino acid sites (HA sites) that determine a protein’s family and function. This method not only reveals the deep biological rules learned by AI models but also offers new ideas for annotating proteins of unknown function, designing drugs, and studying drug resistance mutations. It’s helping turn AI from a prediction tool into an interpretable “research partner.”">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-10-21/post_all_image/paying_attention_to_2025_09_14_image_1.jpg">
+<meta name="twitter:image:alt" content="A conceptual image showing an AI analyzing a protein amino acid sequence.
+The AI's 'eyes' are focused on specific residues in the sequence, which are
+highlighted to represent the High Attention sites the model has identified
+as key regions determining the protein's function.
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">A New Way to Use AI: Decoding Protein Function with Attention</h1>
+                  <div>
+        <div class="description">
+          <p>How do protein language models (like ESM) “think” like experts? This article explores how we can analyze their “attention” mechanism to identify the key amino acid sites (HA sites) that determine a protein’s family and function. This method not only reveals the deep biological rules learned by AI models but also offers new ideas for annotating proteins of unknown function, designing drugs, and studying drug resistance mutations. It’s helping turn AI from a prediction tool into an interpretable “research partner.”</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">Protein Language Model</div>
+                <div class="quarto-category">Attention Mechanism</div>
+                <div class="quarto-category">Drug Design</div>
+                <div class="quarto-category">AI Interpretability</div>
+                <div class="quarto-category">ESM</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Tuesday, the 21st of October, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#table-of-contents" id="toc-table-of-contents" class="nav-link active" data-scroll-target="#table-of-contents">Table of Contents</a></li>
+  <li><a href="#dynaprot-predicting-protein-dynamics-from-static-structures-a-lightweight-alternative-to-md-simulations" id="toc-dynaprot-predicting-protein-dynamics-from-static-structures-a-lightweight-alternative-to-md-simulations" class="nav-link" data-scroll-target="#dynaprot-predicting-protein-dynamics-from-static-structures-a-lightweight-alternative-to-md-simulations">1. DynaProt: Predicting Protein Dynamics from Static Structures, a Lightweight Alternative to MD Simulations</a></li>
+  <li><a href="#a-new-way-to-use-ai-decoding-protein-function-with-attention" id="toc-a-new-way-to-use-ai-decoding-protein-function-with-attention" class="nav-link" data-scroll-target="#a-new-way-to-use-ai-decoding-protein-function-with-attention">2. A New Way to Use AI: Decoding Protein Function with Attention</a></li>
+  <li><a href="#generative-ai-fills-in-clinical-data-a-new-approach-for-precision-medicine" id="toc-generative-ai-fills-in-clinical-data-a-new-approach-for-precision-medicine" class="nav-link" data-scroll-target="#generative-ai-fills-in-clinical-data-a-new-approach-for-precision-medicine">3. Generative AI Fills in Clinical Data, a New Approach for Precision Medicine</a></li>
+  <li><a href="#ai-prediction-of-protein-sugar-interactions-how-are-models-like-alphafold3-doing" id="toc-ai-prediction-of-protein-sugar-interactions-how-are-models-like-alphafold3-doing" class="nav-link" data-scroll-target="#ai-prediction-of-protein-sugar-interactions-how-are-models-like-alphafold3-doing">4. AI Prediction of Protein-Sugar Interactions: How Are Models Like AlphaFold3 Doing?</a></li>
+  <li><a href="#ai-for-molecular-property-prediction-getting-back-to-the-language-of-chemistsfunctional-groups" id="toc-ai-for-molecular-property-prediction-getting-back-to-the-language-of-chemistsfunctional-groups" class="nav-link" data-scroll-target="#ai-for-molecular-property-prediction-getting-back-to-the-language-of-chemistsfunctional-groups">5. AI for Molecular Property Prediction: Getting Back to the Language of Chemists—Functional Groups</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-10-21/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="table-of-contents" class="level2">
+<h2 class="anchored" data-anchor-id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li>The DynaProt framework uses a lightweight AI model to predict protein dynamics from a single static structure with high accuracy and efficiency, offering a new alternative to MD simulations for fields like drug discovery.</li>
+<li>By analyzing the “attention” focus of protein language models, we can directly locate the key amino acids that determine their family and function, making the AI’s “thought process” less of a black box.</li>
+<li>Researchers developed a generative AI framework called “Coherent Denoising” that uses multiple models to “vote” on how to fill in missing clinical data, improving the predictive power and diagnostic efficiency of precision medicine.</li>
+<li>The latest AI models perform reasonably well at predicting simple protein-sugar binding, but they still struggle with complex glycans, showing we have a long way to go to crack the glyco-interactome.</li>
+<li>AI for predicting molecular properties is returning to chemical fundamentals, using the familiar language of functional groups to build models that are both accurate and easy to understand.</li>
+</ol>
+</section>
+<section id="dynaprot-predicting-protein-dynamics-from-static-structures-a-lightweight-alternative-to-md-simulations" class="level2">
+<h2 class="anchored" data-anchor-id="dynaprot-predicting-protein-dynamics-from-static-structures-a-lightweight-alternative-to-md-simulations">1. DynaProt: Predicting Protein Dynamics from Static Structures, a Lightweight Alternative to MD Simulations</h2>
+<p><a href="post_all_image/learning_residue_lev_2025_09_14_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/learning_residue_lev_2025_09_14_image_1.jpg" class="img-fluid"></a></p>
+<p>Molecular Dynamics (MD) simulations are powerful. They can reveal how proteins move, change shape, and interact with drug molecules. But they are slow and computationally expensive. A simulation for a complex system can take days or even weeks. This is a huge bottleneck for projects that need to quickly screen large numbers of molecules or analyze entire proteomes.</p>
+<p>The DynaProt framework offers a solution. It skips the simulation process and directly predicts a protein’s dynamic properties from a single static structure from the Protein Data Bank (PDB).</p>
+<p>Here’s how DynaProt works. It doesn’t simulate the trajectory of every atom over time.</p>
+<p>First, it defines a 3D Gaussian distribution for each amino acid residue. You can imagine each residue not as a fixed point but as a “probability cloud.” The shape and size of this cloud describe the direction and magnitude of the residue’s likely movements, capturing the protein’s local flexibility.</p>
+<p>But protein movements are coordinated. Motion in one region can affect a distant region—this is known as allostery. DynaProt captures this long-range coupling by predicting the “joint scalar covariance” between residues, a value that reflects the correlation strength between the movements of any two residues.</p>
+<p>With data on both local flexibility and global correlations, the model can piece together a complete picture of the protein’s dynamic behavior. This method compresses the massive amount of complex information from an MD simulation into a lightweight, predictable mathematical model.</p>
+<p>This approach is highly practical.</p>
+<p>First, it’s efficient. The authors trained the model using MD simulation data from only about 1,000 proteins. Compared to models like AlphaFold, which require pre-training on the entire PDB database, its data requirement is several orders of magnitude smaller. This lowers the barrier to building and training such models. In application, its speed advantage is even more apparent: generating a dynamic conformational ensemble from a single static structure takes just a few seconds. This makes proteome-scale dynamic analysis possible.</p>
+<p>Second, it’s accurate. The model’s predictions of residue flexibility (RMSF values) are highly correlated with the “ground truth” from MD simulations. It surpasses Normal Mode Analysis (NMA) in both precision and efficiency. NMA has been a primary tool for analyzing low-frequency protein motions for decades, and the fact that a lightweight model can outperform it speaks to the method’s effectiveness.</p>
+<p>For drug development, its potential lies in identifying “allosteric pockets” or “cryptic pockets.” The active sites of many proteins are closed or non-existent in their static crystal structures and only appear when the protein moves into a specific conformation. Finding these pockets with traditional methods is time-consuming. DynaProt can quickly generate a large number of different conformations, increasing the chances of discovering these hidden targets.</p>
+<p>DynaProt isn’t a replacement for MD simulations in scenarios that require precise modeling of chemical reactions or calculating binding free energies. But for tasks like large-scale screening, understanding protein functional mechanisms, and discovering druggable targets, it provides a powerful new tool that combines speed and accuracy.</p>
+<p>📜Title: Learning Residue Level Protein Dynamics with Multiscale Gaussians<br>
+📜Paper: https://arxiv.org/abs/2509.01038</p>
+</section>
+<section id="a-new-way-to-use-ai-decoding-protein-function-with-attention" class="level2">
+<h2 class="anchored" data-anchor-id="a-new-way-to-use-ai-decoding-protein-function-with-attention">2. A New Way to Use AI: Decoding Protein Function with Attention</h2>
+<p><a href="post_all_image/paying_attention_to_2025_09_14_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/paying_attention_to_2025_09_14_image_1.jpg" class="img-fluid"></a></p>
+<p>We’ve been using all sorts of AI models to predict protein function—AlphaFold for structure, ESM for properties. They work well, but there’s always been a nagging question: how does this thing actually think? And how much should we trust its answers? Using a tool we don’t understand can feel a bit unsettling. A paper in <em>PLOS Computational Biology</em> offers a clever way to peek inside the model’s “brain.”</p>
+<p>The researchers used the large protein language model ESM (Evolutionary Scale Modelling). Instead of just looking at the final output, they went into the model’s intermediate layers to observe a mechanism called “attention.” You can think of the process like this: we ask the model, “When you decide which family this protein belongs to, which amino acids in the sequence are you focusing on the most?” The amino acids that the model “pays attention” to are what the researchers defined as “High Attention” (HA) sites.</p>
+<p>The results are interesting. The model doesn’t read the entire sequence with equal focus. It quickly concentrates its attention on a few key amino acid residues. More importantly, these HA sites aren’t randomly distributed; they often correspond to what biologists already know are active sites, catalytic residues, or other sites critical for protein function.</p>
+<p>It’s like an experienced doctor looking at a CT scan. They don’t scan it evenly from top to bottom; they immediately lock onto a few suspicious areas. This finding provides strong biological support for the model’s predictive ability. It tells us that the AI has indeed learned some fundamental biological principles, not just statistical patterns.</p>
+<p>One thing I find exciting is that HA sites are not identical to highly conserved sites in a sequence. In the past, a classic way to find functional sites was to perform a multiple sequence alignment and see which residues almost never change during evolution. This method is effective but has its limits. Some of the HA sites identified by the ESM model are in regions of the sequence with high variability.</p>
+<p>This suggests the model has learned something more complex, like the co-evolutionary relationships between amino acids. A particular site might not be conserved, but it could form a functional “duo” with another distant site, and this combination is what defines the protein’s function. This is something traditional sequence alignment methods would struggle to find.</p>
+<p>So, how is this useful for people developing drugs? Very.</p>
+<p>First, it can help us quickly annotate proteins of unknown function. When you get a new target sequence, you can run it through this method to get a “suspect list” of functional sites, significantly narrowing the scope for experimental validation.</p>
+<p>Second, it provides new clues for drug design. These HA sites are likely potential drug-binding pockets or allosteric sites. The AI is essentially highlighting the key areas we need to study.</p>
+<p>Third, it’s helpful for understanding drug resistance mutations. We can check if known resistance mutation sites also fall within these HA regions, giving us a deeper understanding of how mutations affect function.</p>
+<p>This work transforms protein language models from a prediction tool into a “research partner” that can help us explore and understand biological mechanisms. It allows us to move from “knowing what” (the model’s prediction) to “knowing why” (why the model made that prediction). This shift from a “black box” to a “glass box” is incredibly valuable for the entire field of computer-aided drug discovery.</p>
+<p>📜<strong>Paper</strong>: Paying attention to attention: High attention sites as indicators of protein family and function in language models<br>
+📜<strong>Link</strong>: https://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1013424</p>
+</section>
+<section id="generative-ai-fills-in-clinical-data-a-new-approach-for-precision-medicine" class="level2">
+<h2 class="anchored" data-anchor-id="generative-ai-fills-in-clinical-data-a-new-approach-for-precision-medicine">3. Generative AI Fills in Clinical Data, a New Approach for Precision Medicine</h2>
+<p><a href="post_all_image/coherent_cross_modal_2025_09_14_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/coherent_cross_modal_2025_09_14_image_1.jpg" class="img-fluid"></a></p>
+<p>In drug development and clinical diagnostics, we always want a complete data puzzle for each patient. For example, having genomics, transcriptomics, proteomics, and medical imaging data all at once. But in reality, the data we have is often incomplete, like a puzzle with key pieces missing. This makes implementing precision medicine difficult.</p>
+<p>The researchers in this paper proposed a clever solution to fill these gaps.</p>
+<p>They developed a generative framework called “Coherent Denoising.” The best way to understand this framework is to think of it as an expert committee. Imagine a committee with three experts: one specializes in MRI imaging, another is an expert in gene expression data, and a third is a pathology expert. Now, we have a patient’s MRI and pathology report but are missing the gene expression data.</p>
+<p>A traditional approach might be to use a single “all-knowing” model to guess the missing part based on the available information. But a single model can easily make mistakes, like a person who knows a little about everything but is an expert in nothing. “Coherent Denoising” works differently. It gives the task to this expert committee. The MRI expert says, “Based on this image, I infer the gene expression data should look like this.” The pathology expert says, “From the cell morphology, I predict a different gene expression pattern.” The core mechanism of this framework forces these experts from different fields (i.e., multiple single-condition models) to reach a consensus. They must generate a coherent set of gene expression data that all experts agree on, through “negotiation” and “voting.”</p>
+<p>This consensus-based generation method is much more robust than a single model. It ensures the generated data is not only statistically plausible but also biologically consistent with the existing multi-modal data.</p>
+<p>To prove this method isn’t just theory, the researchers tested it directly on The Cancer Genome Atlas (TCGA), a large, complex, and messy real-world dataset. The results showed that the synthetic data generated by the framework performed excellently in downstream tasks. For instance, in classification tasks involving 20 different tumor types and in predicting patient survival, the completed dataset performed nearly as well as the original, complete dataset. This shows that the generated data retains key biological signals, not just meaningless noise.</p>
+<p>The really exciting part of this technology is its potential for clinical application.</p>
+<p>First, it enables counterfactual analysis, helping doctors optimize diagnostic workflows. For a patient with incomplete data, a doctor could ask the model: “To get a diagnosis fastest, should I order a proteomics test or methylation sequencing next?” The model can simulate adding different types of data to predict which test would provide the biggest boost to diagnostic accuracy. This could help avoid unnecessary tests, saving resources for both the patient and the healthcare system.</p>
+<p>Second, the framework has a natural advantage in data privacy. A large, monolithic model can sometimes be vulnerable to “reverse engineering” attacks, potentially leaking private patient data from the training set. “Coherent Denoising” distributes knowledge across multiple smaller, specialized models. Piecing together complete, specific patient data from these distributed model parameters is extremely difficult. It’s like trying to reconstruct a whole secret by interrogating a group of witnesses who each only know a small part of the story—nearly impossible.</p>
+<p>📜Paper: <a href="https://www.biorxiv.org/content/10.1101/2025.08.22.671728v2" class="uri">https://www.biorxiv.org/content/10.1101/2025.08.22.671728v2</a><br>
+💻Code: <a href="https://github.com/r-marchesi/coherent-genAI" class="uri">https://github.com/r-marchesi/coherent-genAI</a></p>
+</section>
+<section id="ai-prediction-of-protein-sugar-interactions-how-are-models-like-alphafold3-doing" class="level2">
+<h2 class="anchored" data-anchor-id="ai-prediction-of-protein-sugar-interactions-how-are-models-like-alphafold3-doing">4. AI Prediction of Protein-Sugar Interactions: How Are Models Like AlphaFold3 Doing?</h2>
+<p><a href="post_all_image/evaluation_of_de_nov_2025_09_14_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="post_all_image/evaluation_of_de_nov_2025_09_14_image_1.jpg" class="img-fluid"></a></p>
+<p>In drug discovery, protein-sugar interactions are a classic problem. Sugars (glycans) are everywhere, from recognition sites on the cell surface to the “door knockers” used by viruses to gain entry. But predicting how they bind to proteins has always been a challenge.</p>
+<p>Most small-molecule drugs are like rigid keys fitting into a protein’s lock. Glycan molecules are more like a string of wet spaghetti—flexible, variable, with countless possible shapes. This poses a huge challenge for computational models. So, when next-generation AI models like AlphaFold3 appeared, researchers wanted to know: can they handle the “spaghetti”?</p>
+<p>A recent preprint paper conducted a solid “final exam” to find out.</p>
+<p><strong>First, no cheating on the test</strong>. The worst way to evaluate a model is to test it on its own training data. To ensure a fair assessment, the researchers created a new, high-quality benchmark dataset called BCAPIN. The protein-glycan complex structures in it were all experimentally determined and were confirmed to be absent from the training sets of models like AlphaFold3 and DiffDock. This was a completely new exam.</p>
+<p>They also designed a more comprehensive scoring metric, DockQC. Traditional evaluation methods like Root Mean Square Deviation (RMSD) can sometimes be misleading. For a flexible molecule like a glycan, even if the overall backbone position is close (low RMSD), the key interacting groups that determine binding could be pointing in the wrong direction. DockQC provides a more realistic assessment by considering ligand position, key amino acid contacts, and sugar ring conformation. It’s like judging a basketball player not just by how high they jump, but also by how accurately they shoot.</p>
+<p><strong>The results were mixed</strong>. For the binding of single sugar molecules (monosaccharides) to proteins, all the tested AI models performed reasonably well, with success rates generally above 85%. This indicates that AI has mastered the basic rules of placing relatively rigid small molecules into protein pockets, like a robot identifying and picking up a standard Lego brick.</p>
+<p>But when the sugar chains got longer, becoming disaccharides, trisaccharides, or longer oligosaccharides, the performance of all models started to drop. The longer the chain, the more flexible it is, and the number of possible conformations grows exponentially. The AI models clearly struggled to determine the correct conformation, like asking a robot to pick up a cooked noodle.</p>
+<p>At this stage, relying entirely on tools like AlphaFold3 for high-throughput screening of glycan-based drugs is not yet practical. You can use it to form an initial hypothesis, like whether a certain monosaccharide might bind in a specific pocket. But you can’t fully trust the results, especially when it presents a good-looking binding mode for a complex glycan.</p>
+<p>This paper points out two core bottlenecks: 1. <strong>Data</strong>: We need more high-quality, experimentally determined structures of protein-glycan complexes. AI learns from data; without enough good “textbooks,” it can’t master more complex rules. 2. <strong>Confidence</strong>: Models need a more reliable self-assessment system. They shouldn’t just give a prediction but also accurately assess its confidence, like “90% certain” or “20% certain.” Without a reliable confidence score, sifting through massive numbers of results is like panning for gold in a desert.</p>
+<p>This work provides a comprehensive stress test of existing tools, marking out their scope of application and current limitations. It points the entire field toward the next steps.</p>
+<p>📜Title: Evaluation of De Novo Deep Learning Models on the Protein-Sugar Interactome<br>
+📜Paper: https://www.biorxiv.org/content/10.1101/2025.09.02.673778v1</p>
+</section>
+<section id="ai-for-molecular-property-prediction-getting-back-to-the-language-of-chemistsfunctional-groups" class="level2">
+<h2 class="anchored" data-anchor-id="ai-for-molecular-property-prediction-getting-back-to-the-language-of-chemistsfunctional-groups">5. AI for Molecular Property Prediction: Getting Back to the Language of Chemists—Functional Groups</h2>
+<p><a href="post_all_image/functional_groups_ar_2025_09_14_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="post_all_image/functional_groups_ar_2025_09_14_image_1.jpg" class="img-fluid"></a></p>
+<p>An AI model often gives you a prediction, telling you a molecule is highly active. But if you ask why, it can’t answer. It’s like talking to a fortune teller who can make predictions but can’t explain them, leaving you uneasy. R&amp;D investments can’t be based on an unexplainable “black box.”</p>
+<p>This paper proposes the Functional Group Representation (FGR) framework. Its core idea is to make AI understand and analyze molecules <strong>through functional groups</strong>, just like a chemist.</p>
+<p><strong>Here’s how the method works</strong>:</p>
+<p>First, the model builds a huge “dictionary” of functional groups. Some come from classic textbook examples like hydroxyl, carboxyl, and phenyl groups. Others are chemical substructures that the model automatically “mines” from massive molecular databases like ZINC. These newly discovered “quasi-functional groups” enrich the model’s chemical vocabulary.</p>
+<p>With this dictionary, any molecule fed into the model is quickly broken down into a combination of functional groups.</p>
+<p>Next, the model uses an autoencoder to process this functional group information, compressing the high-dimensional combination into a low-dimensional mathematical vector. This acts like a “translator,” converting the language of chemistry into the language of math that machines can efficiently understand. By pre-training on a vast amount of unlabeled molecular data, the model learns the “grammar rules” and combination patterns of functional groups on its own.</p>
+<p><strong>So, how well does it work</strong>?</p>
+<p>In terms of predictive performance, FGR performed on par with top-tier Graph Neural Networks (GNNs) on benchmarks across biophysics, quantum chemistry, and pharmacokinetics, even outperforming them on some tasks. This result is noteworthy because FGR’s starting point is simpler than that of graph models, which learn the complex connections between atoms and bonds.</p>
+<p>FGR’s advantage is its interpretability. When the model predicts a molecule has a certain property, it’s possible to trace back and determine which functional groups contributed the most. The attribution analysis maps in the paper show that the model can accurately pinpoint the key structures determining molecular activity—what we often call the pharmacophore.</p>
+<p>This changes everything. The model no longer just gives a number; it provides a judgment with chemical logic, such as: “This molecule is predicted to be highly active, mainly due to the combined effect of its pyridine ring and amide bond.” This kind of information can directly guide medicinal chemists in designing the next round of molecular optimizations.</p>
+<p>The researchers also tested FGR’s strength on more challenging tasks, like predicting peptide cleavage sites and screening for antibacterial molecules. In these scenarios, which involve larger datasets and more complex structures, FGR performed exceptionally well, proving its scalability and robustness.</p>
+<p>This shows that AI in drug discovery is shifting from a pursuit of model complexity to solving practical problems, building models using the language chemists are most familiar with: functional groups. This not only makes predictions more reliable but also allows researchers to trust and use AI tools.</p>
+<p>📜Title: Functional Groups are All you Need for Chemically Interpretable Molecular Property Prediction<br>
+📜Paper: https://arxiv.org/abs/2509.09619v1<br>
+code: https://github.com/bisect-group/fgmolprop</p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-10-21/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

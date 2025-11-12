@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="本文深入探讨了三项 AI 在药物发现领域的最新进展。SAGERank 利用图神经网络革新了抗体 - 抗原对接打分，解决了小数据泛化难题；VECTOR+ 借助属性增强的对比学习，为小样本药物发现提供了生成新颖分子的实用框架；针对环肽膜透性预测，系统性基准测试表明 DMPNN 表现最佳，但未来的突破关键在于整合分子的三维动态结构信息。">
+
+<title>AI 驱动药物发现：从抗体对接到环肽渗透性的三大前沿突破 – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="AI 驱动药物发现：从抗体对接到环肽渗透性的三大前沿突破 – MPU">
+<meta property="og:description" content="本文深入探讨了三项 AI 在药物发现领域的最新进展。SAGERank 利用图神经网络革新了抗体 - 抗原对接打分，解决了小数据泛化难题；VECTOR+ 借助属性增强的对比学习，为小样本药物发现提供了生成新颖分子的实用框架；针对环肽膜透性预测，系统性基准测试表明 DMPNN 表现最佳，但未来的突破关键在于整合分子的三维动态结构信息。">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-10-06/post_all_image/sage_rank_inductive_2025_09_14_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="一张流程图，展示了 SAGERank 模型的工作原理。左侧是输入的抗体 - 抗原复合物三维结构，箭头指向中间，表示通过图构建过程将其转换为原子级别的图表示。右侧是图神经网络模型，最终输出一个预测的打分值，用于评估对接构象的准确性。
+">
+<meta name="twitter:title" content="AI 驱动药物发现：从抗体对接到环肽渗透性的三大前沿突破 – MPU">
+<meta name="twitter:description" content="本文深入探讨了三项 AI 在药物发现领域的最新进展。SAGERank 利用图神经网络革新了抗体 - 抗原对接打分，解决了小数据泛化难题；VECTOR+ 借助属性增强的对比学习，为小样本药物发现提供了生成新颖分子的实用框架；针对环肽膜透性预测，系统性基准测试表明 DMPNN 表现最佳，但未来的突破关键在于整合分子的三维动态结构信息。">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-10-06/post_all_image/sage_rank_inductive_2025_09_14_image_1.jpg">
+<meta name="twitter:image:alt" content="一张流程图，展示了 SAGERank 模型的工作原理。左侧是输入的抗体 - 抗原复合物三维结构，箭头指向中间，表示通过图构建过程将其转换为原子级别的图表示。右侧是图神经网络模型，最终输出一个预测的打分值，用于评估对接构象的准确性。
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">AI 驱动药物发现：从抗体对接到环肽渗透性的三大前沿突破</h1>
+                  <div>
+        <div class="description">
+          <p>本文深入探讨了三项 AI 在药物发现领域的最新进展。SAGERank 利用图神经网络革新了抗体 - 抗原对接打分，解决了小数据泛化难题；VECTOR+ 借助属性增强的对比学习，为小样本药物发现提供了生成新颖分子的实用框架；针对环肽膜透性预测，系统性基准测试表明 DMPNN 表现最佳，但未来的突破关键在于整合分子的三维动态结构信息。</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">药物发现</div>
+                <div class="quarto-category">图神经网络</div>
+                <div class="quarto-category">对比学习</div>
+                <div class="quarto-category">计算生物学</div>
+                <div class="quarto-category">环肽</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Monday, the 6th of October, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#目录" id="toc-目录" class="nav-link active" data-scroll-target="#目录">目录</a></li>
+  <li><a href="#sagerank-图神经网络革新抗体---抗原对接" id="toc-sagerank-图神经网络革新抗体---抗原对接" class="nav-link" data-scroll-target="#sagerank-图神经网络革新抗体---抗原对接">1. SAGERank: 图神经网络革新抗体 - 抗原对接</a></li>
+  <li><a href="#ai-小数据生成新药vector-用对比学习破局" id="toc-ai-小数据生成新药vector-用对比学习破局" class="nav-link" data-scroll-target="#ai-小数据生成新药vector-用对比学习破局">2. AI 小数据生成新药？VECTOR+ 用对比学习破局</a></li>
+  <li><a href="#ai-预测环肽膜透性dmpnn-胜出但-3d-结构才是关键" id="toc-ai-预测环肽膜透性dmpnn-胜出但-3d-结构才是关键" class="nav-link" data-scroll-target="#ai-预测环肽膜透性dmpnn-胜出但-3d-结构才是关键">3. AI 预测环肽膜透性：DMPNN 胜出，但 3D 结构才是关键</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-10-06/post_all.zh.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="目录" class="level2">
+<h2 class="anchored" data-anchor-id="目录">目录</h2>
+<ol type="1">
+<li>SAGERank 是一个基于图神经网络的归纳学习框架，它在抗体 - 抗原对接打分和表位预测上超越了现有方法，且对小数据集有很好的泛化能力。</li>
+<li>VECTOR+ 通过属性增强的对比学习，为小样本药物发现提供了一个实用框架，能生成对接分数更优且结构新颖的候选分子。</li>
+<li>对于环肽膜透性预测，图神经网络（特别是 DMPNN）表现最佳，但要实现真正突破，未来的模型必须整合分子的三维动态结构信息。</li>
+</ol>
+</section>
+<section id="sagerank-图神经网络革新抗体---抗原对接" class="level2">
+<h2 class="anchored" data-anchor-id="sagerank-图神经网络革新抗体---抗原对接">1. SAGERank: 图神经网络革新抗体 - 抗原对接</h2>
+<p><a href="post_all_image/sage_rank_inductive_2025_09_14_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/sage_rank_inductive_2025_09_14_image_1.jpg" class="img-fluid"></a></p>
+<p>在计算结构生物学，尤其是抗体药物研发中，预测蛋白质 - 蛋白质相互作用（Protein-Protein Interaction, PPI）很困难。我们用分子对接软件跑出来一大堆可能的结合构象，然后就要面对一个核心问题：哪个才是对的？传统的打分函数，如 Rosetta 或 FoldX，各有千秋，但结果常不尽人意。</p>
+<p>SAGERank 模型提供了一个新选择，用图神经网络（Graph Neural Networks, GNN）解决这个问题。</p>
+<p>我们来看看它是怎么做的。</p>
+<p>首先，研究者把抗体和抗原的相互作用界面看作一个原子级别的图。图里的每个节点就是一个原子，原子之间的连接代表它们的相互关系。这步操作很关键，因为它把复杂的 3D 结构问题，转换成了图网络擅长处理的数据格式。</p>
+<p>SAGERank 的核心技术是 GraphSAGE（Graph Sample and Aggregate）。这个算法的厉害之处在于其「归纳学习」（inductive learning）能力。传统的图学习模型很多是「转导学习」（transductive learning），它们只能处理训练时见过的节点。换句话说，你用数据集 A 训练，就只能预测 A 里面的东西，来一个全新的蛋白 B，它就无法处理。</p>
+<p>但归纳学习不一样。GraphSAGE 通过聚合邻居节点的信息来学习每个节点的表示，它学到的是一套通用的「聚合规则」。所以，就算来一个全新的、从未见过的蛋白复合物，它也能应用这套规则去理解和预测。这对于药物研发很重要，因为我们永远在面对新的靶点和分子。</p>
+<p>结果怎么样？研究者用一个包含 287 个抗体 - 抗原复合物的数据集训练了 SAGERank。这个数据量在深度学习领域其实很小。但得益于归纳学习的能力，它的表现出色。在对接构象排序测试中，SAGERank 的命中率和成功率都明显优于 Zrank、Pisa、FoldX 和 Rosetta 这些老牌工具。这意味着，用 SAGERank 筛选，你更有可能在前几个结果里就找到那个接近天然构象的正确构象。</p>
+<p>作者还把 SAGERank 用在了其他地方：<br>
+1. <strong>T 细胞受体（TCR）识别</strong> ：它同样能很好地处理 TCR 与 pMHC 复合物的识别问题。这证明了模型的泛化能力不错，不只是个「抗体专用」工具。<br>
+2. <strong>抗原表位（epitope）预测</strong> ：它能准确圈出抗原上与抗体结合的关键区域。对于抗体设计和疫苗开发，这是个有用的功能。<br>
+3. <strong>分子胶水（molecular glues</strong>） ：研究者甚至在一个分子胶水介导的三元复合物数据集上做了测试，结果显示 SAGERank 也有潜力分辨这种包含小分子的复杂相互作用。这一下就把它的应用场景从生物大分子扩展到了小分子领域。</p>
+<p>总的来看，SAGERank 提供了一个强大、高效的 PPI 预测和打分工具。它最大的亮点在于用归纳式图神经网络解决了小数据量下的泛化难题。对于一线研发人员，这意味着多了一个更可靠的计算工具来辅助抗体设计和结构分析，而且它背后的设计思路也为解决其他分子识别问题提供了很好的借鉴。</p>
+<p>📜Title: SAGERank: Inductive Learning of Protein–Protein Interaction from Antibody–Antigen Recognition<br>
+📜Paper: https://pubs.rsc.org/en/content/articlelanding/2025/sc/d5sc03707g<br>
+💻Code: https://github.com/sunchuance/SAGERank</p>
+</section>
+<section id="ai-小数据生成新药vector-用对比学习破局" class="level2">
+<h2 class="anchored" data-anchor-id="ai-小数据生成新药vector-用对比学习破局">2. AI 小数据生成新药？VECTOR+ 用对比学习破局</h2>
+<p><a href="post_all_image/valid_property_enhan_2025_09_14_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/valid_property_enhan_2025_09_14_image_1.jpg" class="img-fluid"></a></p>
+<p>做药物发现，我们常会遇到一个窘境：手上只有几十个活性还不错的苗头化合物，数据量太小，想用 AI 生成模型来帮忙寻找更优的分子结构，模型却「喂不饱」，根本训练不起来。这如同只给了厨师一点点盐和胡椒，却让他做出一桌满汉全席。大多数生成模型都需要成千上万个数据点才能学到东西。</p>
+<p>这篇论文里的 VECTOR+ 框架，就是为了解决这个「开局数据少」的实际问题：如果不能靠量取胜，那就让模型学会「看质量」。</p>
+<p><strong>它是怎么工作的</strong>？</p>
+<p>整个流程可以分成两步。</p>
+<p>第一步，构建一个有意义的化学「地图」，即潜在空间（Latent Space）。传统的自编码器（Autoencoder）模型学习的是如何把一个分子压缩成一串数字，再把它还原回去，重点在「长得像」。VECTOR+ 不这么干。它用的是对比学习（Contrastive Learning）。</p>
+<p>你可以这么理解：模型会同时看三个分子。一个「锚点」分子（Anchor），一个和它性质类似（比如活性都很好）的「正样本」（Positive），还有一个性质不同（比如活性差）的「负样本」（Negative）。模型的目标很简单：在它的内部地图上，把「锚点」和「正样本」拉近，同时把「锚点」和「负样本」推远。</p>
+<p>反复进行这个过程，潜在空间就不再是简单地按化学结构相似度来组织了。它会根据我们关心的药理属性（比如对 PD-L1 的抑制活性）来重新「分区」。活性好的分子会聚集在一起，形成「优势区域」。这个过程不需要海量数据，因为它关注的是分子间的「相对关系」，而不是每个分子的「绝对坐标」。</p>
+<p>第二步，从「优势区域」里创造新分子。当地图画好之后，研究者用高斯混合模型（Gaussian Mixture Model, GMM）来定位那些活性最好的分子聚集区。这如同在地图上找到了几个「宝藏」的位置。然后，模型就在这些「宝藏」区域附近进行采样，生成新的分子坐标，再通过解码器把这些坐标翻译成新的化学结构。</p>
+<p><strong>这套方法真的管用吗</strong>？</p>
+<p>研究者用两个靶点对它进行了验证：一个是免疫肿瘤学里的热门靶点 PD-L1，另一个是受体激酶。</p>
+<p>对于 PD-L1，他们甚至自己整理并公开了一个包含 296 个小分子抑制剂的数据集，这本身就是个不小的贡献。实验结果很实在：VECTOR+ 生成的新分子，不仅化学结构上和训练集里的分子有明显区别（新颖性高），而且可合成性也很好。最关键的是，它们的分子对接分数比数据库里已知的抑制剂还要高。</p>
+<p>这意味着，这个 AI 模型不仅仅是在模仿，而是在已知的基础上，探索出了更有潜力的化学空间。这正是我们希望 AI 在药物研发中扮演的角色：一个能提供高质量、新颖想法的创意伙伴。</p>
+<p>他们还把 VECTOR+ 和一些知名的生成模型，比如 JT-VAE 和 MolGPT，放在一起比了比。无论是在对接分数、新颖性还是独特性等指标上，VECTOR+ 的表现都更好。</p>
+<p>作为一个研发科学家，我认为这个策略非常贴近实际工作。在项目早期，我们最缺的就是数据。VECTOR+ 这种不依赖海量数据、而是通过强化学习分子间属性差异来构建化学空间的方法，为「AI 赋能早期药物发现」提供了一个可行的解决方案。它生成的不是一堆随机的、无法合成的奇怪结构，而是可以直接启发下一轮化合物设计和合成的、有价值的候选分子。</p>
+<p>📜Title: Valid Property-Enhanced Contrastive Learning for Targeted Optimization &amp; Resampling for Novel Drug Design<br>
+📜Paper: https://arxiv.org/abs/2509.00684v1</p>
+</section>
+<section id="ai-预测环肽膜透性dmpnn-胜出但-3d-结构才是关键" class="level2">
+<h2 class="anchored" data-anchor-id="ai-预测环肽膜透性dmpnn-胜出但-3d-结构才是关键">3. AI 预测环肽膜透性：DMPNN 胜出，但 3D 结构才是关键</h2>
+<p><a href="post_all_image/systematic_benchmark_2025_09_14_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/systematic_benchmark_2025_09_14_image_1.jpg" class="img-fluid"></a></p>
+<p>环肽这类「超越五规则」（beyond Rule of 5, bRo5）的分子是块难啃的骨头，尤其在细胞膜渗透性这个问题上。我们都想找到能准确预测哪个分子能进细胞、哪个会被挡在门外的计算模型。这能为药物设计省下大量的时间和金钱。Liu 等人系统地比较了 13 种主流的机器学习方法，看看到底谁是预测环肽膜透性的「王者」。</p>
+<p>这项研究的结论很清晰：基于图的方法，特别是定向消息传递神经网络（Directed Message Passing Neural Network, DMPNN），表现最好。这不意外。对于化学家来说，分子本身就是一张由原子和化学键构成的图。DMPNN 这类模型直接在分子图上进行学习，能很好地理解原子间的连接关系和空间排布，而不是像处理一串文本（SMILES 字符串）那样。它既能看到每个原子周围的「邻居」是什么样（局部特征），也能感知到环另一端官能团的影响（长程依赖），这对于环肽这种大而柔性的分子至关重要。</p>
+<p>研究还给出了一个实用的建议：直接预测渗透性的具体数值（回归），比简单地把它分为「高」或「低」两类（分类）要好得多。在药物优化中，我们需要知道一个新分子的渗透性是提高了 10% 还是 10 倍，一个模糊的「更好」标签没什么用。回归模型能给出定量的反馈，这才是我们迭代分子结构时真正需要的信息。</p>
+<p>一个有趣的发现是关于数据划分的。在机器学习领域，我们通常认为「骨架拆分」（Scaffold Split）是比「随机拆分」更严格、更能评估模型泛化能力的黄金标准。它能确保训练集和测试集的分子骨架完全不同，防止模型「记住」特定骨架的答案。但在这项研究里，随机拆分的效果反而更好。这听起来有点反直觉，但仔细想想也有道理。目前的环肽渗透性数据集还不够大，化学多样性有限。强行进行骨架拆分，可能会让模型在训练中根本没见过某些类型的化学结构，导致泛化能力下降。这提醒我们，在数据有限的情况下，让模型看到尽可能多样的化学「例子」可能比严格的划分方法更重要。</p>
+<p>不过，这项工作最重要的启示，是指出了当前所有模型的「阿喀琉斯之踵」：它们都忽略了分子的三维（3D）乃至四维（4D，即动态）结构。</p>
+<p>环肽不是一个刚性的积木，它像一串可以扭动的钥匙链。在水溶液里是一种构象，在接近疏水的细胞膜时又是另一种构象。这种「变色龙」般的构象变化，恰恰是它能否穿过细胞膜的关键。目前的模型都是基于分子的二维结构图，这如同只看一张房子的平面图就想判断它是否宜居一样，丢失了最关键的立体空间信息。</p>
+<p>研究者尝试加入 logP 或拓扑极性表面积（Topological Polar Surface Area, TPSA）这类描述符作为辅助任务来提升性能，但效果不佳。这说明简单的物理化学性质还不足以捕捉渗透过程的复杂性。未来的模型要想取得质的飞跃，必须能够处理和理解分子的 3D 构象集合，甚至它们在跨膜过程中的动态变化。我们需要一个高质量的、包含环肽动态构象的数据集，这才是推动这个领域前进的下一个引擎。</p>
+<p>📜Title: Systematic Benchmarking of 13 AI Methods for Predicting Cyclic Peptide Membrane Permeability<br>
+📜Paper: https://jcheminf.biomedcentral.com/articles/10.1186/s13321-025-01083-4</p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-10-06/post_all.zh.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>
