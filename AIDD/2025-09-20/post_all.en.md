@@ -102,7 +102,7 @@ This method won't replace experiments, but it can help screen out unsuitable mol
 
 ## 3. AI Protein Docking: Accurate Predictions Without a Structure
   
-![ba33fda40d65cc375982be6eb195608f_MD5](post_all_image/ba33fda40d65cc375982be6eb195608f_MD5.jpg)  
+![](post_all_image/ba33fda40d65cc375982be6eb195608f_MD5.jpg)  
 
 The binding of proteins and peptides is fundamental to understanding life and developing new drugs. But when a crystal structure of the complex is missing, predicting how they bind is a major challenge. A research team has developed an AI-assisted workflow specifically to solve this data-gap problem.
   

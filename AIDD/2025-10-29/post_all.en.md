@@ -19,7 +19,7 @@ toc-depth: 3
 
 ## 1. MetaBench: Large Language Models Take a Big Test in Metabolomics, and the Results Aren't Great
 
-![meta_bench_a_multi_t_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1](post_all_image/meta_bench_a_multi_t_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)
+![](post_all_image/meta_bench_a_multi_t_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)
 
 There's a lot of talk about how Large Language Models (LLMs) could change drug development. But can they handle a field as specialized and data-heavy as metabolomics? A paper on a benchmark called MetaBench suggests the answer is no, at least for now.
 
@@ -40,7 +40,7 @@ The paper's conclusion is that we shouldn't have unrealistic expectations for ge
 
 ## 2. Predicting Drug Side Effects with a Digital Twin: Moving Beyond Black-Box Models
 
-![digital_twin_approac_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1](post_all_image/digital_twin_approac_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)
+![](post_all_image/digital_twin_approac_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)
 
 Drug development often hits a wall: a molecule fails late in clinical trials due to unexpected side effects, wasting huge amounts of time and money. Predicting these side effects is therefore crucial.
 
@@ -67,7 +67,7 @@ The method is still in its early stages and needs more data to validate its gene
 
 ## 3. The Slogen Model: Unifying Molecule Generation and Screening to Speed Up Drug Optimization
 
-![slogen_a_structure_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1](post_all_image/slogen_a_structure_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)
+![](post_all_image/slogen_a_structure_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)
 
 Lead Optimization in drug discovery is like playing with a complex LEGO set. A researcher has a core structure and needs to keep adding new building blocks (molecular fragments) to make it bind more tightly to a target protein. This process has two challenges: creating new blocks (generation) or picking them from a huge warehouse (screening). Traditional methods handle these two tasks separately, which is inefficient.
 
@@ -94,7 +94,7 @@ This work shows that unifying generation and screening is a viable path forward 
 
 ## 4. Kinome-AI: Accurately Predicting Activating Kinase Mutations
 
-![integrative_machine_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1](post_all_image/integrative_machine_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)
+![](post_all_image/integrative_machine_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)
 
 A common problem in targeted cancer therapy is figuring out whether a newly discovered kinase mutation is driving the cancer or is just a harmless bystander. The answer determines if a patient can benefit from a targeted drug. Traditional methods rely on known mutation hotspots or time-consuming cell-based experiments.
 

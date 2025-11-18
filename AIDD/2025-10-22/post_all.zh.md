@@ -19,7 +19,7 @@ toc-depth: 3
 
 ## 1. AI 新模型 PepTron 预测无序蛋白，为药物发现开辟新路  
   
-![advancing_protein_en_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1](post_all_image/advancing_protein_en_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)  
+![](post_all_image/advancing_protein_en_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)  
 
 AlphaFold2 改变了结构生物学，但它也有自己的「阿喀琉斯之踵」——本质无序蛋白 (Intrinsically Disordered Proteins, IDPs)。  
   
@@ -59,7 +59,7 @@ PROTACs 或分子胶这类新技术，其作用机制不完全依赖于固定的
 
 ## 2. BiomarkerML: AI 赋能蛋白质组学，小白也能找靶点  
   
-![biomarker_ml_a_cloud_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1](post_all_image/biomarker_ml_a_cloud_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)  
+![](post_all_image/biomarker_ml_a_cloud_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)  
 
 药物研发领域每天产生海量蛋白质组学数据。仪器高速运转，数据堆积如山，但能有效分析、从中发掘价值的人才却很稀缺。许多湿实验生物学家面对这些数据，如同手握密码待解的藏宝图，感到头疼。  
   
@@ -84,7 +84,7 @@ BiomarkerML 的价值在于降低了生物信息分析的门槛。它让实验�
 
 ## 3. MECo：用代码编辑分子，让 AI 像化学家一样思考  
   
-![coder_as_editor_cod_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1](post_all_image/coder_as_editor_cod_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)  
+![](post_all_image/coder_as_editor_cod_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)  
 
 药物发现的一大挑战，是让 AI 像化学家一样有条理、有逻辑地优化分子。许多 AI 模型直接操作简化分子线性输入规范（SMILES）字符串，就像编辑图片的原始像素，稍有不慎就会产生化学上无效的「怪物分子」。  
   
@@ -107,7 +107,7 @@ MECo 的「编码即编辑」模式，让 AI 在分子设计上「说人话，�
 
 ## 4. AlphaFold 新玩法：模拟上万种蛋白的动态构象  
   
-![af_calvados_alpha_fo_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_2](post_all_image/af_calvados_alpha_fo_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_2.jpg)  
+![](post_all_image/af_calvados_alpha_fo_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_2.jpg)  
 
 蛋白质不是僵硬的石头，它们会呼吸、摆动和变形。AlphaFold 2 给了我们蛋白质结构的高清「快照」，但这还不够，我们更想看一部「电影」，了解蛋白质如何动态变化。特别是那些包含固有无序区 (Intrinsically Disordered Regions, IDRs) 的多结构域蛋白，它们就像由几个坚固模块通过柔性绳索连接起来的装置，模拟其整体运动一直是个难题。  
   
@@ -134,7 +134,7 @@ AF-CALVADOS 模型提供了一个解决方案。
 
 ## 5. ConforFold: 用二级结构解锁蛋白动态构象  
   
-![confor_fold_recovers_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1](post_all_image/confor_fold_recovers_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)  
+![](post_all_image/confor_fold_recovers_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)  
 
 蛋白质并非静止的积木，而是一直在运动和变形。例如，激酶激活环（activation loop）的 DFG-in 和 DFG-out 构象，就决定了抑制剂是 I 型还是 II 型。AlphaFold 预测蛋白质的静态结构很准，但捕捉这些动态变化却很困难。  
   

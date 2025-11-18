@@ -19,7 +19,7 @@ toc-depth: 3
 
 ## 1. New AI Model PepTron Predicts Disordered Proteins, Opening New Paths for Drug Discovery
 
-![advancing_protein_en_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1](post_all_image/advancing_protein_en_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)
+![](post_all_image/advancing_protein_en_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)
 
 AlphaFold2 changed structural biology, but it has an Achilles' heel: Intrinsically Disordered Proteins (IDPs).
 
@@ -59,7 +59,7 @@ Of course, this work still has room for improvement. The realism of the syntheti
 
 ## 2. BiomarkerML: AI for Proteomics, Letting Anyone Find Targets
 
-![biomarker_ml_a_cloud_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1](post_all_image/biomarker_ml_a_cloud_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)
+![](post_all_image/biomarker_ml_a_cloud_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)
 
 Drug discovery generates massive amounts of proteomics data every day. Instruments run at high speed, and data piles up. But there's a shortage of people who can effectively analyze it and extract value. Many wet-lab biologists find themselves with a treasure map they can't decipher.
 
@@ -84,7 +84,7 @@ The value of BiomarkerML lies in lowering the barrier to bioinformatics analysis
 
 ## 3. MECo: Editing Molecules with Code, Making AI Think Like a Chemist
 
-![coder_as_editor_cod_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1](post_all_image/coder_as_editor_cod_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)
+![](post_all_image/coder_as_editor_cod_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)
 
 A major challenge in drug discovery is getting AI to optimize molecules with the same systematic logic as a chemist. Many AI models operate directly on SMILES strings, a simplified molecular representation. This is like editing the raw pixels of an image—a small mistake can create a chemically invalid "monster molecule."
 
@@ -107,7 +107,7 @@ MECo's "code as editor" model enables AI to "speak human, act machine" in molecu
 
 ## 4. A New Way to Use AlphaFold: Simulating the Dynamics of Tens of Thousands of Proteins
 
-![af_calvados_alpha_fo_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_2](post_all_image/af_calvados_alpha_fo_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_2.jpg)
+![](post_all_image/af_calvados_alpha_fo_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_2.jpg)
 
 Proteins are not rigid rocks; they breathe, wiggle, and change shape. AlphaFold2 gives us high-definition "snapshots" of protein structures, but that's not enough. We want to see the "movie" to understand how proteins move. This is especially true for multi-domain proteins with Intrinsically Disordered Regions (IDRs). These are like devices made of several solid modules connected by flexible ropes, and simulating their overall motion has always been a challenge.
 
@@ -134,7 +134,7 @@ This work provides a massive, public database of protein dynamic conformations. 
 
 ## 5. ConforFold: Unlocking Protein Dynamics with Secondary Structures
 
-![confor_fold_recovers_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1](post_all_image/confor_fold_recovers_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)
+![](post_all_image/confor_fold_recovers_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)
 
 Proteins are not static building blocks; they are constantly moving and changing shape. For example, the DFG-in and DFG-out conformations of a kinase activation loop determine whether an inhibitor is Type I or Type II. AlphaFold is great at predicting a protein's static structure, but capturing these dynamic changes is difficult.
 

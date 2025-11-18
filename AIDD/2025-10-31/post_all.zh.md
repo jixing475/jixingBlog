@@ -17,7 +17,7 @@ toc-depth: 3
 
 ## 1. AI 设计抗癌新药：精准狙击特定癌细胞  
   
-![phenotypic_ai_based_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1](post_all_image/phenotypic_ai_based_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)  
+![](post_all_image/phenotypic_ai_based_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)  
 
 药物发现通常有两种思路。一种是基于靶点，如同用特定钥匙开特定锁。另一种是表型筛选（phenotypic screening），不管锁是什么，直接用大量化合物去试，看哪个能「杀死癌细胞」。表型筛选能发现全新的作用机制，但后续优化就像在黑箱中摸索。  
   
@@ -40,7 +40,7 @@ AI 设计的分子通过了实验验证。研究团队合成了 45 个新分子�
 
 ## 2. MATCHA：AI 分子对接新突破，速度与精度兼得  
   
-![matcha_multi_stage_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1](post_all_image/matcha_multi_stage_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)  
+![](post_all_image/matcha_multi_stage_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)  
 
 分子对接长期面临速度与精度的权衡。传统方法速度快但准确性不足，而 AlphaFold 3 等共折叠模型虽准，计算耗时却过长，不适用于大规模虚拟筛选。新模型 MATCHA 旨在解决这一难题。  
   
@@ -63,7 +63,7 @@ MATCHA 的模型架构融合了扩散模型（Diffusion Transformer）和类 Uni
 
 ## 3. AI 读懂论文，一键链接文本与 3D 蛋白结构  
   
-![linking_protein_resi_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1](post_all_image/linking_protein_resi_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)  
+![](post_all_image/linking_protein_resi_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)  
 
 我们都遇到过这种事。  
   

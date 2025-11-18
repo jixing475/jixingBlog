@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="DeepVul 模型突破了精准医疗依赖特定基因突变的局限，利用 Transformer 架构分析细胞的转录组数据，为更广泛的患者群体寻找治疗方案。该模型通过联合学习基因表达谱、基因扰动和药物扰动，揭示细胞生存的核心生物学逻辑。一个关键发现是，从基因必要性数据中学到的模式比药物反应数据更具普适性，为预测药物敏感性提供了更稳健的基础，并具备良好的可解释性。">
+
+<title>DeepVul：用 Transformer 预测药物反应，精准医疗新思路 – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="DeepVul：用 Transformer 预测药物反应，精准医疗新思路 – MPU">
+<meta property="og:description" content="DeepVul 模型突破了精准医疗依赖特定基因突变的局限，利用 Transformer 架构分析细胞的转录组数据，为更广泛的患者群体寻找治疗方案。该模型通过联合学习基因表达谱、基因扰动和药物扰动，揭示细胞生存的核心生物学逻辑。一个关键发现是，从基因必要性数据中学到的模式比药物反应数据更具普适性，为预测药物敏感性提供了更稳健的基础，并具备良好的可解释性。">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-11-02/post_all_image/deep_vul_a_multi_tas_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.png">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:height" content="630">
+<meta property="og:image:width" content="802">
+<meta property="og:image:alt" content="DeepVul 模型的工作原理解释图。图表展示了一个多任务 Transformer 架构如何整合三种不同类型的数据：基因表达谱，基因扰动效应 (如 CRISPR 敲除), 以及药物扰动效应。这三种信息被输入到一个共享的编码器中，映射到一个统一的潜在空间。这个过程迫使模型学习它们之间共通的底层生物学规律。该图说明了 DeepVul 如何利用基因必要性数据来更准确地预测细胞对特定药物的反应，为精准医疗提供超越基因突变的新思路。
+">
+<meta name="twitter:title" content="DeepVul：用 Transformer 预测药物反应，精准医疗新思路 – MPU">
+<meta name="twitter:description" content="DeepVul 模型突破了精准医疗依赖特定基因突变的局限，利用 Transformer 架构分析细胞的转录组数据，为更广泛的患者群体寻找治疗方案。该模型通过联合学习基因表达谱、基因扰动和药物扰动，揭示细胞生存的核心生物学逻辑。一个关键发现是，从基因必要性数据中学到的模式比药物反应数据更具普适性，为预测药物敏感性提供了更稳健的基础，并具备良好的可解释性。">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-11-02/post_all_image/deep_vul_a_multi_tas_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.png">
+<meta name="twitter:image-height" content="630">
+<meta name="twitter:image-width" content="802">
+<meta name="twitter:image:alt" content="DeepVul 模型的工作原理解释图。图表展示了一个多任务 Transformer 架构如何整合三种不同类型的数据：基因表达谱，基因扰动效应 (如 CRISPR 敲除), 以及药物扰动效应。这三种信息被输入到一个共享的编码器中，映射到一个统一的潜在空间。这个过程迫使模型学习它们之间共通的底层生物学规律。该图说明了 DeepVul 如何利用基因必要性数据来更准确地预测细胞对特定药物的反应，为精准医疗提供超越基因突变的新思路。
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">DeepVul：用 Transformer 预测药物反应，精准医疗新思路</h1>
+                  <div>
+        <div class="description">
+          <p>DeepVul 模型突破了精准医疗依赖特定基因突变的局限，利用 Transformer 架构分析细胞的转录组数据，为更广泛的患者群体寻找治疗方案。该模型通过联合学习基因表达谱、基因扰动和药物扰动，揭示细胞生存的核心生物学逻辑。一个关键发现是，从基因必要性数据中学到的模式比药物反应数据更具普适性，为预测药物敏感性提供了更稳健的基础，并具备良好的可解释性。</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">精准医疗</div>
+                <div class="quarto-category">Transformer</div>
+                <div class="quarto-category">药物反应预测</div>
+                <div class="quarto-category">转录组</div>
+                <div class="quarto-category">基因必要性</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Sunday, the 2nd of November, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#目录" id="toc-目录" class="nav-link active" data-scroll-target="#目录">目录</a></li>
+  <li><a href="#cocographai-造分子新标杆" id="toc-cocographai-造分子新标杆" class="nav-link" data-scroll-target="#cocographai-造分子新标杆">1. CoCoGraph：AI 造分子新标杆</a></li>
+  <li><a href="#ddi-预测新范式融合领域知识与-ai" id="toc-ddi-预测新范式融合领域知识与-ai" class="nav-link" data-scroll-target="#ddi-预测新范式融合领域知识与-ai">2. DDI 预测新范式：融合领域知识与 AI</a></li>
+  <li><a href="#deepvul用-transformer-预测药物反应精准医疗新思路" id="toc-deepvul用-transformer-预测药物反应精准医疗新思路" class="nav-link" data-scroll-target="#deepvul用-transformer-预测药物反应精准医疗新思路">3. DeepVul：用 Transformer 预测药物反应，精准医疗新思路</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-11-02/post_all.zh.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="目录" class="level2">
+<h2 class="anchored" data-anchor-id="目录">目录</h2>
+<ol type="1">
+<li>CoCoGraph 模型设计独特，能高效生成化学有效且新颖的分子，是分子生成领域的一大进步。</li>
+<li>一个混合计算框架，融合了两种分子表示方法与无标签泄露的临床评分，实现了高精度、可解释的药物相互作用预测。</li>
+<li>DeepVul 模型利用转录组数据预测基因必要性和药物反应，为超越基因突变局限的精准医疗提供了新工具。</li>
+</ol>
+</section>
+<section id="cocographai-造分子新标杆" class="level2">
+<h2 class="anchored" data-anchor-id="cocographai-造分子新标杆">1. CoCoGraph：AI 造分子新标杆</h2>
+<p><a href="post_all_image/a_collaborative_cons_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/a_collaborative_cons_image_1.jpg" class="img-fluid"></a></p>
+<p>设计新药或新材料，常常需要创造全新的分子。过去，生成的分子常存在化学结构无效或缺乏新颖性的问题。</p>
+<p>研究者开发了 CoCoGraph，一个用于生成分子的协作式图扩散模型。其设计确保了生成的分子 100% 化学有效。模型采用「双边交换」方法，在整个生成过程中持续监控原子价态、分子式和化学键类型。这些化学规则被直接整合进模型，无需模型自行学习。CoCoGraph 由两个模型协作：一个扩散模型预测化学键的交换方式，一个时间模型评估生成图与真实分子的差距。两者配合，提升了生成结果的稳定性和可靠性。</p>
+<p>CoCoGraph 基础版的模型参数仅 53.4 万，比 DiGress 或 JTVAE 小一个数量级。尽管参数少，其性能表现优异。在 GuacaMol 基准测试中，CoCoGraph 的分子有效性为 100%，独特性为 99.9%，新颖性达 98.6%。它在分子特性分布的 KL 散度（Kullback-Leibler divergence）上，比 DiGress 低近一半，比 JTVAE 低九成以上，表明其生成的分子特性更接近真实分子。在 36 种分子特性的对比中，CoCoGraph FPS 版本在 23 个特性上优于 DiGress，在 33 个特性上优于 JTVAE。它在拓扑结构、电子特性和药物相似性等药物化学关键指标上表现出色。</p>
+<p>为检验生成分子的真实性，研究者进行了一项测试，邀请 102 位专家分辨真实分子和 CoCoGraph 生成的分子。专家的平均准确率仅为 62%，略高于随机猜测，表明 CoCoGraph 生成的分子真实度高，难以分辨。该模型还能在普通设备上高效生成数百万个分子。研究者已利用 CoCoGraph 构建了一个包含 820 万个新分子的公开数据集，其新颖度达 98.5%，冗余度仅为 7.1%。此外，CoCoGraph 对不同类型的分子适应性强。专家评估发现，它生成的无环或脂肪族分子与真实分子的分布几乎没有区别，证明了模型探索不同化学结构空间的能力。</p>
+<p>CoCoGraph 的优势在于，它将复杂的化学规则直接整合到生成过程中，而非让模型从数据中学习。这种内置化学约束的协作式扩散方法，能够快速、大规模地探索分子空间，同时确保每一步都符合化学原理，为分子生成领域开辟了新途径。</p>
+<p>💻Code: <a href="http://cocograph.seeslab.net" class="uri">http://cocograph.seeslab.net</a><br>
+📜Paper: <a href="https://arxiv.org/abs/2505.16365" class="uri">https://arxiv.org/abs/2505.16365</a></p>
+</section>
+<section id="ddi-预测新范式融合领域知识与-ai" class="level2">
+<h2 class="anchored" data-anchor-id="ddi-预测新范式融合领域知识与-ai">2. DDI 预测新范式：融合领域知识与 AI</h2>
+<p><a href="post_all_image/a_hybrid_computation_2025_10_17_image_1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/a_hybrid_computation_2025_10_17_image_1.png" class="img-fluid"></a></p>
+<p>预测药物 - 药物相互作用（Drug-Drug Interaction, DDI）是药物研发和临床应用的难题。传统计算方法中，数据驱动模型如同黑箱，而基于规则的系统覆盖范围有限。一个新框架尝试融合两者优点，寻求平衡。</p>
+<p>首先，模型通过两种分子嵌入技术理解药物的化学结构：<strong>Mol2Vec</strong>和 <strong>SMILES-BERT</strong>。</p>
+<p><strong>Mol2Vec</strong>将分子拆解为化学亚结构「片段」，并学习这些片段间的关系，擅长捕捉局部的结构信息。这好比通过识别乐高积木的种类和组合方式来理解一个模型。</p>
+<p><strong>SMILES-BERT</strong>则将分子的 SMILES 字符串视为一种语言，利用大语言模型（Large Language Model）学习其「语法」和上下文，从而捕捉分子的全局特征。两者结合，让模型既能看到「树木」，也能看到「森林」，对药物分子的理解更加立体。</p>
+<p>框架的一个核心是名为 <strong>RBScore</strong>的临床评分机制。DDI 预测的一大陷阱是「标签泄露」：模型在训练时接触到不应获知的信息，导致测试表现虚高，实战失灵。</p>
+<p>为避免此问题，<strong>RBScore</strong>完全基于药理学知识构建，不依赖任何已知的 DDI 标签。该分数依据药物的药代动力学（PK）和药效学（PD）特性计算，例如药物是否为特定 CYP 酶的抑制剂或底物。这相当于为模型内置了一位药理学家的经验，模型在预测前会参考这份无偏见的「专家意见」，从而提升泛化能力。同时，这也增强了可解释性：当模型预测出相互作用时，可以追溯到 <strong>RBScore</strong>，明确是哪条药理学规则在起作用。</p>
+<p>在分类器和优化上，框架选择了轻量级分类器，而非复杂的神经网络，降低了计算成本，利于实际部署。</p>
+<p>为高效寻找最优超参数，框架采用了一个三阶段元启发式优化策略（RSmpl–ACO–PSO）。第一阶段，通过随机采样（RSmpl）在参数空间中初步筛选出潜力区域。第二阶段，利用蚁群优化（ACO）在这些区域内精细探索。第三阶段，通过粒子群优化（PSO）在最佳点附近进行最终的局部寻优。这种从全局探索到局部优化的策略，兼顾了效率与稳定性。</p>
+<p>模型在 DrugBank 数据集上取得了 0.911 的 ROC-AUC，并在一个真实的 2 型糖尿病患者队列数据中表现良好，验证了其临床应用潜力。</p>
+<p>该框架巧妙地将机器学习与领域知识结合，解决了 DDI 预测的关键痛点。其模块化设计也为未来迭代提供了空间，例如接入更先进的分子表示方法或整合电子病历数据，以实现个性化的 DDI 预测。</p>
+<p>📜Title: A Hybrid Computational Intelligence Framework with Metaheuristic Optimization for Drug–Drug Interaction Prediction<br>
+🌐Paper: https://arxiv.org/abs/2510.09668</p>
+</section>
+<section id="deepvul用-transformer-预测药物反应精准医疗新思路" class="level2">
+<h2 class="anchored" data-anchor-id="deepvul用-transformer-预测药物反应精准医疗新思路">3. DeepVul：用 Transformer 预测药物反应，精准医疗新思路</h2>
+<p><a href="post_all_image/deep_vul_a_multi_tas_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/deep_vul_a_multi_tas_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.png" class="img-fluid"></a></p>
+<p>目前的精准医疗主要依赖寻找特定的靶向基因突变，但这只对少数携带此类突变的癌症患者有效。DeepVul 旨在突破这一局限，为更广泛的患者群体寻找治疗方案。</p>
+<p>DeepVul 的思路是分析细胞的「实时工作日志」——转录组 (transcriptome)，即细胞在特定时间点所有基因的活跃程度。作者认为，这份日志比静态的基因突变更能揭示细胞的弱点。</p>
+<p><strong>它的工作原理是这样的</strong></p>
+<p>模型采用多任务 Transformer 架构，可以理解为一个能同时学习三种信息的智能系统：<br>
+1. <strong>基因表达谱</strong>：一个癌细胞系里成千上万个基因的活性水平。<br>
+2. <strong>基因扰动</strong>：当某个特定基因被「敲除」（如使用 CRISPR 技术）后，细胞发生的变化。<br>
+3. <strong>药物扰动</strong>：当细胞接触某种药物后，其状态的改变。</p>
+<p>DeepVul 的核心设计，是将这三种信息映射到统一的数学空间，即「潜在空间」 (latent space)。这迫使模型去寻找三者共通的底层生物学逻辑。例如，如果细胞系 A 的基因表达谱，与敲除基因 X 后的细胞系 B 相似，模型就会推断基因 X 可能是细胞系 A 的「阿喀琉斯之踵」。</p>
+<p><strong>一个出乎意料的发现</strong></p>
+<p>为测试模型的泛化能力，研究者进行了一项迁移学习 (transfer learning) 实验。他们先用 DepMap 项目的海量基因必要性数据训练模型，使其学习癌细胞的基本生存逻辑，然后让模型执行新任务：预测细胞对不同药物的反应。</p>
+<p>测试包含两种策略：一是微调整个模型来适应新任务；二是「冻结」负责理解基因表达谱的编码器，只训练负责预测的最后部分。</p>
+<p>结果出人意料，「冻结」编码器的策略效果更好。</p>
+<p>这一结果暗示，从基因必要性数据中学到的模式，比从药物反应数据中学到的更基础、更普适。基因必要性反映了细胞生存依赖的核心系统，是一个更纯粹、更全局的信号；而药物反应数据可能包含脱靶效应等「噪音」。这好比学习一门语言，掌握底层语法（基因必要性）比只会背诵几句日常对话（药物反应）更有效。</p>
+<p><strong>模型的价值</strong></p>
+<p>DeepVul 能为更多患者找到潜在治疗靶点。测试表明，它预测数百个基因靶点敏感性的准确度，可与现有的基于突变的方法媲美，从而扩大了潜在受益人群。</p>
+<p>模型具备可解释性。研究者能用 SHAP 等工具探究其决策依据。例如，在预测细胞对 BRAF 抑制剂的敏感性时，模型能指出是哪些基因的表达水平影响了预测结果。这对理解药物作用和耐药机制有重要价值。</p>
+<p>模型的泛化能力也得到验证。在 Broad 研究所数据上训练的模型，无需重新训练，就能直接在 Sanger 研究所的数据上取得稳健表现。这证明模型学到的是普适的生物学规律，而非特定数据集的巧合。</p>
+<p>📜<strong>Paper</strong>: DeepVul: A Multi-Task Transformer Model for Joint Prediction of Gene Essentiality and Drug Response<br>
+🌐<strong>Preprint</strong>: https://www.biorxiv.org/content/10.1101/2024.10.17.618944v2<br>
+💻<strong>Code</strong>: https://github.com/alaaj27/DeepVul.git</p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-11-02/post_all.zh.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

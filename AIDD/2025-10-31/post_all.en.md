@@ -17,7 +17,7 @@ toc-depth: 3
 
 ## 1. AI Designs New Anti-Cancer Drugs to Precisely Target Specific Cancer Cells
 
-![phenotypic_ai_based_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1](post_all_image/phenotypic_ai_based_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)
+![](post_all_image/phenotypic_ai_based_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)
 
 There are usually two ways to think about drug discovery. One is target-based, like using a specific key for a specific lock. The other is phenotypic screening, where you test a huge number of compounds to see which ones "kill cancer cells," without worrying about the lock. Phenotypic screening can uncover entirely new mechanisms, but optimizing the hits is like fumbling in a black box.
 
@@ -40,7 +40,7 @@ This work combines the unbiased advantage of phenotypic screening with the desig
 
 ## 2. MATCHA: A Breakthrough in AI Molecular Docking That's Both Fast and Accurate
 
-![matcha_multi_stage_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1](post_all_image/matcha_multi_stage_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)
+![](post_all_image/matcha_multi_stage_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)
 
 Molecular docking has long faced a trade-off between speed and accuracy. Traditional methods are fast but not very accurate. Co-folding models like AlphaFold 3 are precise but take too long to compute, making them unsuitable for large-scale virtual screening. The new MATCHA model aims to solve this problem.
 
@@ -63,7 +63,7 @@ MATCHA's model architecture combines the strengths of a Diffusion Transformer an
 
 ## 3. AI Reads Papers, Linking Text to 3D Protein Structures in One Click
 
-![linking_protein_resi_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1](post_all_image/linking_protein_resi_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)
+![](post_all_image/linking_protein_resi_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)
 
 We've all been there.
 

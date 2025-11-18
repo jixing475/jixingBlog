@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="Diffusion models are good at predicting protein structures, but they usually only generate the most common, stable shapes. They often miss the rare but functionally critical ones. The ConforMix algorithm, developed at Stanford, uses an innovative “classifier guidance” technique. This method guides the AI to efficiently explore a biomolecule’s hidden conformational states during the inference phase, without needing to retrain the model. This approach can find “allosteric pockets” needed for drug targeting and estimate the free energy differences between conformations. It provides a powerful “plug-and-play” tool for computer-aided drug discovery (CADD) and for studying dynamic molecular behavior.">
+
+<title>ConforMix: Unlocking Hidden Biomolecular Shapes at AI Inference Time – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="ConforMix: Unlocking Hidden Biomolecular Shapes at AI Inference Time – MPU">
+<meta property="og:description" content="Diffusion models are good at predicting protein structures, but they usually only generate the most common, stable shapes. They often miss the rare but functionally critical ones. The ConforMix algorithm, developed at Stanford, uses an innovative “classifier guidance” technique. This method guides the AI to efficiently explore a biomolecule’s hidden conformational states during the inference phase, without needing to retrain the model. This approach can find “allosteric pockets” needed for drug targeting and estimate the free energy differences between conformations. It provides a powerful “plug-and-play” tool for computer-aided drug discovery (CADD) and for studying dynamic molecular behavior.">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-11-18/post_all_image/unlocking_hidden_bio_2025_11_09_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="A concept diagram shows how the ConforMix algorithm guides an AI diffusion model to explore different protein conformations. On the left is a stable and common protein shape, labeled as the 'default' or 'low-energy' state. A series of arrows points from left to right, symbolizing the algorithm's guidance process. On the right are several different, even rare, protein conformations. One of these clearly shows an open 'allosteric pocket,' a key target for drug design. The diagram uses simple graphics and smooth lines to illustrate how ConforMix unlocks and discovers these functionally vital hidden molecular states at inference time, without retraining the model.
+">
+<meta name="twitter:title" content="ConforMix: Unlocking Hidden Biomolecular Shapes at AI Inference Time – MPU">
+<meta name="twitter:description" content="Diffusion models are good at predicting protein structures, but they usually only generate the most common, stable shapes. They often miss the rare but functionally critical ones. The ConforMix algorithm, developed at Stanford, uses an innovative “classifier guidance” technique. This method guides the AI to efficiently explore a biomolecule’s hidden conformational states during the inference phase, without needing to retrain the model. This approach can find “allosteric pockets” needed for drug targeting and estimate the free energy differences between conformations. It provides a powerful “plug-and-play” tool for computer-aided drug discovery (CADD) and for studying dynamic molecular behavior.">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-11-18/post_all_image/unlocking_hidden_bio_2025_11_09_image_1.jpg">
+<meta name="twitter:image:alt" content="A concept diagram shows how the ConforMix algorithm guides an AI diffusion model to explore different protein conformations. On the left is a stable and common protein shape, labeled as the 'default' or 'low-energy' state. A series of arrows points from left to right, symbolizing the algorithm's guidance process. On the right are several different, even rare, protein conformations. One of these clearly shows an open 'allosteric pocket,' a key target for drug design. The diagram uses simple graphics and smooth lines to illustrate how ConforMix unlocks and discovers these functionally vital hidden molecular states at inference time, without retraining the model.
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">ConforMix: Unlocking Hidden Biomolecular Shapes at AI Inference Time</h1>
+                  <div>
+        <div class="description">
+          <p>Diffusion models are good at predicting protein structures, but they usually only generate the most common, stable shapes. They often miss the rare but functionally critical ones. The ConforMix algorithm, developed at Stanford, uses an innovative “classifier guidance” technique. This method guides the AI to efficiently explore a biomolecule’s hidden conformational states during the inference phase, without needing to retrain the model. This approach can find “allosteric pockets” needed for drug targeting and estimate the free energy differences between conformations. It provides a powerful “plug-and-play” tool for computer-aided drug discovery (CADD) and for studying dynamic molecular behavior.</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">ConforMix</div>
+                <div class="quarto-category">Diffusion Models</div>
+                <div class="quarto-category">Molecular Conformation</div>
+                <div class="quarto-category">Allosteric Pockets</div>
+                <div class="quarto-category">Computer-Aided Drug Discovery</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Tuesday, the 18th of November, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#table-of-contents" id="toc-table-of-contents" class="nav-link active" data-scroll-target="#table-of-contents">Table of Contents</a></li>
+  <li><a href="#decoding-genomic-large-language-models-seeing-inside-ais-brain-with-sparse-autoencoders" id="toc-decoding-genomic-large-language-models-seeing-inside-ais-brain-with-sparse-autoencoders" class="nav-link" data-scroll-target="#decoding-genomic-large-language-models-seeing-inside-ais-brain-with-sparse-autoencoders">1. Decoding Genomic Large Language Models: Seeing Inside AI’s “Brain” with Sparse Autoencoders</a></li>
+  <li><a href="#a-new-step-in-ai-drug-discovery-qcgem-blends-quantum-chemistry-to-reshape-molecular-representation" id="toc-a-new-step-in-ai-drug-discovery-qcgem-blends-quantum-chemistry-to-reshape-molecular-representation" class="nav-link" data-scroll-target="#a-new-step-in-ai-drug-discovery-qcgem-blends-quantum-chemistry-to-reshape-molecular-representation">2. A New Step in AI Drug Discovery: qcGEM Blends Quantum Chemistry to Reshape Molecular Representation</a></li>
+  <li><a href="#abnativ2-using-ai-to-judge-an-antibodys-naturalness" id="toc-abnativ2-using-ai-to-judge-an-antibodys-naturalness" class="nav-link" data-scroll-target="#abnativ2-using-ai-to-judge-an-antibodys-naturalness">3. AbNatiV2: Using AI to Judge an Antibody’s “Naturalness”</a></li>
+  <li><a href="#conformix-unlocking-hidden-biomolecular-shapes-at-ai-inference-time" id="toc-conformix-unlocking-hidden-biomolecular-shapes-at-ai-inference-time" class="nav-link" data-scroll-target="#conformix-unlocking-hidden-biomolecular-shapes-at-ai-inference-time">4. ConforMix: Unlocking Hidden Biomolecular Shapes at AI Inference Time</a></li>
+  <li><a href="#ai-predictions-and-clinical-outcomes-how-to-quantify-their-agreement" id="toc-ai-predictions-and-clinical-outcomes-how-to-quantify-their-agreement" class="nav-link" data-scroll-target="#ai-predictions-and-clinical-outcomes-how-to-quantify-their-agreement">5. AI Predictions and Clinical Outcomes: How to Quantify Their Agreement?</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-11-18/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="table-of-contents" class="level2">
+<h2 class="anchored" data-anchor-id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li>Sparse Autoencoders (SAEs) can dissect, audit, and steer genomic large language models, improving AI transparency.</li>
+<li>qcGEM integrates quantum chemistry information into graph neural networks, creating more accurate and interpretable molecular representations. It outperformed existing models in 71 tasks, offering a new direction for AI drug discovery.</li>
+<li>AbNatiV2 is an AI model that assesses the “nativeness” and pairing likelihood of antibody sequences, helping scientists design more stable and effective antibody drugs.</li>
+<li>Researchers at Stanford developed the ConforMix algorithm. It guides AI diffusion models at the inference stage to efficiently explore hidden conformational states of biomolecules without retraining the model.</li>
+<li>A study proposes the “Algorithm-to-Outcome Concordance” (AOC) metric to quantify the consistency between AI-predicted tumor neoantigens and clinical outcomes in cancer immunotherapy.</li>
+</ol>
+</section>
+<section id="decoding-genomic-large-language-models-seeing-inside-ais-brain-with-sparse-autoencoders" class="level2">
+<h2 class="anchored" data-anchor-id="decoding-genomic-large-language-models-seeing-inside-ais-brain-with-sparse-autoencoders">1. Decoding Genomic Large Language Models: Seeing Inside AI’s “Brain” with Sparse Autoencoders</h2>
+<p><a href="post_all_image/decode_g_lm_tools_to_2025_11_09_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/decode_g_lm_tools_to_2025_11_09_image_1.jpg" class="img-fluid"></a></p>
+<p>The genomic language models we train are getting more powerful, but how they make decisions is often a black box. A new study offers a “scalpel” to dissect their inner workings: sparse autoencoders.</p>
+<p>The method, called Decode-gLM, works like this: an encoder compresses the model’s complex neural activity into a few key features, and a decoder then uses these features to rebuild the original activity. To purify the features, the researchers added a sparsity constraint, forcing the encoder to select only the most important information.</p>
+<p>The results show that the SAE model automatically learned over 100 features with clear biological meaning from the genomic model, without human supervision. These features include “signatures” for promoters, enhancers, and specific gene families. It acts like a translator, turning the computer’s binary language into a genetic language that biologists can understand.</p>
+<p>With this “translator,” we can thoroughly audit the model. The researchers found a feature strongly related to the Cytomegalovirus (CMV) enhancer, even though viruses were explicitly excluded from the training data. Tracing it back, they discovered the human reference genome database was contaminated with viral sequences. Without SAEs, this kind of hidden data leakage might never have been found.</p>
+<p>The researchers also trained a “Meta-SAE” on top of these features to explore how they relate to each other. The results showed that several independent features related to the Human Immunodeficiency Virus (HIV) were linked by a single, higher-level abstract feature. This suggests the model not only identifies individual genetic elements but is also starting to understand the biological processes where they work together.</p>
+<p>This “scalpel” can also directly manipulate the model. The researchers identified a feature linked to antibiotic resistance. By “enhancing” it, they successfully guided the model to locate a known aminoglycoside resistance mutation on the 16S rRNA gene. This is like directly telling the AI: “Go look for resistance mutations in that direction.”</p>
+<p>Decode-gLM brings sparse autoencoders to genomics, allowing us to interpret, audit, and even steer these complex AI models. This greatly increases our trust in them. For developers, this isn’t just a technical step forward. It marks the start of a new era where we can work alongside AI, not just use it as a black box tool.</p>
+<p>📜Title: Decode-gLM: Tools to Interpret, Audit, and Steer Genomic Language Models 🌐Paper: https://www.biorxiv.org/content/10.1101/2025.10.31.685860v2.full.pdf</p>
+</section>
+<section id="a-new-step-in-ai-drug-discovery-qcgem-blends-quantum-chemistry-to-reshape-molecular-representation" class="level2">
+<h2 class="anchored" data-anchor-id="a-new-step-in-ai-drug-discovery-qcgem-blends-quantum-chemistry-to-reshape-molecular-representation">2. A New Step in AI Drug Discovery: qcGEM Blends Quantum Chemistry to Reshape Molecular Representation</h2>
+<p><a href="post_all_image/qc_gem_a_graph_based_2025_11_13_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/qc_gem_a_graph_based_2025_11_13_image_1.jpg" class="img-fluid"></a></p>
+<p>In AI-aided drug discovery, a central problem has always been how to accurately describe a molecule to a computer. Traditional methods, like fingerprints or simple graph structures, focus mainly on how atoms are connected. But this is not enough. A molecule’s actual behavior is determined by complex physicochemical properties, such as its 3D shape and electron cloud distribution.</p>
+<p>A new method called qcGEM tries to solve this problem from the ground up. It feeds detailed information from quantum chemistry calculations into the model. It’s like giving the model a high-resolution “snapshot” of the molecule’s physical properties, telling it deep information that goes beyond simple connections.</p>
+<p>The core idea of qcGEM is to combine localized quantum descriptors with the molecule’s 3D geometry to build a more informative molecular graph. The model learns from this quantum chemistry data during a pre-training phase. This allows the molecular embeddings it generates—a compact mathematical format computers can understand—to naturally carry physicochemical “genes.” A molecule’s representation is thus transformed from a flat connection diagram into a three-dimensional entity with electron-cloud coloring.</p>
+<p>The benefits of this approach were proven in testing. The paper’s data shows that qcGEM systematically beat 29 existing methods, including 2D, 3D, and pre-trained models, across 71 different tasks. These tasks cover key challenges in drug development, from predicting molecular solubility and identifying “activity cliffs”—where a tiny structural change causes a dramatic shift in activity—to simulating protein-ligand interactions.</p>
+<p>A highlight of qcGEM is its interpretability. For example, it can accurately tell apart a pair of stereoisomers that differ only in their 3D shape. To a traditional model, these two molecules might look identical. But qcGEM can capture this subtle difference. In the body, such differences often determine a drug’s effectiveness and even its safety.</p>
+<p>The team also considered computational efficiency. They introduced a lightweight version, qcGEM-Hybrid. This version maintains high accuracy while significantly increasing calculation speed, making large-scale virtual screening practical. Researchers can first use it to quickly screen millions of molecules for potential candidates and then use the full qcGEM model for detailed analysis.</p>
+<p>The thinking behind qcGEM reminds us that AI models should be built on solid principles of physics and chemistry. Incorporating first-principles knowledge, like quantum chemistry, into data-driven models may be the key to advancing AI in drug discovery.</p>
+<p>📜Title: qcGEM: a graph-based molecular representation with quantum chemistry awareness 🌐Paper: https://www.biorxiv.org/content/10.1101/2025.11.02.686183v1</p>
+</section>
+<section id="abnativ2-using-ai-to-judge-an-antibodys-naturalness" class="level2">
+<h2 class="anchored" data-anchor-id="abnativ2-using-ai-to-judge-an-antibodys-naturalness">3. AbNatiV2: Using AI to Judge an Antibody’s “Naturalness”</h2>
+<p><a href="post_all_image/deep_learning_assess_2025_11_07_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/deep_learning_assess_2025_11_07_image_1.jpg" class="img-fluid"></a></p>
+<p>When developing antibody drugs, a common problem is that carefully designed molecules can be unstable or get cleared by the immune system. This often happens because their sequences are too different from natural antibodies. AbNatiV2 is a tool that can assess the “nativeness” of a sequence ahead of time to reduce later trouble.</p>
+<p>The model uses deep learning, trained on a massive dataset of real antibody sequences, to learn the features of a “natural antibody.” The researchers expanded the training data to over 20 million sequences, including those from humans and alpacas. This improves the model’s ability to evaluate various antibodies, especially nanobodies.</p>
+<p>AbNatiV2’s technology was also upgraded with two new techniques: rotary positional embeddings and focal reconstruction loss. The first helps the model better understand long-range interactions between amino acid residues. The second prevents the model from being biased by common sequence patterns, making its assessments more objective.</p>
+<p>The researchers also released a paired model, p-AbNatiV2. A traditional antibody is made of a heavy chain (VH) and a light chain (VL), which must pair correctly to function. But in many cases, researchers may only have information for one chain or be unsure if the two chains are a match. p-AbNatiV2 uses a cross-attention mechanism, allowing the model to consider information from the other chain when evaluating one, to judge if they are a good pair. Experiments show its pairing prediction is better than existing tools.</p>
+<p>For drug developers, AbNatiV2 is a powerful tool, whether they are screening candidate molecules, optimizing existing antibodies, or designing new ones from scratch. It helps researchers rule out non-ideal sequences early, so they can focus resources on the most promising molecules. The team has made the web tool and source code available for researchers to use.</p>
+<p>📜Title: Deep learning assessment of nativeness and pairing likelihood for antibody and nanobody design with AbNatiV2 🌐Paper: https://www.biorxiv.org/content/10.1101/2025.10.31.685806v1 💻Code: https://gitlab.developers.cam.ac.uk/ch/sormanni/abnativ</p>
+</section>
+<section id="conformix-unlocking-hidden-biomolecular-shapes-at-ai-inference-time" class="level2">
+<h2 class="anchored" data-anchor-id="conformix-unlocking-hidden-biomolecular-shapes-at-ai-inference-time">4. ConforMix: Unlocking Hidden Biomolecular Shapes at AI Inference Time</h2>
+<p><a href="post_all_image/unlocking_hidden_bio_2025_11_09_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="post_all_image/unlocking_hidden_bio_2025_11_09_image_1.jpg" class="img-fluid"></a></p>
+<p>Computer-Aided Drug Design (CADD) faces a challenge: proteins are not rigid. They are like flexible machines that change shape to perform their functions. The pockets where drugs need to bind are often closed, opening up only in specific conformations. These are called “cryptic pockets.” Molecular Dynamics (MD) simulations can capture these dynamic processes, but they are computationally expensive. Simulating a few hundred nanoseconds can take days or weeks.</p>
+<p>AI, particularly Diffusion Models, has offered a new way to predict protein structures. These models can generate 3D structures of molecules, but they typically produce only the most stable and common shapes. It’s like asking an AI to draw a cat, and it always draws one sleeping. We want to see it jumping and hunting. The rare but functionally important shapes get ignored.</p>
+<p>Researchers at Stanford developed the ConforMix algorithm to address this. It doesn’t require retraining massive diffusion models. Instead, it guides them as they generate structures, a process known as inference.</p>
+<p>ConforMix works using a “classifier guidance” technique. As the model generates a conformation, the algorithm constantly checks how different the new shape is from a known default shape. This difference is measured by Root Mean Square Deviation (RMSD). If the new and old shapes are too similar, the algorithm “pushes” the model to explore in a different direction.</p>
+<p>The researchers applied this algorithm to an existing diffusion model (BioEmu) and significantly improved the efficiency of finding new conformations. For rare shapes already confirmed by experiments, ConforMix discovered them more effectively than traditional sampling methods. It can also quickly estimate the free energy difference between different conformations, which helps in understanding how difficult it is for the shape to change.</p>
+<p>The algorithm is broadly applicable and can handle proteins, multi-protein complexes, and RNA. Whether for studying enzyme catalysis mechanisms or designing drugs that target allosteric sites, ConforMix can help. It can even be combined with models like AlphaFold 3, allowing them not just to predict static structures but also to show how molecules change dynamically. This “plug-and-play” feature lets scientists immediately apply the technology to explore new opportunities hidden in the dynamic movements of molecules.</p>
+<p>📜<strong>Title</strong>: Unlocking Hidden Biomolecular Conformational Landscapes in Diffusion Models at Inference Time 🌐<strong>Paper</strong>: https://openreview.net/pdf/dd8aa97e8cf000d81066d7d22c7bb772b167e328.pdf</p>
+</section>
+<section id="ai-predictions-and-clinical-outcomes-how-to-quantify-their-agreement" class="level2">
+<h2 class="anchored" data-anchor-id="ai-predictions-and-clinical-outcomes-how-to-quantify-their-agreement">5. AI Predictions and Clinical Outcomes: How to Quantify Their Agreement?</h2>
+<p><a href="post_all_image/a_proposed_framework_2025_11_07_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="post_all_image/a_proposed_framework_2025_11_07_image_1.jpg" class="img-fluid"></a></p>
+<p>The development of personalized cancer vaccines faces a key question: are the “good” neoantigens predicted by AI algorithms actually effective in patients?</p>
+<p>To quantify the relationship between predictions and treatment efficacy, researchers have proposed the “Algorithm-to-Outcome Concordance” (AOC) framework.</p>
+<p>This framework combines three key factors into one formula: the AI model’s predictive performance (AUC), the actual effectiveness of the vaccine in clinical trials (such as the hazard ratio, HR), and the variability between different clinical trials (the I² statistic). The AOC metric acts like a ruler, measuring the translational fidelity of different AI models in a real-world clinical setting.</p>
+<p>To test the framework, the research team reviewed data from six melanoma vaccine clinical trials between 2017 and 2025. These trials covered various technology platforms, including mRNA, peptides, and dendritic cells.</p>
+<p>The data showed that for patients with a high Tumor Mutational Burden (TMB) and a predominance of clonal neoantigens, the agreement between AI predictions and clinical outcomes was better. TMB and the clonality of neoantigens could potentially serve as biomarkers to help select patients most likely to benefit from personalized vaccines.</p>
+<p>The study also built an economic model, which showed that if an AI model’s AOC value exceeds 0.7, the corresponding personalized vaccine therapy could potentially lower the incremental cost-effectiveness ratio (ICER) to an acceptable level. This is critical for gaining market access and insurance coverage for innovative therapies.</p>
+<p>Currently, the AOC framework is still a hypothesis-generating tool, with calculations relying on simulations or public summary data. The next step is for researchers to rigorously validate the metric using real individual patient data.</p>
+<p>The AOC framework provides a quantifiable and reproducible standard for evaluation. It directly links the predictive power of AI algorithms with their real-world clinical translation. This helps optimize the design of personalized vaccines and also gives regulatory agencies a scientific basis for evaluating and approving such therapies.</p>
+<p>📜Title: A Proposed Framework for Quantifying AI-to-Clinical Translation: The Algorithm-to-Outcome Concordance (AOC) Metric 🌐Paper: https://arxiv.org/abs/2510.26685v1</p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-11-18/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

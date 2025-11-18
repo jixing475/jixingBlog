@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="一份来自巴塞尔和柏林研究者的实用指南，旨在将机器学习势能面（ML-PES）的构建从’黑箱’操作转变为严谨的科学实践。文章深入探讨了模型选择（如 SchNet、MACE）、数据处理最佳实践（如使用 64 位双精度）以及如何通过迁移学习，用少量高精度数据显著提升模拟的准确性，为计算化学家提供了构建稳定、可信分子动力学模型的清晰路线图。">
+
+<title>机器学习势能面：告别炼金，拥抱可信赖的分子动力学 – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="机器学习势能面：告别炼金，拥抱可信赖的分子动力学 – MPU">
+<meta property="og:description" content="一份来自巴塞尔和柏林研究者的实用指南，旨在将机器学习势能面（ML-PES）的构建从’黑箱’操作转变为严谨的科学实践。文章深入探讨了模型选择（如 SchNet、MACE）、数据处理最佳实践（如使用 64 位双精度）以及如何通过迁移学习，用少量高精度数据显著提升模拟的准确性，为计算化学家提供了构建稳定、可信分子动力学模型的清晰路线图。">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-11-16/post_all_image/design_assessment_2025_11_09_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="一张图表展示了机器学习势能面构建流程中的关键步骤和注意事项。左侧是一个标题 'ML-PES: Best Practices'，下方列出了三个核心阶段：数据生成与筛选，神经网络模型训练，以及评估与应用。图表右侧则是一个复杂的分子结构图，代表着分子动力学模拟的对象。整个图像旨在说明，构建一个可靠的机器学习势能面需要系统性的方法和对细节的关注，从而实现精确的分子模拟，正如文章所讨论的那样。
+">
+<meta name="twitter:title" content="机器学习势能面：告别炼金，拥抱可信赖的分子动力学 – MPU">
+<meta name="twitter:description" content="一份来自巴塞尔和柏林研究者的实用指南，旨在将机器学习势能面（ML-PES）的构建从’黑箱’操作转变为严谨的科学实践。文章深入探讨了模型选择（如 SchNet、MACE）、数据处理最佳实践（如使用 64 位双精度）以及如何通过迁移学习，用少量高精度数据显著提升模拟的准确性，为计算化学家提供了构建稳定、可信分子动力学模型的清晰路线图。">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-11-16/post_all_image/design_assessment_2025_11_09_image_1.jpg">
+<meta name="twitter:image:alt" content="一张图表展示了机器学习势能面构建流程中的关键步骤和注意事项。左侧是一个标题 'ML-PES: Best Practices'，下方列出了三个核心阶段：数据生成与筛选，神经网络模型训练，以及评估与应用。图表右侧则是一个复杂的分子结构图，代表着分子动力学模拟的对象。整个图像旨在说明，构建一个可靠的机器学习势能面需要系统性的方法和对细节的关注，从而实现精确的分子模拟，正如文章所讨论的那样。
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">机器学习势能面：告别炼金，拥抱可信赖的分子动力学</h1>
+                  <div>
+        <div class="description">
+          <p>一份来自巴塞尔和柏林研究者的实用指南，旨在将机器学习势能面（ML-PES）的构建从’黑箱’操作转变为严谨的科学实践。文章深入探讨了模型选择（如 SchNet、MACE）、数据处理最佳实践（如使用 64 位双精度）以及如何通过迁移学习，用少量高精度数据显著提升模拟的准确性，为计算化学家提供了构建稳定、可信分子动力学模型的清晰路线图。</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">机器学习势能面</div>
+                <div class="quarto-category">ML-PES</div>
+                <div class="quarto-category">分子动力学</div>
+                <div class="quarto-category">计算化学</div>
+                <div class="quarto-category">迁移学习</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Sunday, the 16th of November, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#目录" id="toc-目录" class="nav-link active" data-scroll-target="#目录">目录</a></li>
+  <li><a href="#ai-自动挑选辅助任务提升分子性质预测精度" id="toc-ai-自动挑选辅助任务提升分子性质预测精度" class="nav-link" data-scroll-target="#ai-自动挑选辅助任务提升分子性质预测精度">1. AI 自动挑选辅助任务，提升分子性质预测精度</a></li>
+  <li><a href="#机器学习势能面告别炼金拥抱可信赖的分子动力学" id="toc-机器学习势能面告别炼金拥抱可信赖的分子动力学" class="nav-link" data-scroll-target="#机器学习势能面告别炼金拥抱可信赖的分子动力学">2. 机器学习势能面：告别炼金，拥抱可信赖的分子动力学</a></li>
+  <li><a href="#star-vae用-transformer-和-lora-高效生成新分子" id="toc-star-vae用-transformer-和-lora-高效生成新分子" class="nav-link" data-scroll-target="#star-vae用-transformer-和-lora-高效生成新分子">3. STAR-VAE：用 Transformer 和 LoRA 高效生成新分子</a></li>
+  <li><a href="#ai-结合化学创造前所未有的超稳定蛋白质" id="toc-ai-结合化学创造前所未有的超稳定蛋白质" class="nav-link" data-scroll-target="#ai-结合化学创造前所未有的超稳定蛋白质">4. AI 结合化学，创造前所未有的超稳定蛋白质</a></li>
+  <li><a href="#ai-智能体-immunia发掘免疫治疗新靶点" id="toc-ai-智能体-immunia发掘免疫治疗新靶点" class="nav-link" data-scroll-target="#ai-智能体-immunia发掘免疫治疗新靶点">5. AI 智能体 IMMUNIA：发掘免疫治疗新靶点</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-11-16/post_all.zh.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="目录" class="level2">
+<h2 class="anchored" data-anchor-id="目录">目录</h2>
+<ol type="1">
+<li>AUTAUT 框架利用大语言模型自动筛选并加权辅助任务，解决了分子数据有限的难题，提升了分子性质预测的准确性。</li>
+<li>一篇来自巴塞尔和柏林研究者的论文，为构建可靠的机器学习势能面（Machine Learning Potential Energy Surfaces, ML-PES）提供了路线图，强调模型选择、数据处理和训练细节，旨在将此过程从「黑箱」操作转变为严谨的科学实践。</li>
+<li>STAR-VAE 模型结合了 Transformer 和 LoRA 技术，能在大规模分子数据上预训练，再用少量数据快速微调，实现可控、高效的分子生成。</li>
+<li>研究者结合 AI 深度学习与化学工程原理，成功将脆弱的蛋白质 α-螺旋结构改造为极其稳定的分子骨架。</li>
+<li>IMMUNIA 框架利用多个大语言模型协同推理，成功筛选出 PTPRS、VCAN 和 MXRA5 等具有潜力的新型免疫调控靶点。</li>
+</ol>
+</section>
+<section id="ai-自动挑选辅助任务提升分子性质预测精度" class="level2">
+<h2 class="anchored" data-anchor-id="ai-自动挑选辅助任务提升分子性质预测精度">1. AI 自动挑选辅助任务，提升分子性质预测精度</h2>
+<p><a href="post_all_image/automatic_auxiliary_2025_11_09_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/automatic_auxiliary_2025_11_09_image_1.jpg" class="img-fluid"></a></p>
+<p>药物研发领域面临一个普遍难题：有标签的分子数据稀疏。为解决该问题，研究人员通常引入「辅助任务」帮助模型学习更多信息。但判断哪些任务有效，哪些会产生干扰，以及如何平衡主任务和辅助任务的学习，往往需要大量经验和试错。</p>
+<p>AUTAUT 框架利用大语言模型（Large Language Model, LLM）将这一过程自动化。</p>
+<p><strong>工作原理</strong></p>
+<p>首先，大语言模型在网络上检索大量潜在相关任务。接着，通过一个多步提示机制，大语言模型评估并筛选出与主任务最相关的辅助任务，省去研究员的人工筛选时间。</p>
+<p>然后，AUTAUT 将筛选出的辅助任务整合到训练流程中，并采用动态权重策略。该策略会实时调整每个辅助任务在训练中的权重，确保其知识能辅助主任务，避免「负迁移」现象。</p>
+<p><strong>效果</strong></p>
+<p>研究者在多个公开数据集上测试了 AUTAUT，涵盖了分子性质预测的分类和回归任务。结果显示，AUTAUT 的性能优于顶尖的分子属性预测模型，也超过了需要人工挑选辅助任务的方法。</p>
+<p>该方法的价值在于提升预测精度的同时，降低了使用门槛。非机器学习专家也能利用该框架，让 AI 为分子性质预测任务自动寻找最佳辅助，高效推进药物发现。这为利用 AI 解决数据稀疏性问题提供了实用的新思路。</p>
+<p>📜<strong>Title</strong>: Automatic Auxiliary Task Selection and Adaptive Weighting Boost Molecular Property Prediction<br>
+🌐<strong>Paper</strong>: https://openreview.net/pdf/11a8ed826be6d6df5e5a8a128cc0a9e04172688e.pdf</p>
+</section>
+<section id="机器学习势能面告别炼金拥抱可信赖的分子动力学" class="level2">
+<h2 class="anchored" data-anchor-id="机器学习势能面告别炼金拥抱可信赖的分子动力学">2. 机器学习势能面：告别炼金，拥抱可信赖的分子动力学</h2>
+<p><a href="post_all_image/design_assessment_2025_11_09_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/design_assessment_2025_11_09_image_1.jpg" class="img-fluid"></a></p>
+<p>当人们讨论 AI 如何颠覆制药时，一线计算化学工作者更关心具体问题：如何让机器学习（ML）真正解决问题？巴塞尔和柏林的一组研究者发表的论文，提供了一份构建稳定、可信的机器学习势能面的「操作手册」。</p>
+<p>这篇论文如同一份菜谱，指导从数据生成、神经网络架构选择到最终验证部署的每一步。</p>
+<p>论文强调，不存在「一招鲜」的模型。选择 SchNet、MACE 还是 ANI，关键在于要解决的问题。体系大、追求速度，某些模型更合适。若要精确描述多体相互作用的化学反应，则需更高精度的模型。这取决于数据预算：杀鸡无需牛刀。</p>
+<p>文章还给出一个实用的技巧：训练模型时使用 64 位双精度。很多 GPU 为速度偏爱 32 位单精度，但研究者发现，单精度模型计算的力场存在瑕疵，在需要精确能量守恒的 NVE 系综模拟中会迅速崩溃。仅一行代码设置的区别，就能省下数月返工重跑模拟的时间。</p>
+<p>数据处理上，作者们像晶体学家一样严谨。他们指出，原始量子化学计算数据集中约 10% 不可靠，必须筛除，特别是涉及多参考态的异常点。这些数据清理工作是保证模型稳定性的基石。</p>
+<p>论文最令人兴奋的是两个应用案例。第一个是仅用 1.7 万个结构数据，就为丙氨酸 - 赖氨酸 - 丙氨酸（Ala-Lys-Ala）三肽构建了一个 PhysNet 势能面。结果显示，该模型预测多肽构象平衡的表现优于经典的 CGenFF 力场。</p>
+<p>第二个案例展示了迁移学习的力量。为精确模拟 DNA 双螺旋中 GC/AT 碱基对的质子转移，研究者在一个基础模型上，仅增加 2300 个 MP2 级别的计算数据点，就将关键能垒的精度提升到昂贵的 CCSD(T) 级别。这意味着，能以相对低廉的成本，模拟过去难以企及的、依赖量子隧穿效应的生物化学过程。</p>
+<p>最后，研究者向整个领域提出挑战：能否开发出既能准确评估模型不确定性（Uncertainty Quantification, UQ），又不大幅增加计算量的新方法？能否微调「基础模型」，以 CCSD(T) 级别的精度进行毫秒级的蛋白质折叠模拟？这场竞赛刚刚开始。</p>
+<p>📜Title: Design, Assessment, and Application of Machine Learning Potential Energy Surfaces<br>
+🌐Paper: https://arxiv.org/abs/2511.00951<br>
+💻Code: https://github.com/MMunibas/practice</p>
+</section>
+<section id="star-vae用-transformer-和-lora-高效生成新分子" class="level2">
+<h2 class="anchored" data-anchor-id="star-vae用-transformer-和-lora-高效生成新分子">3. STAR-VAE：用 Transformer 和 LoRA 高效生成新分子</h2>
+<p><a href="post_all_image/star_vae_latent_var_2025_11_13_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/star_vae_latent_var_2025_11_13_image_1.jpg" class="img-fluid"></a></p>
+<p>新药研发如同在浩瀚宇宙中寻找特定星球，化学空间巨大。传统生成模型常产出无效结构，或依赖于现实中难以获取的海量标注数据。</p>
+<p>STAR-VAE 模型为此提供了一种解决方案。它先让模型「博览群书」，再针对具体任务进行「专项训练」。</p>
+<p><strong>第一步：大规模预训练</strong></p>
+<p>模型首先学习了 7900 万个分子的「语言规则」。这些分子采用了 SELFIES 表示法，保证模型无论如何组合，最终生成的都是化学上有效的分子，避免了原子价键错误等基础问题。</p>
+<p>模型的架构包含一个 Transformer 编码器和一个自回归的 Transformer 解码器。编码器将输入的分子压缩成一个数学向量，即潜空间（Latent Space）表示；解码器则从这个向量还原出分子。整个过程类似于机器翻译，旨在让模型深入理解分子的结构规律。</p>
+<p><strong>第二步：用少量数据快速微调</strong></p>
+<p>预训练好的模型已具备通用知识，但药物研发需要的是能生成特定属性（如对某个蛋白靶点有高亲和力）分子的「专家」。这就需要微调。</p>
+<p>传统微调需更新模型全部参数，计算量大且依赖大量标注数据。STAR-VAE 引入了低秩适配器（Low-Rank Adaptation, LoRA）。LoRA 像一个轻量级「插件」，微调时只训练这些插件，模型主体参数保持不变。</p>
+<p>这种方法的优势是训练速度快、所需数据少。如同经验丰富的厨师拿到新配方，只需调整几个关键步骤就能掌握新菜式，而无需从头学艺。</p>
+<p><strong>效果如何</strong>？</p>
+<p>在 GuacaMol 和 MOSES 等标准分子生成基准测试中，STAR-VAE 的表现与现有顶尖模型相当。</p>
+<p>在条件生成任务中，效果更为突出。在 Tartarus 蛋白 - 配体设计测试中，模型被要求生成与目标蛋白结合更紧密的分子。结果显示，微调后的 STAR-VAE 所生成分子的对接分数，其分布显著向高分区域偏移，证明模型成功学会了优化分子属性。</p>
+<p>该模型的设计思路实用。它结合了大规模无监督学习和高效的有监督微调，解决了药物发现中「数据昂贵且稀缺」的核心问题。一线研发人员可以借此更快地探索和优化先导化合物，让 AI 技术在药物研发中发挥实际作用。</p>
+<p>📜Title: STAR-VAE: Latent Variable Transformers for Scalable and Controllable Molecular Generation<br>
+🌐Paper: https://arxiv.org/abs/2511.02769v1</p>
+</section>
+<section id="ai-结合化学创造前所未有的超稳定蛋白质" class="level2">
+<h2 class="anchored" data-anchor-id="ai-结合化学创造前所未有的超稳定蛋白质">4. AI 结合化学，创造前所未有的超稳定蛋白质</h2>
+<p><a href="post_all_image/transforming_a_fragi_2025_11_09_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="post_all_image/transforming_a_fragi_2025_11_09_image_1.jpg" class="img-fluid"></a></p>
+<p>蛋白质世界中，α-螺旋结构很常见，但不够牢固，轻微的扰动或加热就可能使其解体，为药物研发和生物材料设计带来了麻烦。</p>
+<p>一个研究团队为此开发了新方法，结合了人工智能（AI）与化学工程。他们先用 AI 设计出坚固的蛋白质骨架，再用化学方法为骨架增加多重「锁扣」。</p>
+<p>具体流程如下：首先，研究者使用 RFdiffusion 和 ProteinMPNN 等 AI 工具，设计出由四个 α-螺旋组成的蛋白捆绑结构（four-helix bundle），这种结构比单个螺旋稳定。然后，通过分子动力学模拟，筛选出在虚拟高温、高压等极端环境下仍能维持稳定的候选设计。</p>
+<p>实验结果证实，这些经 AI 优化的蛋白质骨架非常坚固。在超过 200 皮牛（pN）的机械力拉伸下，它们才能解开，而普通 α-螺旋蛋白早已散架。同时，它们能在 100°C 以上的高温中保持稳定，并对化学变性剂有很强抗性。</p>
+<p>为了进一步加固，研究者又引入了化学工程方法。他们使用 AlphaFold3 这类能精准预测蛋白质结构的 AI，在蛋白质的关键位置引入盐桥和金属配位等化学键，增加了分子内部的连接点，提升了整体稳定性。</p>
+<p>这套从 AI 宏观设计到化学微调的分层策略十分高效，能从数百万个虚拟设计方案中快速筛选出少数几个最优候选，直接进入实验室验证，缩短了研发周期。这为开发新型生物材料、药物递送载体乃至微型分子机器铺平了道路。</p>
+<p>📜Paper: Transforming a Fragile Protein Helix into an Ultrastable Scaffold via a Hierarchical AI and Chemistry Framework<br>
+🌐Paper: https://www.biorxiv.org/content/10.1101/2025.11.03.686355v1</p>
+</section>
+<section id="ai-智能体-immunia发掘免疫治疗新靶点" class="level2">
+<h2 class="anchored" data-anchor-id="ai-智能体-immunia发掘免疫治疗新靶点">5. AI 智能体 IMMUNIA：发掘免疫治疗新靶点</h2>
+<p><a href="post_all_image/immunia_a_multi_llm_2025_11_13_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="post_all_image/immunia_a_multi_llm_2025_11_13_image_1.jpg" class="img-fluid"></a></p>
+<p>如何利用大语言模型进行可靠的科学推理，一直是生物医药领域的挑战。一篇预印本论文介绍了一种名为 IMMUNIA 的新方法，它组织多个不同的大语言模型协同工作，像一个专家委员会，专门寻找新的免疫治疗靶点。</p>
+<p>单一模型的知识或推理模式可能存在偏见。IMMUNIA 让多个模型（如 GPT-4、Claude 等）同时分析海量文献和分子数据，然后对结果进行交叉验证，达成共识，提高了结论的可靠性。</p>
+<p>研究人员首先通过结构化提示词 (structured prompting) 设定规则，要求模型重点关注与免疫治疗、炎症反应和 NF-κB 信号通路相关的基因。这为模型划定了明确的搜索范围，避免了无目的的分析。</p>
+<p>为了验证 IMMUNIA 的可靠性，研究人员用已知的免疫调节基因（阳性对照）和不相关的基因（阴性对照）对它进行测试。结果显示，IMMUNIA 能准确区分二者，证明了其推理的有效性。</p>
+<p>在筛选出的高可信度候选基因中，PTPRS、VCAN 和 MXRA5 脱颖而出。IMMUNIA 的分析表明，它们可能在肿瘤微环境的基质细胞中扮演类似免疫检查点的角色，帮助肿瘤逃避免疫攻击。</p>
+<p>我们熟知的 PD-1/PD-L1 主要作用于 T 细胞，而这些新靶点可能开辟调控基质细胞免疫抑制功能的新途径。</p>
+<p>IMMUNIA 框架的设计灵活。研究人员可以根据不同的癌症类型调整提示词，让它专注于特定的生物学问题。这种可定制性使它有潜力成为一个跨癌种的通用靶点发现工具。</p>
+<p>这项工作展示了如何驾驭大语言模型，让它们从海量信息中提炼出有价值的科学洞见。</p>
+<p>📜Title: IMMUNIA: A Multi-LLM Reasoning Agent for Immunoregulatory Surfaceome Discovery<br>
+🌐Paper: https://www.biorxiv.org/content/10.1101/2025.11.02.686138v1</p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-11-16/post_all.zh.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

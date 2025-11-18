@@ -17,7 +17,7 @@ toc-depth: 3
 
 ## 1. GQVis: Generating Genomics Visualizations with Natural Language
 
-![gq_vis_a_dataset_of_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1](post_all_image/gq_vis_a_dataset_of_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)
+![](post_all_image/gq_vis_a_dataset_of_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)
 
 In genomics research, making sense of massive datasets is a major challenge. To turn data into a meaningful chart, a researcher usually needs to write R or Python code and know exactly which type of plot to use. This process is tedious and creates a barrier for exploratory data analysis.
 
@@ -55,7 +55,7 @@ GQVis is currently a high-quality "textbook" for training models. The next step 
 
 ## 2. DeepChem-DEL: An Open-Source Framework to Standardize DEL Data Modeling
 
-![deep_chem_del_an_ope_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1](post_all_image/deep_chem_del_an_ope_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)
+![](post_all_image/deep_chem_del_an_ope_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)
 
 ### A unified workflow with a modular design
 
@@ -97,7 +97,7 @@ Now, this open-source, reproducible benchmarking framework gives everyone a comm
 
 ## 3. The Odyssey Model: Replacing Attention with "Consensus" to Reconstruct Protein Evolution
 
-![odyssey_reconstruct_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1](post_all_image/odyssey_reconstruct_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)
+![](post_all_image/odyssey_reconstruct_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)
 
 As protein language models get larger, the attention mechanism in the Transformer architecture becomes a bottleneck because its computational cost grows quadratically. A 102-billion-parameter protein model would have to get around the attention mechanism.
 

@@ -306,11 +306,11 @@ document.addEventListener('DOMContentLoaded', function() {
 <h2 class="anchored" data-anchor-id="ai-左右互搏专攻罕见药物相互作用">3. AI 左右互搏，专攻罕见药物相互作用</h2>
 <p><a href="post_all_image/g_flow_nets_for_learni_2025_08_14_2025_08_14_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/g_flow_nets_for_learni_2025_08_14_2025_08_14_image_1.jpg" class="img-fluid"></a></p>
 <p>在临床药理学中，药物 - 药物相互作用（DDI）是个永恒的难题。当一个病人同时服用多种药物时（这在老年患者中非常普遍），这些药物在体内可能会相互「打架」，导致药效降低，甚至产生严重的毒副作用。能够准确预测哪些药物组合是「危险品」，对用药安全至关重要。</p>
-<p>我们当然想用 AI 来干这件事。但这里有一个障碍，叫做 「<strong>类别不平衡」（class imbalance</strong>） 。</p>
+<p>我们当然想用 AI 来干这件事。但这里有一个障碍，叫做「<strong>类别不平衡」（class imbalance</strong>） 。</p>
 <p>想象一下，你要训练一个 AI 来识别动物。你给它看了一百万张猫的照片，十万张狗的照片，但只给它看了一张水豚的照片。结果可想而知，这个 AI 会变成一个顶级的「猫咪识别器」，一个还不错的「狗狗识别器」，但它很可能会把任何长得有点像啮齿动物的东西都当成猫，因为它见过的水豚实在太少了。</p>
 <p>DDI 数据集就是这个样子。某些类型的相互作用，比如通过 CYP3A4 酶代谢的药物，数据多如牛毛。而另一些罕见但可能致命的相互作用，比如某些药物对转运蛋白的抑制，相关的数据可能就那么几条。用这种偏科严重的数据训练出来的模型，自然也就成了「偏科生」，对那些罕见但重要的风险「视而不见」。</p>
 <p>这篇来自 arXiv 的论文，就提出了一个很聪明的解决方案，来纠正模型的「偏科」问题。他们的核心思想，不是去现实世界里辛辛苦苦地找更多的「水豚」照片，而是<strong>用 AI 自己，去画出成千上万张逼真的「假水豚」照片</strong>。</p>
-<p>他们用的「画家」，是一种叫做<strong>Generative Flow Networks (GFlowNets</strong>)的生成模型。</p>
+<p>他们用的「画家」，是一种叫做<strong>Generative Flow Networks (GFlowNets</strong>) 的生成模型。</p>
 <p>整个过程可以分成三步，像一场精心编排的「左右互搏」：</p>
 <ol type="1">
 <li><p><strong>第一阶段：初学乍练</strong>。<br>

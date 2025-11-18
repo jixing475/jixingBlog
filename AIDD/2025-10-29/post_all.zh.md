@@ -19,7 +19,7 @@ toc-depth: 3
 
 ## 1. MetaBench：大语言模型在代谢组学「大考」，结果不太妙  
   
-![meta_bench_a_multi_t_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1](post_all_image/meta_bench_a_multi_t_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)  
+![](post_all_image/meta_bench_a_multi_t_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)  
 
 人们普遍讨论大语言模型（Large Language Models）如何改变药物研发。但它们能否处理代谢组学这类高度专业、数据复杂的领域？一篇名为 MetaBench 的论文给出了一个不太乐观的结果。  
   
@@ -40,7 +40,7 @@ MetaBench 测试显示，即使是性能最好的大语言模型，在没有外�
 
 ## 2. 数字孪生预测药物副作用：告别黑箱模型  
   
-![digital_twin_approac_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1](post_all_image/digital_twin_approac_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)  
+![](post_all_image/digital_twin_approac_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)  
 
 药物研发常面临一个难题：分子在临床后期因意外副作用而失败，导致时间和资金的巨大浪费。预测副作用因此至关重要。  
   
@@ -67,7 +67,7 @@ MetaBench 测试显示，即使是性能最好的大语言模型，在没有外�
 
 ## 3. Slogen 模型：统一分子生成与筛选，加速药物优化  
   
-![slogen_a_structure_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1](post_all_image/slogen_a_structure_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)  
+![](post_all_image/slogen_a_structure_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)  
 
 药物研发中的先导化合物优化 (Lead Optimization)，就像玩一套复杂的乐高。研究者有一个核心结构，需要不断添加新的「积木块」（分子碎片），让它和靶点蛋白结合得更紧密。这个过程面临两个挑战：创造新的「积木块」（生成），或从巨大的仓库中挑选（筛选）。传统方法将两者分开，效率不高。  
   
@@ -94,7 +94,7 @@ Slogen 也有局限。例如，在生成一些常见的环状骨架结构 (BM sc
 
 ## 4. Kinome-AI：精准预测激酶激活突变  
   
-![integrative_machine_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1](post_all_image/integrative_machine_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)  
+![](post_all_image/integrative_machine_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)  
 
 在肿瘤靶向治疗中，一个常见的难题是：新发现的激酶突变究竟是驱动癌症，还是无害的？这直接决定了患者能否受益于靶向药。传统方法依赖已知突变热点或耗时的细胞实验。  
   

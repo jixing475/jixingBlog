@@ -17,7 +17,7 @@ toc-depth: 3
 
 ## 1. GQVis: 用自然语言生成基因组学可视化图谱  
   
-![gq_vis_a_dataset_of_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1](post_all_image/gq_vis_a_dataset_of_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)  
+![](post_all_image/gq_vis_a_dataset_of_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)  
 
 在基因组学研究中，如何看懂海量数据是一大挑战。研究者想把数据变成一张有意义的图，通常需要编写 R 或 Python 代码，并清楚知道何时该用哪种图。这个过程繁琐，为探索性数据分析设下了门槛。  
   
@@ -55,7 +55,7 @@ GQVis 目前是一个高质量的「教材」，用于训练模型。接下来�
 
 ## 2. DeepChem-DEL：开源框架统一 DEL 数据建模  
   
-![deep_chem_del_an_ope_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1](post_all_image/deep_chem_del_an_ope_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)  
+![](post_all_image/deep_chem_del_an_ope_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)  
 
 ### 统一工作流，模块化设计  
   
@@ -97,7 +97,7 @@ DeepChem-DEL 的核心贡献在于其开放性与标准化。过去，许多公�
 
 ## 3. Odyssey 模型：用「共识」机制替代注意力，重构蛋白质进化  
   
-![odyssey_reconstruct_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1](post_all_image/odyssey_reconstruct_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)  
+![](post_all_image/odyssey_reconstruct_2025_10_22_extract_paper_insights_news_rewrite_en_to_zh_image_1.jpg)  
 
 蛋白质语言模型越大，Transformer 架构的注意力（Attention）机制就越是瓶颈，因为它的计算成本呈二次方增长。所以，一个 1020 亿参数的蛋白质模型，必然绕开了注意力机制。  
   

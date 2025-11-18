@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="For structural biologists, cryo-electron microscopy (cryo-EM) data processing was once a time-consuming bottleneck. The CryoSPARC team at Structura Biotechnology has developed a fully automated, end-to-end data processing workflow that handles everything from data screening and particle picking to 3D structure reconstruction. When applied to challenging GPCR targets, the results surpassed the quality and resolution of expert manual processing, providing a powerful automation tool for high-throughput and structure-based drug discovery (SBDD).">
+
+<title>Cryo-EM Automation: CryoSPARC Makes High-Throughput Drug Discovery a Reality – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="Cryo-EM Automation: CryoSPARC Makes High-Throughput Drug Discovery a Reality – MPU">
+<meta property="og:description" content="For structural biologists, cryo-electron microscopy (cryo-EM) data processing was once a time-consuming bottleneck. The CryoSPARC team at Structura Biotechnology has developed a fully automated, end-to-end data processing workflow that handles everything from data screening and particle picking to 3D structure reconstruction. When applied to challenging GPCR targets, the results surpassed the quality and resolution of expert manual processing, providing a powerful automation tool for high-throughput and structure-based drug discovery (SBDD).">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-11-22/post_all_image/end_to_end_automatio_2025_10_28_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="An illustration of the CryoSPARC software's automated workflow. The background shows a complex 3D rendering of a protein structure in blue and purple. In the foreground, the title 'Automated Workflows' sits above four icons representing key steps in the process: 'Automated Preprocessing', 'Automated Particle Picking', 'Automated 2D Classification', and 'Automated 3D Reconstruction'. The image clearly shows how the technology transforms the labor-intensive steps of cryo-EM data processing into a standardized, automated operation, accelerating the drug discovery pipeline.
+">
+<meta name="twitter:title" content="Cryo-EM Automation: CryoSPARC Makes High-Throughput Drug Discovery a Reality – MPU">
+<meta name="twitter:description" content="For structural biologists, cryo-electron microscopy (cryo-EM) data processing was once a time-consuming bottleneck. The CryoSPARC team at Structura Biotechnology has developed a fully automated, end-to-end data processing workflow that handles everything from data screening and particle picking to 3D structure reconstruction. When applied to challenging GPCR targets, the results surpassed the quality and resolution of expert manual processing, providing a powerful automation tool for high-throughput and structure-based drug discovery (SBDD).">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-11-22/post_all_image/end_to_end_automatio_2025_10_28_image_1.jpg">
+<meta name="twitter:image:alt" content="An illustration of the CryoSPARC software's automated workflow. The background shows a complex 3D rendering of a protein structure in blue and purple. In the foreground, the title 'Automated Workflows' sits above four icons representing key steps in the process: 'Automated Preprocessing', 'Automated Particle Picking', 'Automated 2D Classification', and 'Automated 3D Reconstruction'. The image clearly shows how the technology transforms the labor-intensive steps of cryo-EM data processing into a standardized, automated operation, accelerating the drug discovery pipeline.
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">Cryo-EM Automation: CryoSPARC Makes High-Throughput Drug Discovery a Reality</h1>
+                  <div>
+        <div class="description">
+          <p>For structural biologists, cryo-electron microscopy (cryo-EM) data processing was once a time-consuming bottleneck. The CryoSPARC team at Structura Biotechnology has developed a fully automated, end-to-end data processing workflow that handles everything from data screening and particle picking to 3D structure reconstruction. When applied to challenging GPCR targets, the results surpassed the quality and resolution of expert manual processing, providing a powerful automation tool for high-throughput and structure-based drug discovery (SBDD).</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">Cryo-EM</div>
+                <div class="quarto-category">CryoSPARC</div>
+                <div class="quarto-category">Structural Biology</div>
+                <div class="quarto-category">Drug Discovery</div>
+                <div class="quarto-category">Automated Workflow</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Saturday, the 22nd of November, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#table-of-contents" id="toc-table-of-contents" class="nav-link active" data-scroll-target="#table-of-contents">Table of Contents</a></li>
+  <li><a href="#a-new-approach-to-retrosynthesis-copy-and-paste-to-make-ai-understand-chemistry" id="toc-a-new-approach-to-retrosynthesis-copy-and-paste-to-make-ai-understand-chemistry" class="nav-link" data-scroll-target="#a-new-approach-to-retrosynthesis-copy-and-paste-to-make-ai-understand-chemistry">1. A New Approach to Retrosynthesis: Copy and Paste to Make AI Understand Chemistry</a></li>
+  <li><a href="#cryo-em-automation-cryosparc-makes-high-throughput-drug-discovery-a-reality" id="toc-cryo-em-automation-cryosparc-makes-high-throughput-drug-discovery-a-reality" class="nav-link" data-scroll-target="#cryo-em-automation-cryosparc-makes-high-throughput-drug-discovery-a-reality">2. Cryo-EM Automation: CryoSPARC Makes High-Throughput Drug Discovery a Reality</a></li>
+  <li><a href="#a-biosecurity-alert-for-ai-the-double-edged-sword-of-generative-ai" id="toc-a-biosecurity-alert-for-ai-the-double-edged-sword-of-generative-ai" class="nav-link" data-scroll-target="#a-biosecurity-alert-for-ai-the-double-edged-sword-of-generative-ai">3. A Biosecurity Alert for AI: The Double-Edged Sword of Generative AI</a></li>
+  <li><a href="#protomol-using-prototypes-to-guide-multimodal-molecular-property-prediction" id="toc-protomol-using-prototypes-to-guide-multimodal-molecular-property-prediction" class="nav-link" data-scroll-target="#protomol-using-prototypes-to-guide-multimodal-molecular-property-prediction">4. ProtoMol: Using Prototypes to Guide Multimodal Molecular Property Prediction</a></li>
+  <li><a href="#a-machine-learning-breakthrough-accurately-predicting-superbug-drug-resistance" id="toc-a-machine-learning-breakthrough-accurately-predicting-superbug-drug-resistance" class="nav-link" data-scroll-target="#a-machine-learning-breakthrough-accurately-predicting-superbug-drug-resistance">5. A Machine Learning Breakthrough: Accurately Predicting Superbug Drug Resistance</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-11-22/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="table-of-contents" class="level2">
+<h2 class="anchored" data-anchor-id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li>This study improves template-free retrosynthesis by teaching a model to “copy and paste” the unchanged parts of a molecule, making AI think more like a chemist.</li>
+<li>A fully automated cryo-EM workflow developed by the CryoSPARC team can solve complex protein structures without human intervention, promising to reshape the efficiency of drug discovery.</li>
+<li>Generative AI is accelerating bioscience, but it also brings the risk of designing harmful biological agents. We must build an adaptive biosecurity framework that can evolve with the technology.</li>
+<li>ProtoMol creates a unified “prototype” semantic space to align different information types—molecular structure diagrams and text descriptions—improving the accuracy and interpretability of molecular property prediction.</li>
+<li>This multi-scale machine learning model accurately predicts antibiotic resistance in ESKAPE pathogens and uncovers new resistance mechanisms, offering new tools for clinical diagnostics and drug development.</li>
+</ol>
+</section>
+<section id="a-new-approach-to-retrosynthesis-copy-and-paste-to-make-ai-understand-chemistry" class="level2">
+<h2 class="anchored" data-anchor-id="a-new-approach-to-retrosynthesis-copy-and-paste-to-make-ai-understand-chemistry">1. A New Approach to Retrosynthesis: Copy and Paste to Make AI Understand Chemistry</h2>
+<p><a href="post_all_image/copy_augmented_repre_2025_10_28_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/copy_augmented_repre_2025_10_28_image_1.jpg" class="img-fluid"></a></p>
+<p>When AI predicts retrosynthesis, it faces a tricky problem: most of a molecule’s structure remains unchanged during a chemical reaction. But traditional models redraw the entire molecule, even if 90% of it is identical to the starting material. This wastes computing power and often introduces chemically impossible errors in the parts that didn’t change.</p>
+<p>The authors of this paper came up with a new method.</p>
+<p>Their idea is to make the model focus only on the parts that change and simply “copy and paste” the rest.</p>
+<p>To do this, they designed a new molecular representation called C-SMILES. Traditional SMILES strings are like long, run-on sentences, making it hard to distinguish key parts. C-SMILES breaks them down into “atom-bond” pairs, like turning a long sentence into a clear list of phrases. This allows the model to easily spot which “phrases” have changed and which have not when comparing reactants and products.</p>
+<p><a href="post_all_image/copy_augmented_repre_2025_10_28_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/copy_augmented_repre_2025_10_28_image_1.jpg" class="img-fluid"></a></p>
+<p>Next comes the core “copy-augmentation” mechanism. At each step of generating a reactant molecule, the model decides: should this part be newly “created” or “copied” directly from the product molecule? It’s like playing a “spot the difference” game where you only need to circle the changes, not redraw the whole picture.</p>
+<p>This mechanism narrows the model’s search space, making predictions more efficient. Because most of the structure is copied directly, the chemical validity of the generated molecules is as high as 99.9%. The model almost never makes basic mistakes in stable parts of the structure.</p>
+<p>What about the results? On the industry-standard USPTO-50K dataset, the method achieved a top-1 accuracy of 67.2%. This means two out of every three predictions hit the correct answer. For chemists in computational drug discovery, this is a tool that can improve workflow by providing suggestions that are closer to feasible laboratory synthesis routes.</p>
+<p>This approach better mimics a chemist’s intuition. When observing a complex molecule, a chemist instinctively identifies the stable, non-reacting scaffold and focuses on the transformation of key functional groups. By using “copy and paste,” this model, in a way, simulates that thinking process. It is beginning to understand the difference between what changes and what stays the same in a chemical reaction.</p>
+<p>📜Title: Copy-Augmented Representation for Structure Invariant Template-Free Retrosynthesis<br>
+🌐Paper: https://arxiv.org/abs/2510.16588</p>
+</section>
+<section id="cryo-em-automation-cryosparc-makes-high-throughput-drug-discovery-a-reality" class="level2">
+<h2 class="anchored" data-anchor-id="cryo-em-automation-cryosparc-makes-high-throughput-drug-discovery-a-reality">2. Cryo-EM Automation: CryoSPARC Makes High-Throughput Drug Discovery a Reality</h2>
+<p><a href="post_all_image/end_to_end_automatio_2025_10_28_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/end_to_end_automatio_2025_10_28_image_1.jpg" class="img-fluid"></a></p>
+<p>For structural biologists using cryo-electron microscopy (cryo-EM), collecting data is just the first step. The data processing that follows is the most time-consuming and laborious part. Researchers have to screen thousands of micrographs, manually pick millions of protein particles, and then go through multiple rounds of 2D and 3D classification and refinement. This process involves a lot of repetitive work and subjective judgment, much like a craft. It limits the throughput of structure determination and becomes a bottleneck in drug discovery projects.</p>
+<p>The CryoSPARC team at Structura Biotechnology developed an end-to-end automated data processing workflow to solve this problem. You can feed the raw microscope data into the pipeline and walk away. When you return, a high-quality 3D density map of the structure might already be finished.</p>
+<p><strong>How powerful is this automated workflow</strong>?</p>
+<p>The researchers tested the workflow on a set of G protein-coupled receptor (GPCR) datasets, which are known to be difficult to process. GPCRs are one of the most popular target families in drug development, but their structural flexibility and small size pose a serious challenge for cryo-EM data processing.</p>
+<p>Out of 21 datasets tested, the automated processing results for 17 of them met or exceeded the resolution and map quality of the published, expert-processed structures.</p>
+<p>In some cases, the automated workflow produced higher-quality ligand density maps. A good density map clearly reveals how a small-molecule drug fits into the pocket of its target protein, showing its orientation and interactions with specific amino acids. This precise information is critical for guiding subsequent molecular optimization and determines the success of new drug design.</p>
+<p><strong>The Technology Behind the Automation</strong></p>
+<p>The workflow’s automation is powered by several new tools:</p>
+<ol type="1">
+<li><strong>Micrograph Junk Detector</strong>: Acts like a quality inspector, automatically identifying and removing low-quality images with ice contamination, sample aggregation, or severe defocus.</li>
+<li><strong>Micrograph Denoiser</strong>: Reduces noise to make the outlines of protein particles clearer against the background, setting the stage for better particle picking.</li>
+<li><strong>Reference Based Auto Select</strong>: An innovative particle-picking algorithm that accurately identifies valid particles automatically.</li>
+<li><strong>Select Volume</strong>: After 3D reconstruction, it automatically extracts the target protein from a complex (like a GPCR-G protein complex) for local refinement.</li>
+</ol>
+<p>These tools work together to turn steps that once required researchers to repeatedly adjust parameters based on experience into a standardized, automatic operation.</p>
+<p><strong>What This Means for Drug Development</strong></p>
+<p>This work does more than just simplify a researcher’s job; it changes the model for structure-based drug development.</p>
+<p>In Structure-Based Drug Discovery (SBDD) projects, scientists often need to solve the structures of a single target bound to dozens or even hundreds of different compounds. If processing each structure takes weeks of manual effort, the project will stall.</p>
+<p>With this automated workflow, high-throughput cryo-EM structure determination is now possible. Imagine a scenario where a synthesis team delivers 10 new compounds. After sample preparation and data collection, the data goes straight into the automated pipeline. Within days, you have the binding modes for all the compounds, allowing you to quickly judge the success of the molecular designs and start the next round. This speeds up the design-make-test-analyze cycle.</p>
+<p>The researchers also provide the files for these automated workflows, which users can download, use, and modify in their own CryoSPARC installations. The technology is no longer an exclusive skill of a few experts but a widely accessible tool that will benefit the entire biomedical field.</p>
+<p>📜Paper: End-to-end automation of repeat-target cryo-EM structure determination in CryoSPARC<br>
+🌐Paper: https://www.biorxiv.org/content/10.1101/2025.10.17.682689v1</p>
+</section>
+<section id="a-biosecurity-alert-for-ai-the-double-edged-sword-of-generative-ai" class="level2">
+<h2 class="anchored" data-anchor-id="a-biosecurity-alert-for-ai-the-double-edged-sword-of-generative-ai">3. A Biosecurity Alert for AI: The Double-Edged Sword of Generative AI</h2>
+<p><a href="post_all_image/generative_ai_for_bi_2025_10_28_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="post_all_image/generative_ai_for_bi_2025_10_28_image_1.jpg" class="img-fluid"></a></p>
+<p>Drug developers have mixed feelings about Generative AI. It can efficiently design new proteins and discover new molecules, speeding up research. But a common concern is that this powerful tool could be used for malicious purposes.</p>
+<p><strong>How AI Can Be Misused: From Design Assistant to Potential Threat</strong></p>
+<p>The article centers on the “dual-use dilemma” of generative AI. We use it to design therapeutic antibodies; someone else could use it to design toxins. AI learns biological rules from massive datasets and then generates completely new sequences or structures.</p>
+<p>Current models understand science, not intent. Even with rules like “do not generate harmful substances,” an attacker can use “jailbreak” techniques to trick it with seemingly harmless prompts. For instance, by claiming to be “researching an antidote,” a user could ask the model to design a molecule that efficiently binds to and blocks a neurotransmitter receptor. The model might then generate a potential neurotoxin.</p>
+<p><strong>Escalating Risk: AI Agents That Can Take Action</strong></p>
+<p>The risk is growing. The emergence of AI agents allows AI to move from “designing blueprints” to “executing tasks.”</p>
+<p>An AI agent could independently plan and carry out an entire experimental workflow: design a dangerous gene sequence online, automatically place an order with a DNA synthesis platform, and then direct a cloud-based automated lab to complete the experiment. The entire process requires almost no human intervention, significantly lowering the technical barrier for creating biological threats.</p>
+<p><strong>Data Security: Our Real Defenses Are Becoming Fragile</strong></p>
+<p>Data privacy is another often-overlooked risk. The data used to train models—such as proprietary compound libraries, screening data, and clinical trial results—are a company’s core assets. Research shows that large models can “memorize” specific, rare data points during training. If an attacker uses special queries to induce the model to leak this training data, it could lead not only to the loss of trade secrets but also to the design of targeted biological attacks against specific populations.</p>
+<p><strong>Industry-Wide Concern and How to Respond</strong></p>
+<p>The author interviewed 130 experts from academia, government, and industry. 76% were concerned about the misuse of AI in biology, and 74% believe a new governance framework is necessary.</p>
+<p>The article proposes a multi-layered defense strategy.</p>
+<ol type="1">
+<li><strong>Screening at the Source</strong>: Remove known harmful sequences and information from the training data.</li>
+<li><strong>Model Alignment</strong>: Embed safety and ethical principles into the model’s core logic during development.</li>
+<li><strong>Real-Time Monitoring</strong>: After deployment, establish a system to monitor user requests in real-time and block suspicious intentions immediately.</li>
+</ol>
+<p>This system must evolve dynamically. As technology advances, so do attack methods. We need to conduct continuous “red-teaming”—simulated attacks—to proactively find and fix the model’s security vulnerabilities, ensuring our defenses keep pace with evolving threats.</p>
+<p>📜Title: Generative AI for Biosciences: Emerging Threats and Roadmap to Biosecurity<br>
+🌐Paper: https://arxiv.org/abs/2510.15975<br>
+💻Code: N/A</p>
+</section>
+<section id="protomol-using-prototypes-to-guide-multimodal-molecular-property-prediction" class="level2">
+<h2 class="anchored" data-anchor-id="protomol-using-prototypes-to-guide-multimodal-molecular-property-prediction">4. ProtoMol: Using Prototypes to Guide Multimodal Molecular Property Prediction</h2>
+<p><a href="post_all_image/proto_mol_enhancing_2025_10_28_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="post_all_image/proto_mol_enhancing_2025_10_28_image_1.jpg" class="img-fluid"></a></p>
+<p>Drug discovery involves diverse data types, from 2D or 3D molecular structure diagrams to text describing biological activity, toxicity, or physicochemical properties from patents and literature. Getting a computer to understand and connect both types of information has been a long-standing challenge.</p>
+<p>Existing multimodal learning methods usually merge information only at the final stage, lacking depth. This shallow fusion is like having two experts—one who only understands structures and another who only reads literature—who meet just once to submit a final report without communicating during their analysis. This approach fails to capture the subtle but critical links between structure and semantics.</p>
+<p>ProtoMol offers a new solution.</p>
+<p><strong>The Core Idea: Establishing a “Common Language</strong>”</p>
+<p>ProtoMol’s core idea is to create a common frame of reference for molecular graphs and text: a unified semantic space called the “Prototype Space.”</p>
+<p>A “prototype” can be understood this way: to predict if a molecule is toxic, you can define abstract “prototype” vectors for the “toxic” and “non-toxic” categories, representing the core features of each class. ProtoMol’s job is to train a model to map both the structural information from a molecule’s graph and the information from its text description into this prototype space.</p>
+<p>If a molecule is toxic, both its structure graph and text description, after being encoded by the model, will be located close to the “toxic” prototype in this space. At the same time, the model uses contrastive learning to push molecules from different categories (like toxic and non-toxic) further apart in the space.</p>
+<p><strong>How It Works: A Dual-Branch Architecture with Layer-by-Layer “Dialogue</strong>”</p>
+<p>To achieve this, ProtoMol uses a dual-branch encoder architecture.</p>
+<ol type="1">
+<li><strong>Graph Encoder</strong>: Uses Graph Neural Networks (GNN) to extract features from the atoms and bonds of a molecule’s structure.</li>
+<li><strong>Text Encoder</strong>: Uses a Transformer model to understand and encode the semantic information in the text description.</li>
+</ol>
+<p>The key is that the two branches do not work independently. ProtoMol employs a layer-by-layer bidirectional cross-modal attention mechanism. At each layer of information processing, the graph and text encoders exchange information, “referencing” each other. This step-by-step alignment ensures that low-level features (like individual atoms or words) and high-level features (like functional groups or sentence meanings) are processed in sync.</p>
+<p>This layer-by-layer “dialogue,” combined with the unified prototype space, ensures a deep fusion of information from both modalities.</p>
+<p><strong>How Well Does It Perform</strong>?</p>
+<p>ProtoMol was tested on several public benchmark datasets for both molecular property classification and regression tasks. The results showed that its performance consistently surpassed that of current state-of-the-art models.</p>
+<p>Ablation studies further validated the model’s key components. Removing either the prototype space or the cross-modal attention mechanism caused a drop in performance, proving that these two designs are critical to its success.</p>
+<p>ProtoMol’s modeling approach aligns with a chemist’s intuition. When chemists evaluate a molecule, they mentally match its structural features with known concepts like “lipophilicity” or “carcinogenic group.” ProtoMol’s prototype space mimics this concept-based cognitive process, which may be why it is both accurate and more interpretable. This work offers a new direction for developing more reliable and trustworthy AI tools for drug discovery.</p>
+<p>📜Title: ProtoMol: Enhancing Molecular Property Prediction via Prototype-Guided Multimodal Learning<br>
+🌐Paper: https://arxiv.org/abs/2510.16824</p>
+</section>
+<section id="a-machine-learning-breakthrough-accurately-predicting-superbug-drug-resistance" class="level2">
+<h2 class="anchored" data-anchor-id="a-machine-learning-breakthrough-accurately-predicting-superbug-drug-resistance">5. A Machine Learning Breakthrough: Accurately Predicting Superbug Drug Resistance</h2>
+<p><a href="post_all_image/from_sequence_to_sig_2025_10_28_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-6"><img src="post_all_image/from_sequence_to_sig_2025_10_28_image_1.jpg" class="img-fluid"></a></p>
+<p>Antibiotic resistance (AMR) is a growing crisis, especially with “superbugs” like the ESKAPE pathogens. Traditional bacterial culture and susceptibility testing are slow, which can delay treatment for critically ill patients. Methods based on sequencing known resistance genes can miss new resistance mechanisms.</p>
+<p>This study offers a new approach that moves from identifying single features to creating a comprehensive “resistance profile.”</p>
+<p>Here is how it works. The researchers collected a large amount of genomic data from ESKAPE pathogens. They first constructed a pangenome for each bacterial species, which is like a complete gene library for that species. Then, they broke down genes into smaller functional units for analysis, such as protein domains.</p>
+<p>This produced features at multiple scales, from the presence of a gene to variations in protein domains. It is like describing a car by not only its make and model but also its tire tread and headlight design, providing much richer information.</p>
+<p>Using these features, the researchers trained a logistic regression machine learning model. The model learns which combinations of features, or “signatures,” are highly correlated with resistance to specific antibiotics.</p>
+<p>The model’s predictions were highly accurate, with a median Matthews Correlation Coefficient (MCC) of 0.89. The MCC is a reliable metric for evaluating classification on unbalanced data. The model performed consistently when tested on data from bacterial strains from different geographical locations and time periods, proving that it learned generalizable rules rather than just memorizing the training data.</p>
+<p>The model’s discovery capability is another major highlight. It correctly identified known resistance mechanisms, such as specific enzymes or efflux pumps, which served as a positive control. The model also flagged several new, unreported genes or proteins. These are potential new resistance mechanisms, providing leads for future biological research and drug development.</p>
+<p>Finally, the research team packaged the model and its results into an interactive web application. Labs or hospitals worldwide can upload a strain’s genetic sequence and quickly receive a resistance prediction report. This shortens the time from gene sequencing to obtaining clinically relevant information.</p>
+<p>Of course, the new candidate genes predicted by the model still need to be validated by wet lab experiments. But the high-quality candidate list it provides allows researchers to focus their efforts more efficiently and narrows the scope of their search.</p>
+<p>📜Title: From sequence to signature: Machine learning uncovers multiscale feature landscapes that predict AMR across ESKAPE pathogens<br>
+🌐Paper: https://www.biorxiv.org/content/10.1101/2025.07.03.663053v2</p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-11-22/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>
