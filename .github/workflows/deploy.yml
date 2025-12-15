@@ -46,7 +46,7 @@ jobs:
       # --- End System Dependency Installation ---
 
       - name: Set up R package cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{ env.RENV_PATHS_CACHE }}
           key: ${{ runner.os }}-renv-${{ hashFiles('**/renv.lock') }}
