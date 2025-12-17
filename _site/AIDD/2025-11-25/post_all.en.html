@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="This article explains the DMol platform, a model that speeds up molecule generation by 10x using graph diffusion models and motif compression. We look at how DMol uses hybrid noise and a supernode strategy to significantly reduce diffusion steps, ensuring the generated molecules are chemically sound and drug-like. This provides an efficient tool for drug discovery that balances speed and quality.">
+
+<title>DMol: Generate Molecules 10x Faster While Keeping Key Chemical Motifs – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="DMol: Generate Molecules 10x Faster While Keeping Key Chemical Motifs – MPU">
+<meta property="og:description" content="This article explains the DMol platform, a model that speeds up molecule generation by 10x using graph diffusion models and motif compression. We look at how DMol uses hybrid noise and a supernode strategy to significantly reduce diffusion steps, ensuring the generated molecules are chemically sound and drug-like. This provides an efficient tool for drug discovery that balances speed and quality.">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-11-25/post_all_image/d_mol_a_highly_effic_2025_11_19_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="A diagram showing the core architecture or performance of the DMol model. The image illustrates the graph diffusion process for molecule generation, highlighting how motif compression treats key chemical structures like benzene rings as supernodes. This visual helps explain how the model achieves generation speeds 10 times faster than mainstream methods while maintaining the chemical accuracy of the molecules.
+">
+<meta name="twitter:title" content="DMol: Generate Molecules 10x Faster While Keeping Key Chemical Motifs – MPU">
+<meta name="twitter:description" content="This article explains the DMol platform, a model that speeds up molecule generation by 10x using graph diffusion models and motif compression. We look at how DMol uses hybrid noise and a supernode strategy to significantly reduce diffusion steps, ensuring the generated molecules are chemically sound and drug-like. This provides an efficient tool for drug discovery that balances speed and quality.">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-11-25/post_all_image/d_mol_a_highly_effic_2025_11_19_image_1.jpg">
+<meta name="twitter:image:alt" content="A diagram showing the core architecture or performance of the DMol model. The image illustrates the graph diffusion process for molecule generation, highlighting how motif compression treats key chemical structures like benzene rings as supernodes. This visual helps explain how the model achieves generation speeds 10 times faster than mainstream methods while maintaining the chemical accuracy of the molecules.
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">DMol: Generate Molecules 10x Faster While Keeping Key Chemical Motifs</h1>
+                  <div>
+        <div class="description">
+          <p>This article explains the DMol platform, a model that speeds up molecule generation by 10x using graph diffusion models and motif compression. We look at how DMol uses hybrid noise and a supernode strategy to significantly reduce diffusion steps, ensuring the generated molecules are chemically sound and drug-like. This provides an efficient tool for drug discovery that balances speed and quality.</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">DMol</div>
+                <div class="quarto-category">Graph Diffusion Model</div>
+                <div class="quarto-category">Motif Compression</div>
+                <div class="quarto-category">Drug Discovery</div>
+                <div class="quarto-category">Generative AI</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Tuesday, the 25th of November, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#table-of-contents" id="toc-table-of-contents" class="nav-link active" data-scroll-target="#table-of-contents">Table of Contents</a></li>
+  <li><a href="#dmol-generate-molecules-10x-faster-while-keeping-key-chemical-motifs" id="toc-dmol-generate-molecules-10x-faster-while-keeping-key-chemical-motifs" class="nav-link" data-scroll-target="#dmol-generate-molecules-10x-faster-while-keeping-key-chemical-motifs">1. DMol: Generate Molecules 10x Faster While Keeping Key Chemical Motifs</a></li>
+  <li><a href="#h3-ddg-model-accurately-predicts-protein-mutations-to-aid-drug-design" id="toc-h3-ddg-model-accurately-predicts-protein-mutations-to-aid-drug-design" class="nav-link" data-scroll-target="#h3-ddg-model-accurately-predicts-protein-mutations-to-aid-drug-design">2. H3-DDG Model Accurately Predicts Protein Mutations to Aid Drug Design</a></li>
+  <li><a href="#bayesian-learning-the-future-of-molecular-force-fields" id="toc-bayesian-learning-the-future-of-molecular-force-fields" class="nav-link" data-scroll-target="#bayesian-learning-the-future-of-molecular-force-fields">3. Bayesian Learning: The Future of Molecular Force Fields?</a></li>
+  <li><a href="#moltd-model-speeds-up-3d-molecule-generation-by-nearly-100x" id="toc-moltd-model-speeds-up-3d-molecule-generation-by-nearly-100x" class="nav-link" data-scroll-target="#moltd-model-speeds-up-3d-molecule-generation-by-nearly-100x">4. MolTD Model Speeds Up 3D Molecule Generation by Nearly 100x</a></li>
+  <li><a href="#are-alphafold-scores-a-new-gold-standard-for-gene-models" id="toc-are-alphafold-scores-a-new-gold-standard-for-gene-models" class="nav-link" data-scroll-target="#are-alphafold-scores-a-new-gold-standard-for-gene-models">5. Are AlphaFold Scores a New “Gold Standard” for Gene Models?</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-11-25/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="table-of-contents" class="level2">
+<h2 class="anchored" data-anchor-id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li>DMol uses a graph diffusion model and motif compression to generate molecules 10 times faster, preserving key chemical motifs and excelling in both efficiency and chemical validity.</li>
+<li>The H3-DDG model accurately predicts changes in protein binding free energy (∆∆G) after mutation by simulating complex multi-level, many-body interactions, performing especially well for multi-point mutations.</li>
+<li>A Bayesian learning framework offers a new approach to optimizing molecular force fields, using probabilistic methods to improve accuracy and robustness, particularly for charged, complex biological systems.</li>
+<li>The MolTD model boosts 3D molecule generation speed by nearly 100 times by optimizing atom arrangement and feature adjustment, while ensuring high-quality molecular structures.</li>
+<li>AlphaFold 3’s structure prediction scores can effectively distinguish between good and bad gene models, providing a new tool for annotating genomes that lack experimental data.</li>
+</ol>
+</section>
+<section id="dmol-generate-molecules-10x-faster-while-keeping-key-chemical-motifs" class="level2">
+<h2 class="anchored" data-anchor-id="dmol-generate-molecules-10x-faster-while-keeping-key-chemical-motifs">1. DMol: Generate Molecules 10x Faster While Keeping Key Chemical Motifs</h2>
+<p><a href="post_all_image/d_mol_a_highly_effic_2025_11_19_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/d_mol_a_highly_effic_2025_11_19_image_1.jpg" class="img-fluid"></a></p>
+<p>The field of drug discovery is always looking for faster and better ways to design new molecules, and generative models offer a new path. Graph diffusion models are a popular choice right now, but they are generally slow. Generating a single molecule from scratch can take hundreds or even thousands of diffusion steps. For drug development, which requires screening huge numbers of molecules, this is a bottleneck.</p>
+<p>The DMol platform was built to solve this problem. Its core idea is to drastically reduce the number of diffusion steps without sacrificing molecular quality. DMol cuts the process down to just a few dozen steps, making it about 10 times faster than mainstream methods.</p>
+<p>Two key innovations make this possible.</p>
+<p>First, DMol uses a hybrid approach to adding noise. Traditional diffusion models typically learn to restore a molecule’s structure after randomly corrupting it. DMol combines both deterministic and random corruption methods. This gives the model better control over the diffusion process, allowing it to learn how to generate valid molecules in fewer steps.</p>
+<p>Second is a technique called “motif compression.” Molecules are made of many chemical motifs that have specific functions, like benzene rings or carboxyl groups. These motifs define a molecule’s basic properties.</p>
+<p>DMol identifies these chemical motifs and “compresses” them into a single “supernode.” In the diffusion model, a complex benzene ring is treated no differently than a simple carbon atom. This way, these important functional groups remain intact while the model generates the molecular backbone. Finally, the model “unpacks” these supernodes back into their original motif structures.</p>
+<p>This approach simplifies the model’s learning task, improves computational efficiency, and ensures the chemical validity of the generated molecules. Experiments on standard industry datasets like QM9 and MOSES confirmed this. Molecules generated by DMol show excellent performance in validity, uniqueness, and novelty. Metrics like quantitative estimate of drug-likeness (QED) were 4% higher than existing models like DeFoG and DiGress.</p>
+<p>DMol also supports conditional generation based on a molecular scaffold. A researcher can provide a core structure, and the model can “grow” new molecules with specific properties from it. This is very useful in drug optimization.</p>
+<p>DMol increases the speed of molecule generation and, through motif compression, ensures chemical accuracy. A tool that balances speed and quality is very attractive to researchers on the front lines of development.</p>
+<p>📜Title: DMol: A Highly Efficient and Chemical Motif-Preserving Molecule Generation Platform 🌐Paper: https://openreview.net/pdf/0f1d8aa866eb76c5f8a65f0847079723262ef2aa.pdf</p>
+</section>
+<section id="h3-ddg-model-accurately-predicts-protein-mutations-to-aid-drug-design" class="level2">
+<h2 class="anchored" data-anchor-id="h3-ddg-model-accurately-predicts-protein-mutations-to-aid-drug-design">2. H3-DDG Model Accurately Predicts Protein Mutations to Aid Drug Design</h2>
+<p><a href="post_all_image/accurately_predictin_2025_11_19_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/accurately_predictin_2025_11_19_image_1.jpg" class="img-fluid"></a></p>
+<p>Predicting the change in binding free energy (∆∆G) caused by protein mutations is a central challenge in protein engineering and drug development. Swapping just one amino acid can alter a protein’s binding affinity, determining whether a drug molecule succeeds or fails. Traditional computational methods struggle to handle the complex network of interactions inside a protein, especially when multiple amino acids mutate at once.</p>
+<p>Researchers have developed a new computational framework called H3-DDG to tackle this challenge. The method treats a protein as a complex, multi-level system.</p>
+<p>First, H3-DDG builds a hypergraph to represent the protein’s structure. A hypergraph can describe higher-order interactions, such as a hydrogen bond network formed by a water molecule connecting two amino acid residues, or π-π stacking formed by several aromatic rings. This is like upgrading from a 2D social network map to a 3D model that can show interactions within small groups of people, providing richer information.</p>
+<p>Next, the model uses a hierarchical many-body attention mechanism to examine the effects of a mutation at different scales. It can focus on changes in the chemical environment within a few angstroms (Å) of the mutation site, and it can also observe how this local change propagates through a chain of interactions to affect another functional region dozens of angstroms away. Accurately predicting multi-point mutations requires considering both fine-grained local structures and global long-range effects, as the impacts of multiple mutations are not simply additive.</p>
+<p>H3-DDG’s predictive power was validated on several industry-standard datasets. On the SKEMPI v2 dataset, its predictions had a Pearson correlation of 0.75 with experimental data. For multi-point mutations, it improved upon the previous best method by 12.10%. On the more challenging BindingGYM dataset, its performance improved by 34.26%.</p>
+<p>To demonstrate the validity of the model’s design, the researchers conducted a series of ablation studies. The results showed that removing the many-body attention mechanism caused a 5.4% drop in prediction accuracy, highlighting that accurately capturing higher-order interactions like hydrogen bond networks is crucial to the model’s success.</p>
+<p>Theoretical success needs to be applied in practice. The researchers used H3-DDG to optimize an antibody targeting the SARS-CoV-2 virus. The model’s predictions helped identify mutations that could enhance the antibody’s binding to the viral spike protein, providing guidance for designing more effective therapeutic antibodies. This shows H3-DDG’s potential to accelerate drug discovery and protein engineering.</p>
+<p>The researchers also noted that H3-DDG still needs to be tested on larger datasets and integrated with high-throughput experimental workflows to be useful in diverse, real-world R&amp;D scenarios.</p>
+<p>📜Title: Accurately Predicting Protein Mutational Effects via a Hierarchical Many-Body Attention Network 🌐Paper: https://openreview.net/pdf/d224adc934a88117d29e0bbc68a2334d4b96fdbb.pdf</p>
+</section>
+<section id="bayesian-learning-the-future-of-molecular-force-fields" class="level2">
+<h2 class="anchored" data-anchor-id="bayesian-learning-the-future-of-molecular-force-fields">3. Bayesian Learning: The Future of Molecular Force Fields?</h2>
+<p><a href="post_all_image/bayesian_learning_fo_2025_11_19_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/bayesian_learning_fo_2025_11_19_image_1.jpg" class="img-fluid"></a></p>
+<p>Force fields are the foundation of molecular simulation. Traditional force field development relies on experience and trial-and-error, making the process opaque and the results often suboptimal, especially when dealing with complex biological macromolecules. A new study proposes a Bayesian learning framework to make force field development more scientific and transparent.</p>
+<p>The method treats both force field parameters and experimental data as probability distributions, which allows it to quantify the model’s uncertainty. The result is a set of possible parameter combinations and their corresponding probabilities. This is like watching a film that shows all possible states of a system, rather than looking at a single static photo.</p>
+<p>The researchers demonstrated the framework’s capability using 18 biologically significant molecular fragments, including components of proteins, nucleic acids, and lipids. They found that the optimized parameters performed better than existing force fields when describing charged systems.</p>
+<p>To prove the method’s practicality, they simulated the binding of calcium ions to cardiac troponin C, a key step in heart muscle contraction. Traditional simulations struggle to accurately capture this interaction. The Bayesian method provided more accurate simulation results and, by using multiple parameter sets, revealed the robustness and variability of the model’s predictions.</p>
+<p>To address the high computational cost associated with probabilistic methods, the researchers used local Gaussian processes from machine learning to speed up the Bayesian inference. This makes the method computationally feasible for complex macromolecular systems.</p>
+<p>Transferability is key in drug development. The study confirmed that parameters optimized on small molecular fragments could be successfully transferred to larger biomolecular systems. They verified this by simulating aqueous solutions and protein-ligand interactions, demonstrating the framework’s potential for broader applications.</p>
+<p>📜Paper: Bayesian Learning for Accurate and Robust Biomolecular Force Fields 🌐Paper: https://arxiv.org/abs/2511.05398v1</p>
+</section>
+<section id="moltd-model-speeds-up-3d-molecule-generation-by-nearly-100x" class="level2">
+<h2 class="anchored" data-anchor-id="moltd-model-speeds-up-3d-molecule-generation-by-nearly-100x">4. MolTD Model Speeds Up 3D Molecule Generation by Nearly 100x</h2>
+<p><a href="post_all_image/accelerating_3d_mole_2025_11_19_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="post_all_image/accelerating_3d_mole_2025_11_19_image_1.jpg" class="img-fluid"></a></p>
+<p>Drug discovery requires getting high-quality 3D molecular structures quickly. For current generative models, speed is a bottleneck when handling the 3D geometry of molecules. A new method called MolTD, developed by a team at Tsinghua University, accelerates this process.</p>
+<p>The speed bottleneck in 3D molecule generation lies in determining the arrangement of atoms. Only after that can their coordinates and chemical features be refined.</p>
+<p>MolTD speeds up the process by splitting generation into two steps.</p>
+<p>The first step is Permutation. Instead of predicting from scratch, the model references representative molecular structures from a dataset. This “geometric-informed prior” helps the model plan the general positions of atoms more quickly, forming a stable molecular backbone and reducing the number of computational steps needed to reach a stable structure.</p>
+<p>The second step is Adjustment. Once the molecular backbone is in place, the details of each atom need to be refined. For this, the researchers designed a “consistency parameter objective,” a technique that makes the process of adjusting atomic features faster and more accurate.</p>
+<p>On the QM9 and GEOM-DRUG datasets, MolTD achieved top performance in just 10 sampling steps. This is about 7.5 times faster than previous models and nearly 100 times faster than mainstream diffusion models. This speed increase is significant for drug development, which often requires generating and screening molecules on a large scale.</p>
+<p>MolTD is widely applicable. It can achieve better results with less computation in both de novo drug design and target-based drug design tasks. This shows its potential for real-world applications like drug discovery and new materials design.</p>
+<p>📜Title: Accelerating 3D Molecule Generative Models with Trajectory Diagnosis 🌐Paper: https://openreview.net/pdf/9b6d2adfb4ba64950f7ce5bdfa7c078e3013c8a7.pdf 💻Code: https://github.com/GenSI-THUAIR/MolTD</p>
+</section>
+<section id="are-alphafold-scores-a-new-gold-standard-for-gene-models" class="level2">
+<h2 class="anchored" data-anchor-id="are-alphafold-scores-a-new-gold-standard-for-gene-models">5. Are AlphaFold Scores a New “Gold Standard” for Gene Models?</h2>
+<p><a href="post_all_image/the_promise_of_alpha_2025_10_28_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="post_all_image/the_promise_of_alpha_2025_10_28_image_1.jpg" class="img-fluid"></a></p>
+<p>Genome annotation means marking the locations and boundaries of genes on a long DNA sequence. Automated processes are fast but often make mistakes. Manual curation is accurate but extremely slow, making it impractical for the vast amount of sequencing data from new species.</p>
+<p>A new approach uses a basic principle of biology: a correct gene model, when translated into an amino acid sequence, should fold into a stable 3D protein structure. An incorrect model will produce a polypeptide chain that can’t fold properly. AlphaFold is a tool that can determine how well a protein structure folds.</p>
+<p><strong>Using Structure Prediction as a Referee</strong></p>
+<p>Researchers tested this idea on three species of fungi and protozoa, for which a large amount of expert-curated gene data exists. They compared automatically generated gene models with the expert-refined ones, having AlphaFold 3 predict the corresponding protein structures for each and assign a score.</p>
+<p>The results showed that AlphaFold 3’s scores consistently favored the expert-refined models.</p>
+<p>This is equivalent to using a physicochemical principle—whether a protein can fold correctly—as a standard for judging the quality of a gene annotation. And its judgment aligns closely with that of human experts.</p>
+<p><strong>A Combination Approach Works Better</strong></p>
+<p>Combining AlphaFold 3 with the structure alignment tool Foldseek can further improve the accuracy of screening gene models.</p>
+<p>Here’s how it works: 1. <strong>AlphaFold 3 provides a score</strong>: It assesses whether an amino acid sequence can fold into a reasonable structure. 2. <strong>Foldseek performs a comparison</strong>: It compares the predicted structure against a database of known protein structures to find similarities.</p>
+<p>If a protein translated from a gene model gets a high score from AlphaFold (meaning its structure is plausible) and Foldseek can find a similar homolog in its database, the model is very likely to be correct. This combined strategy is like authenticating an artifact: you check its craftsmanship and also verify its style and origin.</p>
+<p><strong>A Lingering Challenge: Disordered Regions</strong></p>
+<p>The main challenge for this method comes from Intrinsically Disordered Regions (IDRs) in proteins.</p>
+<p>These regions do not have a fixed 3D structure under physiological conditions. AlphaFold is designed to find stable structures, so it gives these regions low scores. This could cause a correct gene model to be wrongly flagged as low-quality simply because its protein contains long IDRs.</p>
+<p>The next key problem to solve is how to teach the model to distinguish between an “incorrect sequence that can’t fold” and a “correct sequence that is naturally disordered.”</p>
+<p>For the massive number of newly sequenced genomes that lack manual curation, this automated evaluation method based on protein structure has the potential to improve the overall quality of gene data. High-quality gene data is the foundation for all subsequent functional research, including the discovery of drug targets.</p>
+<p>📜Title: The Promise of AlphaFold for Gene Structure Annotation 🌐Paper: https://www.biorxiv.org/content/10.1101/2025.10.21.683479v1</p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-11-25/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>
