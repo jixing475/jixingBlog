@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="In the AI drug discovery boom, which is more reliable: emerging co-folding models or classic molecular docking methods? This study’s rigorous benchmarking reveals that AI co-folding models perform poorly on new targets not seen in their training data, as their success heavily depends on data similarity. In contrast, physics-based molecular docking is more robust when exploring unknown chemical space. This serves as a warning for practitioners in drug discovery: for new targets and new molecules, traditional docking might be the more trustworthy choice, while the future likely lies in combining the strengths of both.">
+
+<title>AI Drug Discovery: Co-folding vs.&nbsp;Docking—Which is More Reliable? – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="AI Drug Discovery: Co-folding vs.&nbsp;Docking—Which is More Reliable? – MPU">
+<meta property="og:description" content="In the AI drug discovery boom, which is more reliable: emerging co-folding models or classic molecular docking methods? This study’s rigorous benchmarking reveals that AI co-folding models perform poorly on new targets not seen in their training data, as their success heavily depends on data similarity. In contrast, physics-based molecular docking is more robust when exploring unknown chemical space. This serves as a warning for practitioners in drug discovery: for new targets and new molecules, traditional docking might be the more trustworthy choice, while the future likely lies in combining the strengths of both.">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-12-24/post_all_image/comparative_assessme_2025_12_16_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="An infographic comparing two drug discovery techniques: AI co-folding and traditional molecular docking. The left side shows the 'co-folding' method, highlighting its reliance on a large protein structure database (PDB), implying its predictions are highly correlated with training data similarity. The right side illustrates 'docking,' depicting a small molecule finding its optimal binding pose in a protein's active site based on physicochemical principles. The graphic visually explains the article's core point in section 5: for truly novel drug targets, physics-based docking may be more reliable than AI models that depend on training data.
+">
+<meta name="twitter:title" content="AI Drug Discovery: Co-folding vs.&nbsp;Docking—Which is More Reliable? – MPU">
+<meta name="twitter:description" content="In the AI drug discovery boom, which is more reliable: emerging co-folding models or classic molecular docking methods? This study’s rigorous benchmarking reveals that AI co-folding models perform poorly on new targets not seen in their training data, as their success heavily depends on data similarity. In contrast, physics-based molecular docking is more robust when exploring unknown chemical space. This serves as a warning for practitioners in drug discovery: for new targets and new molecules, traditional docking might be the more trustworthy choice, while the future likely lies in combining the strengths of both.">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-12-24/post_all_image/comparative_assessme_2025_12_16_image_1.jpg">
+<meta name="twitter:image:alt" content="An infographic comparing two drug discovery techniques: AI co-folding and traditional molecular docking. The left side shows the 'co-folding' method, highlighting its reliance on a large protein structure database (PDB), implying its predictions are highly correlated with training data similarity. The right side illustrates 'docking,' depicting a small molecule finding its optimal binding pose in a protein's active site based on physicochemical principles. The graphic visually explains the article's core point in section 5: for truly novel drug targets, physics-based docking may be more reliable than AI models that depend on training data.
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">AI Drug Discovery: Co-folding vs.&nbsp;Docking—Which is More Reliable?</h1>
+                  <div>
+        <div class="description">
+          <p>In the AI drug discovery boom, which is more reliable: emerging co-folding models or classic molecular docking methods? This study’s rigorous benchmarking reveals that AI co-folding models perform poorly on new targets not seen in their training data, as their success heavily depends on data similarity. In contrast, physics-based molecular docking is more robust when exploring unknown chemical space. This serves as a warning for practitioners in drug discovery: for new targets and new molecules, traditional docking might be the more trustworthy choice, while the future likely lies in combining the strengths of both.</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">AI Drug Discovery</div>
+                <div class="quarto-category">Co-folding</div>
+                <div class="quarto-category">Molecular Docking</div>
+                <div class="quarto-category">Computational Chemistry</div>
+                <div class="quarto-category">Benchmarking</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Wednesday, the 24th of December, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#molsculpt-ai-sculpts-precise-3d-molecular-structures-from-chemical-formulas" id="toc-molsculpt-ai-sculpts-precise-3d-molecular-structures-from-chemical-formulas" class="nav-link active" data-scroll-target="#molsculpt-ai-sculpts-precise-3d-molecular-structures-from-chemical-formulas">1. MolSculpt: AI Sculpts Precise 3D Molecular Structures from Chemical Formulas</a></li>
+  <li><a href="#structure-guided-antibody-design-the-cadabre-strategy" id="toc-structure-guided-antibody-design-the-cadabre-strategy" class="nav-link" data-scroll-target="#structure-guided-antibody-design-the-cadabre-strategy">2. Structure-Guided Antibody Design: The CADAbRe Strategy</a></li>
+  <li><a href="#drgscroll-a-genetic-algorithm-for-fully-flexible-side-chain-docking" id="toc-drgscroll-a-genetic-algorithm-for-fully-flexible-side-chain-docking" class="nav-link" data-scroll-target="#drgscroll-a-genetic-algorithm-for-fully-flexible-side-chain-docking">3. DRGSCROLL: A Genetic Algorithm for Fully Flexible Side-Chain Docking</a></li>
+  <li><a href="#validating-new-proteins-with-alphafold2-be-careful-theres-a-pitfall." id="toc-validating-new-proteins-with-alphafold2-be-careful-theres-a-pitfall." class="nav-link" data-scroll-target="#validating-new-proteins-with-alphafold2-be-careful-theres-a-pitfall.">4. Validating New Proteins with AlphaFold2? Be Careful, There’s a Pitfall.</a></li>
+  <li><a href="#ai-drug-discovery-co-folding-vs.-dockingwhich-is-more-reliable" id="toc-ai-drug-discovery-co-folding-vs.-dockingwhich-is-more-reliable" class="nav-link" data-scroll-target="#ai-drug-discovery-co-folding-vs.-dockingwhich-is-more-reliable">5. AI Drug Discovery: Co-folding vs.&nbsp;Docking—Which is More Reliable?</a></li>
+  <li><a href="#ai-for-chemistry-simulation-long-range-forces-are-key-but-not-enough" id="toc-ai-for-chemistry-simulation-long-range-forces-are-key-but-not-enough" class="nav-link" data-scroll-target="#ai-for-chemistry-simulation-long-range-forces-are-key-but-not-enough">6. AI for Chemistry Simulation: Long-Range Forces are Key, But Not Enough</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-12-24/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="table-of-contents" class="level4">
+<h4 class="anchored" data-anchor-id="table-of-contents">Table of Contents</h4>
+<ol type="1">
+<li>MolSculpt uses a chemistry-aware 1D model to guide a 3D diffusion model, generating geometrically precise 3D molecules directly from a chemical formula.</li>
+<li>Researchers developed a computational strategy (CADAbRe) to directly generate highly stable and diverse antibody libraries with drug-like properties comparable to clinical-stage molecules.</li>
+<li>By allowing protein side chains to move continuously during docking, DRGSCROLL uses a genetic algorithm to find more realistic drug binding modes that traditional rigid docking methods miss.</li>
+<li>The workflow of using AlphaFold2 refolding to validate new protein designs has serious flaws, as evolutionary information can mask the true quality of a design.</li>
+<li>For truly novel drug targets, physics-based molecular docking is more trustworthy than AI co-folding models that rely on training data.</li>
+<li>For machine learning interatomic potentials (MLIPs) to be truly generalizable, long-range interaction models are necessary, but current methods still struggle with complex systems like metal-organic frameworks (MOFs).</li>
+</ol>
+</section>
+<section id="molsculpt-ai-sculpts-precise-3d-molecular-structures-from-chemical-formulas" class="level2">
+<h2 class="anchored" data-anchor-id="molsculpt-ai-sculpts-precise-3d-molecular-structures-from-chemical-formulas">1. MolSculpt: AI Sculpts Precise 3D Molecular Structures from Chemical Formulas</h2>
+<p><a href="post_all_image/mol_sculpt_sculpting_2025_12_16_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/mol_sculpt_sculpting_2025_12_16_image_1.jpg" class="img-fluid"></a></p>
+<p>In drug discovery, we often start with a one-dimensional chemical formula, like a SMILES string. This is like getting a list of molecular parts. The real challenge is assembling these parts (atoms) in three-dimensional space to form a stable and biologically active structure. Past methods often struggled, producing molecules that were either chemically nonsensical or had inaccurate 3D structures.</p>
+<p>MolSculpt offers a solution. Its name, “molecular sculpting,” is fitting because it truly refines a molecule with precision.</p>
+<p>Here’s how it works: the researchers split the task between two “experts.”</p>
+<p>The first expert is a pre-trained 1D molecular foundation model that understands chemical rules. You can think of it as a senior chemist who has seen vast numbers of chemical structures and knows the rules of atomic connections and bonding inside out. Crucially, this model is “frozen”—it is not modified during MolSculpt’s training. We simply consult it for advice, rather than retraining it, which saves a lot of computing power.</p>
+<p>The second expert is a 3D diffusion model. It’s a “sculptor” skilled at arranging atoms in 3D space. It starts with a random cloud of atoms and progressively adjusts their positions until a clear molecular structure emerges. The problem is, this sculptor doesn’t know chemistry on its own. Without guidance, it might create a bizarre, unstable structure.</p>
+<p>MolSculpt’s core innovation is building a communication bridge that lets the chemist guide the sculptor. This bridge consists of two parts: learnable queries and a projector.</p>
+<p>The process unfolds like this: at each step, the 3D sculptor asks the 1D chemist questions via the “learnable queries.” These questions are specific, like: “Based on this SMILES formula, what should the chemical environment around this carbon atom be?” or “What should the relationship between this nitrogen atom and that oxygen atom be?”</p>
+<p>After the 1D chemist provides its expert answers, the projector translates this chemical knowledge into specific 3D coordinates and geometric constraints, telling the sculptor what to do next. This way, every step the sculptor takes is guided by the chemist, ensuring the final product is not only well-formed but also obeys all chemical principles.</p>
+<p>So, how well does it work? The test results on two standard datasets, GEOM-DRUGS and QM9, speak for themselves. The molecules generated by MolSculpt achieved top-tier performance in chemical validity and stability.</p>
+<p>More importantly, its ability to reconstruct local geometry—like bond lengths, bond angles, and dihedral angles—is excellent. In drug design, a molecule’s conformation, especially a critical dihedral angle, can completely change its shape if it’s off by even a small amount. It might then fail to fit into the target protein’s active site. MolSculpt’s ability to accurately restore these details means its generated conformations are closer to the real-world dominant conformations, which is hugely valuable for virtual screening and subsequent lab validation.</p>
+<p>The work also explores architectural details, like the optimal number of queries to use. This shows the researchers are seeking a balance: extracting enough information from the 1D model to guide 3D generation without introducing noise from information overload.</p>
+<p>MolSculpt doesn’t just stick two models together; it designs an elegant system for them to work together, letting each play to its strengths. It gives us a powerful and efficient tool for generating high-quality, high-precision 3D molecules from scratch.</p>
+<p>📜Title: MolSculpt: Sculpting 3D Molecular Geometries from Chemical Syntax<br>
+🌐Paper: https://arxiv.org/abs/2512.10991v1</p>
+</section>
+<section id="structure-guided-antibody-design-the-cadabre-strategy" class="level2">
+<h2 class="anchored" data-anchor-id="structure-guided-antibody-design-the-cadabre-strategy">2. Structure-Guided Antibody Design: The CADAbRe Strategy</h2>
+<p><a href="post_all_image/structure_based_desi_2025_12_16_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/structure_based_desi_2025_12_16_image_1.jpg" class="img-fluid"></a></p>
+<p>Anyone working on antibody drugs knows how hard it is to build a good antibody library. Traditional methods either rely on animal immunization, which is slow and unpredictable, or on synthetic or semi-synthetic libraries, which often suffer from poor stability and limited effective diversity. If an antibody’s framework is unstable and prone to aggregation, it becomes a nightmare to develop into a drug, even if its Complementarity-Determining Regions (CDRs) can bind the target.</p>
+<p>The CADAbRe strategy, proposed in this preprint, aims to solve this problem from the ground up. Instead of patching up existing, potentially flawed antibody scaffolds, it uses computation to design an ideal antibody library from first principles.</p>
+<p><strong>Here’s how it works</strong>:</p>
+<p>First, it tackles the stability of the antibody framework. Antibodies are formed by pairing heavy- and light-chain variable regions (V-genes). Instead of random combinations, the researchers used Rosetta energy calculation software to systematically evaluate the interface binding energy of all possible human V-gene pairs. They selected only the pairs calculated to be most stable and least likely to dissociate to serve as the library’s scaffolds. This is like building a house on an incredibly solid foundation to ensure the entire structure is sound.</p>
+<p>Next, they addressed the most critical and difficult part: the CDR H3 loop. The CDR H3 is central to target recognition, and its sequence and structural diversity directly determine how many antigens the library can recognize. But designing the H3 loop is extremely challenging, as long or poorly structured H3 loops are a primary cause of antibody aggregation. Here, the authors used a machine learning model to design H3 sequences that possess both structural diversity and stability. This model can generate H3 loops of various lengths and conformations while avoiding structures known to cause problems.</p>
+<p><strong>So, how good is the resulting library</strong>?</p>
+<p>The researchers synthesized over 500 million unique antibodies and validated them using phage display. They chose two representative targets: the receptor-binding domain (RBD) of SARS-CoV-2 and the spike protein of the rare Lujo virus.</p>
+<p>The experimental results are solid. They successfully identified multiple antibodies with high, nanomolar (nM) affinity for the targets. More importantly, these antibodies showed excellent “developability” metrics. For instance, their performance in thermal stability, solubility, and non-specific binding was comparable to that of therapeutic antibodies already in clinical trials.</p>
+<p>This means we can potentially obtain a batch of high-quality lead molecules directly from computational design, skipping animal immunization and the extensive work needed later to optimize stability.</p>
+<p><strong>What does this mean for drug developers</strong>?</p>
+<p>The CADAbRe approach represents a shift from “screening” to “design.” It’s not about finding a needle in a haystack; it’s about first drawing a blueprint for the ideal “needle” and then building it.</p>
+<p>The platform is programmable. We can adjust the CDR design based on the structural information of a specific target, creating biased libraries tailored for a certain class of targets, like GPCRs or ion channels.</p>
+<p>It also creates a “design-test-learn” feedback loop. Data from each screening round can be fed back into the original design algorithm, making the next generation of antibody libraries more precise and efficient. This greatly speeds up the antibody discovery cycle and reduces reliance on animal experiments. For drug development, any technology that shortens timelines and lowers the risk of failure is extremely valuable.</p>
+<p>📜Title: Structure-based design of antibody repertoires with drug-like properties<br>
+🌐Paper: https://www.biorxiv.org/content/10.64898/2025.12.10.693474v1</p>
+</section>
+<section id="drgscroll-a-genetic-algorithm-for-fully-flexible-side-chain-docking" class="level2">
+<h2 class="anchored" data-anchor-id="drgscroll-a-genetic-algorithm-for-fully-flexible-side-chain-docking">3. DRGSCROLL: A Genetic Algorithm for Fully Flexible Side-Chain Docking</h2>
+<p><a href="post_all_image/drgscroll_achieving_2025_12_16_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/drgscroll_achieving_2025_12_16_image_1.jpg" class="img-fluid"></a></p>
+<p>Anyone who does molecular docking knows we’ve long made a huge compromise. To make computations feasible, we have to assume the protein target is a rigid block of stone. But in reality, proteins are flexible. The amino acid side chains in the binding pocket, in particular, can twist and turn to make room for a small molecule. This process is called “induced fit.” If we ignore this, many molecules that should bind well might be written off in a simulation due to a minor spatial clash.</p>
+<p>DRGSCROLL aims to solve this problem head-on. Its core idea is simple: stop freezing the side chains and let them move.</p>
+<p><strong>How does it do it</strong>?</p>
+<p>The researchers used a Genetic Algorithm. You can think of this process as a sophisticated evolutionary system. The system’s population includes not just the various poses of the small molecule (ligand) but also the torsion angles (χ angles) of all the side chains in the protein’s pocket.</p>
+<p>The algorithm has two goals:<br>
+1. Find the lowest-energy binding state, meaning the tightest bind.<br>
+2. Avoid any unreasonable atomic collisions (steric clashes).</p>
+<p>The genetic algorithm simultaneously optimizes both the ligand’s pose and all the side chain angles. It continuously generates new combinations, eliminates “inferior” conformations with high energy or clashes, and preserves and propagates “superior” ones with low energy and reasonable geometries. Through repeated iterations, it can efficiently search a massive conformational space to find the global optimal binding mode.</p>
+<p><strong>How well does it actually perform</strong>?</p>
+<p>Let’s look at the data. The researchers benchmarked it against several industry-standard software tools, including Vina, Glide, and IFD (Induced Fit Docking), on the PDBbind dataset. The results showed that the conformations found by DRGSCROLL had significantly fewer atomic clashes and better docking scores. This confirms that it can indeed find more stable and realistic binding modes that require subtle side-chain adjustments.</p>
+<p>Next came the more critical real-world test: virtual screening. This is the most common use case in drug discovery, where you try to pick out the true active “hits” from thousands of molecules. The researchers used DRGSCROLL to distinguish active compounds from decoys for two popular targets, RET kinase and PARP1.</p>
+<p>The results were impressive. DRGSCROLL outperformed Vina GPU 2.1 across metrics like AUC, F1 score, and precision. This means it’s better at telling real compounds from fakes, helping us focus precious lab resources on the most promising molecules.</p>
+<p><strong>Is it practical to use</strong>?</p>
+<p>Flexibility and computational cost are on a seesaw. The clever part of DRGSCROLL is that it’s optimized for GPUs. This allows it to handle full side-chain flexibility while maintaining an acceptable speed, making it feasible for at least medium-throughput virtual screening projects.</p>
+<p>Of course, it isn’t perfect. It currently only considers side-chain flexibility; the protein backbone is still fixed, and water molecules are not explicitly considered. Still, this is a solid step toward “fully dynamic docking.” For targets where we know side-chain movement is critical for binding, DRGSCROLL provides a powerful new tool.</p>
+<p>📜Title: DRGSCROLL: Achieving Full Side-Chain Flexibility in Docking Simulations through a Genetic Algorithm Framework<br>
+🌐Paper: https://www.biorxiv.org/content/10.64898/2025.12.04.692419v1</p>
+</section>
+<section id="validating-new-proteins-with-alphafold2-be-careful-theres-a-pitfall." class="level2">
+<h2 class="anchored" data-anchor-id="validating-new-proteins-with-alphafold2-be-careful-theres-a-pitfall.">4. Validating New Proteins with AlphaFold2? Be Careful, There’s a Pitfall.</h2>
+<p><a href="post_all_image/limitations_of_the_r_2025_12_16_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="post_all_image/limitations_of_the_r_2025_12_16_image_1.jpg" class="img-fluid"></a></p>
+<p>You’ve worked hard to design a completely new protein sequence. How do you know if it will fold correctly into your desired structure?</p>
+<p>For the past few years, the standard answer has been: run it through AlphaFold2 and see how closely the predicted structure matches your design target. We call this process “refolding.” A high pLDDT score and a low scRMSD value seemed like a sure sign of success.</p>
+<p>But a recent preprint pours some cold water on that idea. The researchers found that this routine workflow might be systematically misleading us.</p>
+<p>Where’s the problem? It’s mainly the evolutionary information, the Multiple Sequence Alignment (MSA). AlphaFold2 was trained on massive families of natural protein sequences. When you give it a sequence that’s somewhat similar to a natural protein and provide an MSA, it acts like a student taking an open-book test. It just pulls the answer from its memory banks instead of actually reasoning out how the sequence should fold from scratch.</p>
+<p>This works great for predicting the structures of natural proteins. But for designers trying to create proteins that don’t exist on Earth, it’s a huge problem. The model might just be recognizing the “flavor” of a natural protein in your design and giving you a seemingly perfect result. This doesn’t prove your design itself is successful.</p>
+<p>The researchers’ experimental data clearly shows this. As soon as an MSA is used, AlphaFold2’s ability to distinguish good designs from bad ones drops significantly. The pLDDT score (AlphaFold2’s confidence metric) gets artificially inflated because the model found something familiar, not because your sequence itself contains stable structural information.</p>
+<p>Another key metric, scRMSD (side-chain root-mean-square deviation), is also unreliable. For proteins with flexible regions or random coils, this value can become inexplicably high, making you think your design failed. It’s like trying to measure a soft noodle with a rigid ruler—you can’t get an accurate measurement and then blame the noodle. Fortunately, the authors proposed a simple realignment and calibration method that can partially correct this issue.</p>
+<p>So, what should we do now?</p>
+<p>The subtext of this paper is this: when evaluating brand new, <em>de novo</em> designs, don’t put too much faith in AlphaFold2 running in MSA mode. Try the single-sequence mode instead. While the predicted results might not look as “stunning,” they are likely more “honest.” This mode better reflects the structural information contained within the sequence itself, rather than an answer memorized from a database.</p>
+<p>This doesn’t mean AlphaFold2 is useless. It remains a valuable tool. But this work reminds us that every tool has its proper use cases and limitations. As front-line researchers, we must be like skilled craftspeople, knowing when a hammer is for driving a nail and when it’s likely to smash our thumb. Understanding these limits will help us move forward more steadily on the path of creating new molecules.</p>
+<p>📜Title: Limitations of the refolding pipeline for de novo protein design<br>
+🌐Paper: https://www.biorxiv.org/content/10.64898/2025.12.09.693122v1</p>
+</section>
+<section id="ai-drug-discovery-co-folding-vs.-dockingwhich-is-more-reliable" class="level2">
+<h2 class="anchored" data-anchor-id="ai-drug-discovery-co-folding-vs.-dockingwhich-is-more-reliable">5. AI Drug Discovery: Co-folding vs.&nbsp;Docking—Which is More Reliable?</h2>
+<p><a href="post_all_image/comparative_assessme_2025_12_16_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="post_all_image/comparative_assessme_2025_12_16_image_1.jpg" class="img-fluid"></a></p>
+<p>AI is a hot topic in drug discovery, and with the arrival of AlphaFold, many felt we were on the verge of predicting everything. But when AI models move from predicting protein structures to predicting how small molecules bind to them, things get more complicated. This new study puts AI co-folding models (like AlphaFold 3) and classic molecular docking methods in the same ring for a head-to-head comparison. The results are interesting and serve as a reality check for the field.</p>
+<p>There’s a common perception that AI can do anything. But this research reveals an “Achilles’ heel” of AI co-folding models: their heavy reliance on training data. If a protein-ligand complex is very similar to a structure the model has “seen” in the PDB database, its prediction is highly accurate. Through logistic regression analysis, the authors found that similarity to the training set is the strongest predictor of co-folding success. This is like a student who only memorizes a question bank—they can ace questions they’ve seen before but are helpless when faced with a completely new problem type. In drug development, we are most interested in new targets and new chemical scaffolds, which is precisely where AI co-folding models are weak.</p>
+<p>In contrast, traditional docking methods, while “old-school,” are more robust. They don’t rely on “memory” but on physicochemical principles—like van der Waals forces and electrostatic interactions—to calculate the best pose and binding energy of a ligand in a pocket. Their success is more related to the ligand’s physical properties, such as whether it’s too flexible (too many rotatable bonds) or if the binding pocket is buried too deep. The study shows that docking software using more thorough sampling algorithms and better scoring functions (like Attracting Cavities) performs better. This first-principles approach is clearly more reliable when exploring unknown chemical space.</p>
+<p>This study also makes another important contribution: it establishes a cleaner, more reliable benchmark dataset called RNP-F. The authors found that many existing datasets are full of “noise,” such as crystal structures with poor resolution or overly studied “celebrity” ligands. They removed this problematic data to ensure a fair comparison. This is good for the whole industry, as everyone will now have a more reliable yardstick for evaluating new algorithms.</p>
+<p>Finally, the research points to a harsh reality: both AI and traditional docking face a “garbage in, garbage out” problem. The analysis found that both methods have a high “scoring failure rate,” and often the root cause is a problem with the input PDB structure itself. This reminds us that even the most powerful algorithm can’t create high-quality results from thin air. Solid experimental data will always be the foundation of computer-aided drug design.</p>
+<p>So, what’s the path forward? The researchers believe it’s not about choosing one over the other, but about combining them. Perhaps one could use co-folding to quickly generate an initial pose, and then use more rigorous docking methods for refinement and scoring. This is like having an experienced detective (docking) guide a rookie with a photographic memory (co-folding). By leveraging the strengths of each, we can find the molecules we’re looking for more efficiently.</p>
+<p>📜Title: Comparative Assessment of the Utility of Co-Folding and Docking for Small-Molecule Drug Design<br>
+🌐Paper: https://www.biorxiv.org/content/10.64898/2025.12.09.693161v1</p>
+</section>
+<section id="ai-for-chemistry-simulation-long-range-forces-are-key-but-not-enough" class="level2">
+<h2 class="anchored" data-anchor-id="ai-for-chemistry-simulation-long-range-forces-are-key-but-not-enough">6. AI for Chemistry Simulation: Long-Range Forces are Key, But Not Enough</h2>
+<p><a href="post_all_image/generalization_of_lo_2025_12_16_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-6"><img src="post_all_image/generalization_of_lo_2025_12_16_image_1.jpg" class="img-fluid"></a></p>
+<p>Anyone in computational chemistry knows that Machine Learning Interatomic Potentials (MLIPs) have become very popular. They use neural networks to predict the energy and forces between atoms, running orders of magnitude faster than traditional quantum chemistry calculations while offering higher accuracy than classical force fields. This sounds like a perfect solution, but they have a fatal Achilles’ heel: <strong>generalization</strong>.</p>
+<p>Many MLIPs are “short-sighted.” When calculating the energy of an atom, they only look at its neighbors within a small radius (e.g., 5-10 angstroms). This purely “local” model, like Allegro, handles situations present in its training data very well. But if you ask it to predict a system with a completely new chemical environment it has never seen, it’s likely to be wildly inaccurate. This is like a taxi driver who only knows their own neighborhood; send them to the other side of the city, and they’re completely lost. That’s because in the world of chemistry, many key forces, like electrostatic interactions, are long-range. An atom dozens of angstroms away can still influence your current position.</p>
+<p>The authors of this paper seized on this weak point. Instead of the usual random split of training and test sets, they designed a much tougher test. They first used SOAP descriptors (a mathematical tool to “profile” an atom’s local environment) to analyze the entire dataset. Then, they deliberately picked the molecules with the most “unusual” chemical environments—those most different from the mainstream data—and put them in the test set. This is like throwing that neighborhood-bound taxi driver into the most unfamiliar traffic conditions for their driving test. Only this can truly test a model’s ability to generalize.</p>
+<p>The results were as expected. The purely local models performed poorly on these “unconventional” tests. But when the authors added long-range correction modules to these models—like CELLI or EFA, which you can think of as giving the driver a GPS—performance improved significantly. This proves that to achieve true generalization, a model must be able to see the bigger picture.</p>
+<p>The paper also made an interesting discovery that dashes some unrealistic hopes in the field. Some had hoped that by feeding a model enough energy and force data, a neural network could “figure out” the physical concept of local atomic charge on its own. The authors showed experimentally that this doesn’t work. The model cannot infer accurate atomic charges from scratch. You have to explicitly provide the reference charge for each atom in the training data for it to learn how to assign charges correctly. It’s like teaching a child to paint: you can’t expect them to learn color theory just by looking at black-and-white photos; you have to show them color examples.</p>
+<p>Finally, the authors tested these “top-performing” models with long-range corrections on a truly complex system: metal-organic frameworks (MOFs). The internal pore structures and metal-organic ligand interfaces in MOFs create extremely complex electrostatic environments. Here, even the best long-range models started to struggle. This shows that our current long-range correction schemes are still quite basic and have a long way to go before they can simulate such highly non-uniform, complex materials.</p>
+<p>This work offers a clear perspective: in the quest for generalizable MLIPs, long-range forces are a hurdle that cannot be bypassed. It also points us in the right direction: we need to develop more powerful long-range physical models and test them with more rigorous, non-random benchmarks. For people in drug discovery or materials design, this means that when using these AI tools, you must be aware of their limitations.</p>
+<p>📜Title: Generalization of Long-Range Machine Learning Potentials in Complex Chemical Spaces<br>
+🌐Paper: <a href="https://arxiv.org/abs/2512.10989v1" class="uri">https://arxiv.org/abs/2512.10989v1</a><br>
+💻Code: <a href="https://github.com/tummfm/chemtrain" class="uri">https://github.com/tummfm/chemtrain</a></p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-12-24/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

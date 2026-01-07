@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="The FoldBench benchmark sets up a high-stakes exam for AI structure prediction models like AlphaFold 3, tailored for drug discovery. It covers nine real-world R&amp;D scenarios, including antibody design, allosteric effects, and nucleic acid targeting, to fully assess a model’s practical use. The results show that while AI has progressed significantly, major challenges remain in predicting CDR loop conformations, small-molecule-induced conformational changes, and RNA structures. The benchmark gives researchers a calibration tool, clarifying the capabilities and limits of current AI structure prediction technology in modern drug development.">
+
+<title>The FoldBench Benchmark: A High-Stakes Exam for AI Structure Prediction – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="The FoldBench Benchmark: A High-Stakes Exam for AI Structure Prediction – MPU">
+<meta property="og:description" content="The FoldBench benchmark sets up a high-stakes exam for AI structure prediction models like AlphaFold 3, tailored for drug discovery. It covers nine real-world R&amp;D scenarios, including antibody design, allosteric effects, and nucleic acid targeting, to fully assess a model’s practical use. The results show that while AI has progressed significantly, major challenges remain in predicting CDR loop conformations, small-molecule-induced conformational changes, and RNA structures. The benchmark gives researchers a calibration tool, clarifying the capabilities and limits of current AI structure prediction technology in modern drug development.">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-12-21/post_all_image/benchmarking_all_ato_2025_12_11_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="This image illustrates the core concept of the FoldBench benchmark, designed to evaluate the structure prediction capabilities of AI models in real-world drug discovery scenarios. It might include visualizations of various biomolecular complexes, such as the binding interface of an antibody and antigen, a small-molecule drug targeting RNA, and a protein undergoing an allosteric effect. Together, these diverse structures form a comprehensive set of 'test questions' to examine the accuracy and reliability of models like AlphaFold 3 in predicting complex interactions beyond single proteins, revealing the practical limitations of current AI technology in frontier areas like antibody design and nucleic acid targeting.
+">
+<meta name="twitter:title" content="The FoldBench Benchmark: A High-Stakes Exam for AI Structure Prediction – MPU">
+<meta name="twitter:description" content="The FoldBench benchmark sets up a high-stakes exam for AI structure prediction models like AlphaFold 3, tailored for drug discovery. It covers nine real-world R&amp;D scenarios, including antibody design, allosteric effects, and nucleic acid targeting, to fully assess a model’s practical use. The results show that while AI has progressed significantly, major challenges remain in predicting CDR loop conformations, small-molecule-induced conformational changes, and RNA structures. The benchmark gives researchers a calibration tool, clarifying the capabilities and limits of current AI structure prediction technology in modern drug development.">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-12-21/post_all_image/benchmarking_all_ato_2025_12_11_image_1.jpg">
+<meta name="twitter:image:alt" content="This image illustrates the core concept of the FoldBench benchmark, designed to evaluate the structure prediction capabilities of AI models in real-world drug discovery scenarios. It might include visualizations of various biomolecular complexes, such as the binding interface of an antibody and antigen, a small-molecule drug targeting RNA, and a protein undergoing an allosteric effect. Together, these diverse structures form a comprehensive set of 'test questions' to examine the accuracy and reliability of models like AlphaFold 3 in predicting complex interactions beyond single proteins, revealing the practical limitations of current AI technology in frontier areas like antibody design and nucleic acid targeting.
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">The FoldBench Benchmark: A High-Stakes Exam for AI Structure Prediction</h1>
+                  <div>
+        <div class="description">
+          <p>The FoldBench benchmark sets up a high-stakes exam for AI structure prediction models like AlphaFold 3, tailored for drug discovery. It covers nine real-world R&amp;D scenarios, including antibody design, allosteric effects, and nucleic acid targeting, to fully assess a model’s practical use. The results show that while AI has progressed significantly, major challenges remain in predicting CDR loop conformations, small-molecule-induced conformational changes, and RNA structures. The benchmark gives researchers a calibration tool, clarifying the capabilities and limits of current AI structure prediction technology in modern drug development.</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">FoldBench</div>
+                <div class="quarto-category">AlphaFold 3</div>
+                <div class="quarto-category">Structure Prediction</div>
+                <div class="quarto-category">Drug Discovery</div>
+                <div class="quarto-category">Benchmarking</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Sunday, the 21st of December, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#table-of-contents" id="toc-table-of-contents" class="nav-link active" data-scroll-target="#table-of-contents">Table of Contents</a></li>
+  <li><a href="#ai-reshapes-the-hsa-database-predicting-drug-plasma-protein-binding" id="toc-ai-reshapes-the-hsa-database-predicting-drug-plasma-protein-binding" class="nav-link" data-scroll-target="#ai-reshapes-the-hsa-database-predicting-drug-plasma-protein-binding">1. AI Reshapes the HSA Database: Predicting Drug-Plasma Protein Binding</a></li>
+  <li><a href="#qligfep-v2.1-a-tool-to-make-free-energy-perturbation-calculations-accessible" id="toc-qligfep-v2.1-a-tool-to-make-free-energy-perturbation-calculations-accessible" class="nav-link" data-scroll-target="#qligfep-v2.1-a-tool-to-make-free-energy-perturbation-calculations-accessible">2. QligFEP v2.1: A Tool to Make Free Energy Perturbation Calculations Accessible</a></li>
+  <li><a href="#geometric-graph-u-nets-understanding-multi-scale-protein-structure-like-building-with-legos" id="toc-geometric-graph-u-nets-understanding-multi-scale-protein-structure-like-building-with-legos" class="nav-link" data-scroll-target="#geometric-graph-u-nets-understanding-multi-scale-protein-structure-like-building-with-legos">3. Geometric Graph U-Nets: Understanding Multi-Scale Protein Structure Like Building with LEGOs</a></li>
+  <li><a href="#a-new-approach-for-graph-networks-mining-protein-handshake-patterns-to-predict-drug-targets" id="toc-a-new-approach-for-graph-networks-mining-protein-handshake-patterns-to-predict-drug-targets" class="nav-link" data-scroll-target="#a-new-approach-for-graph-networks-mining-protein-handshake-patterns-to-predict-drug-targets">4. A New Approach for Graph Networks: Mining Protein “Handshake” Patterns to Predict Drug Targets</a></li>
+  <li><a href="#molecular-graph-pre-training-predicting-chemical-motifs-matters-more-than-masking-design" id="toc-molecular-graph-pre-training-predicting-chemical-motifs-matters-more-than-masking-design" class="nav-link" data-scroll-target="#molecular-graph-pre-training-predicting-chemical-motifs-matters-more-than-masking-design">5. Molecular Graph Pre-training: Predicting Chemical Motifs Matters More Than Masking Design</a></li>
+  <li><a href="#the-foldbench-benchmark-a-high-stakes-exam-for-ai-structure-prediction" id="toc-the-foldbench-benchmark-a-high-stakes-exam-for-ai-structure-prediction" class="nav-link" data-scroll-target="#the-foldbench-benchmark-a-high-stakes-exam-for-ai-structure-prediction">6. The FoldBench Benchmark: A High-Stakes Exam for AI Structure Prediction</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-12-21/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="table-of-contents" class="level3">
+<h3 class="anchored" data-anchor-id="table-of-contents">Table of Contents</h3>
+<ol type="1">
+<li>The HSADab database gets a major upgrade, using AI to predict the binding affinity of a chemical structure to human serum albumin.</li>
+<li>QligFEP v2.1.0 makes free energy calculations cheaper and faster by simulating only the critical protein binding pocket, opening the door for large-scale use.</li>
+<li>Researchers designed a Geometric Graph U-Net that improves the recognition of 3D protein folding patterns by modeling a protein’s hierarchical structure, from local to global.</li>
+<li>A new method called PredPPI-GReMLIN achieves high-accuracy protein interaction predictions by modeling interfaces as bipartite graphs and mining them for conserved structural patterns.</li>
+<li>In molecular graph self-supervised learning, predicting chemically meaningful motifs boosts model performance more than designing complex masking strategies, especially when paired with a Graph Transformer.</li>
+<li>The new FoldBench benchmark shows that while models like AlphaFold 3 have made huge strides, reliable prediction in key areas of drug discovery, like antibody design and nucleic acid targeting, remains a distant goal.</li>
+</ol>
+</section>
+<section id="ai-reshapes-the-hsa-database-predicting-drug-plasma-protein-binding" class="level2">
+<h2 class="anchored" data-anchor-id="ai-reshapes-the-hsa-database-predicting-drug-plasma-protein-binding">1. AI Reshapes the HSA Database: Predicting Drug-Plasma Protein Binding</h2>
+<p><a href="post_all_image/human_serum_albumin_2025_12_11_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/human_serum_albumin_2025_12_11_image_1.jpg" class="img-fluid"></a></p>
+<p>Human Serum Albumin (HSA) is the blood’s universal taxi, responsible for transporting small-molecule drugs. If a drug binds too tightly, it won’t be released to do its job. If it binds too loosely, it gets cleared from the body too quickly. Predicting this Plasma Protein Binding (PPB) has always been a challenge in drug development, traditionally relying on experience and tedious experiments.</p>
+<p>This update to the HSADab database deeply integrates AI. Now, a user can just input a SMILES string, and the system predicts the molecule’s binding affinity to HSA and its PPB rate. This end-to-end prediction can save a lot of testing time during early-stage screening.</p>
+<p>A significant advance is the addition of structural data. Since experimentally determined crystal structures of these complexes are rare, researchers used AlphaFold3 and DiffDock to generate a docking library of over 2,000 complexes. It’s like having a snapshot of how each drug molecule sits inside the “taxi,” showing us which pocket it occupies and providing a basis for rational molecular optimization.</p>
+<p>HSA’s structure isn’t rigid. Molecular simulations have found that HSA has both “bound” and “free” conformations. As a drug approaches, the protein undergoes a significant conformational change to envelop it. This structural flexibility is something that older, static docking methods could not capture.</p>
+<p>The research also offers a practical conclusion on tool selection. While the AutoDock series is widely known, in the specific case of HSA, the PLANTS software performed better.</p>
+<p>These tools are now integrated into the <a href="http://www.hsadab.cn">hsadab.cn</a> website. For medicinal chemists, it turns complex calculations into simple online operations, helping to weed out molecules with poor drug-likeness at the very start of a project.</p>
+<p>📜Title: Human Serum Albumin: AI-powered Modelling of Binding Affinities and Interactions 🌐Paper: https://doi.org/10.26434/chemrxiv-2025-mx3fh-v3 💻Code: http://www.hsadab.cn</p>
+</section>
+<section id="qligfep-v2.1-a-tool-to-make-free-energy-perturbation-calculations-accessible" class="level2">
+<h2 class="anchored" data-anchor-id="qligfep-v2.1-a-tool-to-make-free-energy-perturbation-calculations-accessible">2. QligFEP v2.1: A Tool to Make Free Energy Perturbation Calculations Accessible</h2>
+<p><a href="post_all_image/doing_more_with_less_2025_12_11_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/doing_more_with_less_2025_12_11_image_1.jpg" class="img-fluid"></a></p>
+<p>Free Energy Perturbation (FEP) is a highly accurate prediction tool in drug discovery, but its high computational cost and long run times have limited its use.</p>
+<p>The open-source platform QligFEP aims to solve this problem. Traditional FEP calculations place a protein-ligand complex in a huge “water box” for simulation. Most of the computing power is spent on water molecules that have little to do with the binding interaction, which is wasteful.</p>
+<p>QligFEP introduces Spherical Boundary Conditions (SBC), which act like a spotlight, focusing the computation on a spherical region centered on the binding pocket. The area outside the sphere is handled with a simplified approach.</p>
+<p>This method reduces the amount of calculation needed and speeds things up. According to the paper, a single perturbation calculation takes less than two hours on a standard cluster. The cost on Amazon Web Services (AWS) is less than $1 per edge. This makes FEP technology accessible to ordinary academic labs, not just a few well-funded institutions.</p>
+<p>To verify its accuracy, researchers ran benchmark tests on 639 ligand transformations across 16 common industrial protein targets. The results showed that QligFEP’s prediction accuracy is on par with expensive commercial software (like Schrödinger’s FEP+) and other open-source tools. The simplification did not introduce systemic bias.</p>
+<p>QligFEP is also easier to use. It automates steps like ligand mapping and perturbation network generation. Users just need to provide the ligand and protein structures, which simplifies the workflow and facilitates high-throughput virtual screening.</p>
+<p>With its flexible internal restraint algorithms, QligFEP can also handle complex chemical structure transformations like ring openings and closings, tackling real-world problems in drug development.</p>
+<p>In the future, the development team plans to improve its stability for complex chemical transformations and develop GPU and cloud-native versions to further increase computational efficiency.</p>
+<p>By improving the algorithm, QligFEP lowers the barrier to FEP calculations while maintaining accuracy. Making this technology more accessible should help speed up the process of new drug discovery.</p>
+<p>📜Title: Doing More with Less: Accurate and Scalable Ligand Free Energy Calculations by Focusing on the Binding Site 🌐Paper: <a href="https://doi.org/10.26434/chemrxiv-2025-x3r3z-v3" class="uri">https://doi.org/10.26434/chemrxiv-2025-x3r3z-v3</a></p>
+</section>
+<section id="geometric-graph-u-nets-understanding-multi-scale-protein-structure-like-building-with-legos" class="level2">
+<h2 class="anchored" data-anchor-id="geometric-graph-u-nets-understanding-multi-scale-protein-structure-like-building-with-legos">3. Geometric Graph U-Nets: Understanding Multi-Scale Protein Structure Like Building with LEGOs</h2>
+<p><a href="post_all_image/multi_scale_protein_2025_12_11_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/multi_scale_protein_2025_12_11_image_1.jpg" class="img-fluid"></a></p>
+<p>Scale is everything in protein structure analysis. The orientation of a single amino acid’s side chain can determine if it binds to a drug molecule. But how the α-helix containing that amino acid stacks with other secondary structures determines the protein’s overall function. Drug development needs to see both the “trees” (local atomic interactions) and the “forest” (overall domain folding), but current computational tools struggle to do both.</p>
+<p>Standard Geometric Graph Neural Networks (GNNs) are like a magnifying glass that only works up close. They excel at capturing local geometric relationships like bond lengths and angles, making them great for understanding a small drug-binding pocket. But if you want to know where that pocket is in the entire protein, or how the protein’s overall shape changes affect it, these models fall short. They lack a top-down, global perspective.</p>
+<p>This paper gives GNNs a “zoom lens.”</p>
+<p>The authors introduced a new model called a Geometric Graph U-Net. The U-Net approach comes from image processing: first, you use “downsampling” to progressively compress a high-resolution image into a smaller, blurrier one to capture the core global features. Then, you use “upsampling” to restore the details, guided by those global features, to get a precise final result.</p>
+<p>The researchers applied this idea to protein structures. Their model first “coarsens” the protein’s atomic graph. You can think of this as bundling several neighboring amino acid residues into a single “super-node,” creating a more macroscopic, lower-resolution view of the protein. By repeating this process, the model sees the protein at the atomic scale, then the secondary structure scale, and finally the domain scale, gaining a global understanding.</p>
+<p>Next, the model reverses the process with “refining.” It passes the information learned at the macro scale back down to the micro scale, layer by layer, so each atom becomes aware of its global environment. This gives the model both local detail and a global view at the same time.</p>
+<p><a href="post_all_image/multi_scale_protein_2025_12_11_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="post_all_image/multi_scale_protein_2025_12_11_image_1.jpg" class="img-fluid"></a></p>
+<p>The core of this “coarsening” and “refining” process is two new types of pooling layers: Point Pooling and Sparse Pooling. Pooling is a common technique in GNNs for downsampling, but previous methods often ignored 3D geometric information or were too computationally expensive. These new tools efficiently aggregate meaningful local geometric information and connect seamlessly with existing GNN layers. It’s like finding the perfect LEGO connectors that let you build quickly while keeping the structure stable.</p>
+<p>How well does the model perform? On a protein fold classification task, the Geometric Graph U-Net outperformed baseline models that focused only on local or only on global features. This shows that the “see the forest, then the trees” strategy works.</p>
+<p>The authors also proved the superiority of this multi-scale architecture theoretically. They extended a test called the Geometric Weisfeiler-Leman (GWL) test to show that the pooling operation can enhance the model’s ability to distinguish between different graphs (its “expressive power”). This theoretically ensures that the model doesn’t lose critical structural information during the “coarsening” process.</p>
+<p>This work opens up a new path for designing more powerful models for protein structure representation learning. For drug development, this could lead to more accurate tools for predicting a drug’s off-target effects, understanding the long-range mechanisms of allosteric regulation, or even designing entirely new functional proteins from scratch.</p>
+<p>📜Title: Multi-Scale Protein Structure Modelling with Geometric Graph U-Nets 🌐Paper: https://arxiv.org/abs/2512.06752v1</p>
+</section>
+<section id="a-new-approach-for-graph-networks-mining-protein-handshake-patterns-to-predict-drug-targets" class="level2">
+<h2 class="anchored" data-anchor-id="a-new-approach-for-graph-networks-mining-protein-handshake-patterns-to-predict-drug-targets">4. A New Approach for Graph Networks: Mining Protein “Handshake” Patterns to Predict Drug Targets</h2>
+<p><a href="post_all_image/pred_ppi_g_re_mlin_pre_2025_12_11_image_1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="post_all_image/pred_ppi_g_re_mlin_pre_2025_12_11_image_1.png" class="img-fluid"></a></p>
+<p>Predicting Protein-Protein Interactions (PPIs) is a central problem in drug discovery. Relying on sequence information alone doesn’t provide enough detail. What determines if two proteins will bind is the precise atomic match at their contact interface, including shape, charge, and hydrophobicity.</p>
+<p>A new tool called PredPPI-GReMLIN offers a new way to think about this.</p>
+<p><strong>Drawing the “Handshake” as a Graph</strong></p>
+<p>The researchers treat the contact interface of two proteins as a bipartite graph. Imagine a dance party. On one side of the graph are all the amino acid residues on the surface of protein A. On the other side are the residues on the surface of protein B. If two residues interact—say, by forming a hydrogen bond or a hydrophobic contact—a line is drawn between them.</p>
+<p>This method views the interface as a precise network of relationships, capturing the “dialogue” between atoms. This graph contains specific chemical and physical information that goes far beyond what sequence data can offer.</p>
+<p><strong>Mining for Common “Handshake” Patterns</strong></p>
+<p>Next, the researchers developed a graph-searching algorithm to find recurring, conserved interaction patterns in a large database of protein complexes.</p>
+<p>This process is like a linguist studying conversations to find common phrases. PredPPI-GReMLIN learned from thousands of known protein binding modes to build a library of patterns. When it encounters a new pair of proteins, it checks whether their interface matches any of the known patterns in its library to predict if they will interact.</p>
+<p><strong>How Does It Perform?</strong></p>
+<p>On classic test sets like CAMP and Yeast, the method’s precision, recall, and F1 score were all over 97%.</p>
+<p>In a more complex multi-class classification task, where the model had to distinguish between interaction types like hydrogen bonds, salt bridges, and hydrophobic interactions, its accuracy reached 57.74%. While that number might not seem high, accurately distinguishing between interaction types is extremely difficult. This result is quite good and shows the model understands <em>what kind</em> of relationship exists. The model also incorporated features like Solvent-Accessible Surface Area (SASA), which improved its understanding of the chemical environment and boosted its predictive power.</p>
+<p><strong>A Real-World Test on SARS-CoV-2</strong></p>
+<p>The tool was validated on an important drug target: the interaction between the SARS-CoV-2 Spike protein and the human ACE2 receptor.</p>
+<p>The researchers used PredPPI-GReMLIN to predict small-molecule ligands that could disrupt the Spike-ACE2 interaction, then verified them with molecular docking. The predicted ligands had a much better binding energy with the Spike protein than random molecules (p = 5.1×10⁻⁹), showing that the results were statistically significant.</p>
+<p>This demonstrates that the graph patterns found by PredPPI-GReMLIN correspond to real physical and chemical principles and can be used to guide effective drug design and screening.</p>
+<p>The tool’s code and data are publicly available, so researchers can use and extend it for their own projects. This approach of starting from structural details to find general rules provides a new direction for PPI prediction and drug design.</p>
+<p>📜Title: PredPPI-GReMLIN: Prediction of Protein-Protein Interactions through Mining of Conserved Bipartite Graphs 🌐Paper: https://www.biorxiv.org/content/10.64898/2025.12.03.692055v1 💻Code: https://github.com/morufwork/predPPIGReMLIN.git</p>
+</section>
+<section id="molecular-graph-pre-training-predicting-chemical-motifs-matters-more-than-masking-design" class="level2">
+<h2 class="anchored" data-anchor-id="molecular-graph-pre-training-predicting-chemical-motifs-matters-more-than-masking-design">5. Molecular Graph Pre-training: Predicting Chemical Motifs Matters More Than Masking Design</h2>
+<p><a href="post_all_image/self_supervised_lear_2025_12_11_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-6"><img src="post_all_image/self_supervised_lear_2025_12_11_image_1.jpg" class="img-fluid"></a></p>
+<p>Molecular representation learning relies heavily on Self-Supervised Learning (SSL). A common approach is like a “fill-in-the-blank” game: part of a molecule’s information is hidden (masked), and the model has to predict what’s missing. Much research has focused on designing cleverer masking strategies to help the model learn better.</p>
+<p>This work systematically evaluated this problem and found that past efforts might have been misdirected. Extensive experiments show that carefully designed, complex masking strategies do not offer a consistent advantage over the simplest random masking on downstream tasks. Investing too much effort in <em>how</em> to mask information yields little return.</p>
+<p>The key to improving model performance is <em>what</em> we ask the model to predict.</p>
+<p>The traditional approach is to have the model predict the masked single atoms. This is like teaching a child a language by only having them guess letters. They might learn to spell, but they won’t easily understand words or sentences.</p>
+<p>This work proposes a new idea: upgrade the prediction target from single atoms to chemically meaningful “motifs.” Motifs are the functional units of a molecule, like a benzene ring or a carboxyl group, which determine its core chemical properties. Asking the model to predict a whole motif is like asking a child to guess a complete word. This pushes the model to understand the underlying rules and context of chemistry.</p>
+<p>From a chemist’s point of view, this idea is intuitive. A molecule’s activity, toxicity, and other properties are directly related to these functional motifs. If a model can learn to recognize and reconstruct motifs, it can gain a deeper understanding of the molecule. The researchers used tools like Mutual Information to prove mathematically that motif labels have a stronger statistical correlation with molecular properties.</p>
+<p>A good learning task also needs a powerful model. The study found that Graph Transformers benefit more from the motif prediction task than traditional Message Passing Neural Networks (MPNNs). The attention mechanism in a Graph Transformer allows the model to dynamically focus on different parts of the molecule during prediction, which is crucial for understanding a motif’s role in the overall structure. It’s like giving a good student a better textbook—their learning improves more significantly.</p>
+<p>This work provides a clear direction for molecular pre-training: instead of spending energy designing complex masking strategies, it’s more effective to focus on defining chemically meaningful prediction targets and pairing them with a suitable model architecture.</p>
+<p>📜Title: Self-Supervised Learning on Molecular Graphs: A Systematic Investigation of Masking Design 🌐Paper: https://arxiv.org/abs/2512.07064v1</p>
+</section>
+<section id="the-foldbench-benchmark-a-high-stakes-exam-for-ai-structure-prediction" class="level2">
+<h2 class="anchored" data-anchor-id="the-foldbench-benchmark-a-high-stakes-exam-for-ai-structure-prediction">6. The FoldBench Benchmark: A High-Stakes Exam for AI Structure Prediction</h2>
+<p><a href="post_all_image/benchmarking_all_ato_2025_12_11_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-7"><img src="post_all_image/benchmarking_all_ato_2025_12_11_image_1.jpg" class="img-fluid"></a></p>
+<p>AI models like AlphaFold are frequently in the news for their breakthroughs in structure prediction. But drug developers on the front lines are always asking: how useful are these models in real, complex R&amp;D scenarios? A paper in <em>Nature Communications</em> on FoldBench provides a more realistic answer.</p>
+<p>FoldBench is like a high-stakes “final exam” for AI models, tailored for drug discovery. Previous benchmarks were often single-task tests, like predicting the structure of a single protein. But drug discovery deals with complex systems: small molecules binding to proteins, antibodies recognizing antigens, and the mechanisms of RNA-targeting drugs. FoldBench covers these real “application problems” with nine categories of tasks involving proteins, nucleic acids, small-molecule ligands, and their interactions.</p>
+<p>The test results show that AlphaFold 3 is the best-performing model today, leading in several categories and demonstrating the progress AI has made.</p>
+<p>But the key details reveal the models’ limits, and these are the details that determine success or failure in drug development.</p>
+<p>First is antibody-antigen interaction. The critical parts of an antibody are its highly variable Complementarity-Determining Regions (CDRs). These loops are flexible and determine how accurately an antibody recognizes its antigen. The FoldBench tests show that current models are not good enough at predicting the structure of these CDR loops. For antibody drug development, AI cannot yet replace high-throughput screening and structural biology experiments. It can only provide a rough initial conformation, and relying on it for precise antibody design is too risky.</p>
+<p>Second are allosteric systems. Allostery is like a remote control; many drugs work this way to indirectly regulate a target’s activity, often causing subtle but critical conformational changes in the protein. AI models face a huge challenge in predicting these kinds of conformational changes caused by small molecules. If they can’t see these subtle shifts, their role in early-stage allosteric drug discovery is limited.</p>
+<p>Third is nucleic acid structure. RNA-targeting drugs are a hot area right now, but RNA structures are more flexible than proteins and harder to predict. The FoldBench data shows that AlphaFold 3’s scores for predicting nucleic acid structures are much lower than its scores for single proteins. The root cause is the scarcity of high-quality nucleic acid structural data for training.</p>
+<p>A deeper problem is the models’ generalization ability. When the chemical structure of a test molecule (especially a small-molecule ligand) is very different from the training set, prediction accuracy drops sharply. This suggests the models are more like students “cramming for a test” from a known question bank rather than truly understanding the underlying principles of physics and chemistry. Since innovative drug discovery is all about predicting entirely new molecules, if AI is unreliable here, its value is severely diminished.</p>
+<p>The arrival of FoldBench provides a valuable “calibration tool.” It tells researchers where the current boundaries of AI are and where they need to be cautious. It also points the way for model developers: shift the focus from single proteins to solving these real-world problems.</p>
+<p>📜Title: Benchmarking all-atom biomolecular structure prediction with FoldBench 🌐Paper: https://www.nature.com/articles/s41467-024-49483-x</p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-12-21/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

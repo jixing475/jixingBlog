@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="In dual-target T-cell therapies, the random mispairing of TCR chains is a key obstacle, leading to reduced efficacy and a serious risk of autoimmunity. This article covers a breakthrough study that uses computational design (Rosetta) to precisely re-engineer the binding interface of the TCR constant region, creating “orthogonal” TCR pairs. This design forces correct α/β chain pairing with up to 95% accuracy, paving the way for safer and more effective multi-specific T-cell therapies and solving a major challenge in immunotherapy.">
+
+<title>Biggest Hurdle for Dual TCR Therapy Solved? Computational Design Creates ‘Orthogonal’ T-Cell Receptors – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="Biggest Hurdle for Dual TCR Therapy Solved? Computational Design Creates ‘Orthogonal’ T-Cell Receptors – MPU">
+<meta property="og:description" content="In dual-target T-cell therapies, the random mispairing of TCR chains is a key obstacle, leading to reduced efficacy and a serious risk of autoimmunity. This article covers a breakthrough study that uses computational design (Rosetta) to precisely re-engineer the binding interface of the TCR constant region, creating “orthogonal” TCR pairs. This design forces correct α/β chain pairing with up to 95% accuracy, paving the way for safer and more effective multi-specific T-cell therapies and solving a major challenge in immunotherapy.">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2026-01-11/post_all_image/computational_design_2026_01_05_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="A comparative diagram explaining the T-cell receptor (TCR) mispairing problem and the solution offered by computational design. The top half, 'Mispairing,' shows that when two different α and β chains are introduced, they combine randomly, forming the correct pairs along with two ineffective or harmful mispaired TCRs. The bottom half, 'Orthogonal,' shows TCR chains engineered with computational design. Their binding interfaces are shaped to be uniquely complementary, forcing the α1 chain to bind only with the β1 chain, and the α2 chain only with the β2 chain, thus eliminating the mispairing problem. The diagram visually demonstrates how orthogonal TCR design provides a foundation for developing safer multi-specific T-cell therapies.
+">
+<meta name="twitter:title" content="Biggest Hurdle for Dual TCR Therapy Solved? Computational Design Creates ‘Orthogonal’ T-Cell Receptors – MPU">
+<meta name="twitter:description" content="In dual-target T-cell therapies, the random mispairing of TCR chains is a key obstacle, leading to reduced efficacy and a serious risk of autoimmunity. This article covers a breakthrough study that uses computational design (Rosetta) to precisely re-engineer the binding interface of the TCR constant region, creating “orthogonal” TCR pairs. This design forces correct α/β chain pairing with up to 95% accuracy, paving the way for safer and more effective multi-specific T-cell therapies and solving a major challenge in immunotherapy.">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2026-01-11/post_all_image/computational_design_2026_01_05_image_1.jpg">
+<meta name="twitter:image:alt" content="A comparative diagram explaining the T-cell receptor (TCR) mispairing problem and the solution offered by computational design. The top half, 'Mispairing,' shows that when two different α and β chains are introduced, they combine randomly, forming the correct pairs along with two ineffective or harmful mispaired TCRs. The bottom half, 'Orthogonal,' shows TCR chains engineered with computational design. Their binding interfaces are shaped to be uniquely complementary, forcing the α1 chain to bind only with the β1 chain, and the α2 chain only with the β2 chain, thus eliminating the mispairing problem. The diagram visually demonstrates how orthogonal TCR design provides a foundation for developing safer multi-specific T-cell therapies.
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">Biggest Hurdle for Dual TCR Therapy Solved? Computational Design Creates ‘Orthogonal’ T-Cell Receptors</h1>
+                  <div>
+        <div class="description">
+          <p>In dual-target T-cell therapies, the random mispairing of TCR chains is a key obstacle, leading to reduced efficacy and a serious risk of autoimmunity. This article covers a breakthrough study that uses computational design (Rosetta) to precisely re-engineer the binding interface of the TCR constant region, creating “orthogonal” TCR pairs. This design forces correct α/β chain pairing with up to 95% accuracy, paving the way for safer and more effective multi-specific T-cell therapies and solving a major challenge in immunotherapy.</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">T-cell therapy</div>
+                <div class="quarto-category">computational design</div>
+                <div class="quarto-category">protein engineering</div>
+                <div class="quarto-category">immunotherapy</div>
+                <div class="quarto-category">TCR</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Sunday, the 11th of January, 2026</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#genome-a-single-model-to-predict-gene-regulation-in-all-cells" id="toc-genome-a-single-model-to-predict-gene-regulation-in-all-cells" class="nav-link active" data-scroll-target="#genome-a-single-model-to-predict-gene-regulation-in-all-cells">1. GenoME: A Single Model to Predict Gene Regulation in All Cells</a></li>
+  <li><a href="#a-new-use-for-alphafold-designing-novel-proteins-with-amyloid-building-blocks" id="toc-a-new-use-for-alphafold-designing-novel-proteins-with-amyloid-building-blocks" class="nav-link" data-scroll-target="#a-new-use-for-alphafold-designing-novel-proteins-with-amyloid-building-blocks">2. A New Use for AlphaFold: Designing Novel Proteins with Amyloid Building Blocks</a></li>
+  <li><a href="#predict-the-forces-first-then-score-a-new-approach-for-ai-in-affinity-prediction" id="toc-predict-the-forces-first-then-score-a-new-approach-for-ai-in-affinity-prediction" class="nav-link" data-scroll-target="#predict-the-forces-first-then-score-a-new-approach-for-ai-in-affinity-prediction">3. Predict the Forces First, Then Score: A New Approach for AI in Affinity Prediction</a></li>
+  <li><a href="#stop-using-human-ppi-models-for-bacteria.-try-b-ppi." id="toc-stop-using-human-ppi-models-for-bacteria.-try-b-ppi." class="nav-link" data-scroll-target="#stop-using-human-ppi-models-for-bacteria.-try-b-ppi.">4. Stop Using Human PPI Models for Bacteria. Try B-PPI.</a></li>
+  <li><a href="#biggest-hurdle-for-dual-tcr-therapy-solved-computational-design-creates-orthogonal-t-cell-receptors" id="toc-biggest-hurdle-for-dual-tcr-therapy-solved-computational-design-creates-orthogonal-t-cell-receptors" class="nav-link" data-scroll-target="#biggest-hurdle-for-dual-tcr-therapy-solved-computational-design-creates-orthogonal-t-cell-receptors">5. Biggest Hurdle for Dual TCR Therapy Solved? Computational Design Creates ‘Orthogonal’ T-Cell Receptors</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2026-01-11/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="table-of-contents" class="level4">
+<h4 class="anchored" data-anchor-id="table-of-contents">Table of Contents</h4>
+<ol type="1">
+<li>A new AI model called GenoME can predict a new cell type’s entire set of gene regulatory activities using only chromatin accessibility data (ATAC-seq) and can simulate the effects of gene mutations directly in the computer.</li>
+<li>Researchers used the self-assembling properties of amyloid proteins and the structural prediction power of AlphaFold to develop an efficient de novo design method that can quickly generate many novel and stable protein structures.</li>
+<li>BindMecNet significantly improves the accuracy and generalizability of binding affinity prediction by forcing the model to learn the mechanisms of atom-residue interactions.</li>
+<li>The B-PPI model, designed specifically for bacteria, uses a protein language model and a cross-attention mechanism to screen protein interactions more accurately and quickly, outperforming older models trained on human data.</li>
+<li>Through computational design, researchers successfully re-engineered the protein interface of T-cell receptors (TCRs) to force the correct pairing of their α/β chains, paving the way for safer and more effective multi-specific T-cell therapies.</li>
+</ol>
+</section>
+<section id="genome-a-single-model-to-predict-gene-regulation-in-all-cells" class="level2">
+<h2 class="anchored" data-anchor-id="genome-a-single-model-to-predict-gene-regulation-in-all-cells">1. GenoME: A Single Model to Predict Gene Regulation in All Cells</h2>
+<p><a href="post_all_image/geno_me_a_mo_e_based_2026_01_05_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/geno_me_a_mo_e_based_2026_01_05_image_1.jpg" class="img-fluid"></a></p>
+<p>In genomics research, we often run into a frustrating problem: models don’t generalize. A model trained to predict gene expression in T-cells is basically useless for neurons. Predicting histone modifications and 3D chromatin structure requires two different toolkits. It’s like trying to fix a car where the engine, transmission, and electrical system each have their own repair manual, and every car brand has a completely different set of manuals. It’s very inefficient.</p>
+<p>Now, a new paper introduces the GenoME model, which aims to be the universal “master repair manual” for cars.</p>
+<section id="how-does-it-work" class="level4">
+<h4 class="anchored" data-anchor-id="how-does-it-work">How does it work?</h4>
+<p>The researchers simplified the problem down to two core inputs: the cell’s “hardware”—its DNA sequence—and its “current operating state”—chromatin accessibility (measured by ATAC-seq). You can think of the DNA sequence as all the books in a library and the ATAC-seq data as telling you which books are currently open and available to be read.</p>
+<p>GenoME’s architecture is clever, using a Mixture of Experts (MoE) model. You don’t need to overcomplicate it. A traditional neural network is like a general practitioner who knows a little about everything but isn’t an expert in anything. The MoE framework is like a team of specialists in a consultation. It has many “expert” subnetworks, each of which might be particularly good at handling the regulatory logic of a certain cell type, like immune cells or epithelial cells. It also has a “gating network” that first analyzes the incoming ATAC-seq data and decides, “Okay, based on this cell’s features, experts #3 and #5 are the best combination for the job.”</p>
+<p>This way, the model not only shares knowledge across different tasks (like predicting gene expression or chromatin structure) but also cleverly applies the regulatory patterns learned from one cell type to a completely new one.</p>
+</section>
+<section id="the-real-highlight-predicting-the-unknown" class="level4">
+<h4 class="anchored" data-anchor-id="the-real-highlight-predicting-the-unknown">The real highlight: predicting the unknown</h4>
+<p>The model’s most impressive feature is its ability to generalize. Most AI models perform well on their training set but fail when they encounter data they haven’t seen before. GenoME can take the ATAC-seq data from a cell type it has never “studied” and accurately predict that cell’s gene expression, histone modifications, and a range of other states.</p>
+<p>What does this mean for R&amp;D? Suppose we want to study a specific cell from a patient with a rare disease, but we lack the large public datasets needed to train a model for that cell type. With GenoME, we just need to perform ATAC-seq on the patient’s cells to get a pretty good panoramic view of its gene regulation. This opens a new window for personalized medicine.</p>
+</section>
+<section id="doing-crispr-experiments-on-a-computer" class="level4">
+<h4 class="anchored" data-anchor-id="doing-crispr-experiments-on-a-computer">Doing CRISPR experiments on a computer</h4>
+<p>Another powerful feature of GenoME is “in silico perturbation.” This essentially gives you the ability to perform gene editing on your computer.</p>
+<p>For example, a GWAS analysis finds a strong link between a SNP in a non-coding region and disease risk. We suspect it affects an enhancer’s function, but which gene does this enhancer regulate? Verifying this with traditional experiments takes a long time.</p>
+<p>Now, you can directly “edit” this SNP in the GenoME model, or even “knock out” the entire enhancer sequence, and then have the model run a new prediction. If the results show a significant change in the expression of a specific gene, you’ve found a solid causal link. This can help us quickly screen and validate potential drug targets or functional genetic variants, shortening weeks of lab work to just a few minutes.</p>
+<p>GenoME isn’t just another prediction model. It provides a framework that allows us to explore and understand the complex logic of the human genome’s regulation in a way that approaches causal inference. For anyone in drug development, functional genomics, or precision medicine, this is certainly a powerful tool to watch.</p>
+<p>📜Title: GenoME: a MoE-based generative model for individualized, multimodal prediction and perturbation of genomic profiles<br>
+🌐Paper: https://www.biorxiv.org/content/10.64898/2025.12.28.696482v1</p>
+</section>
+</section>
+<section id="a-new-use-for-alphafold-designing-novel-proteins-with-amyloid-building-blocks" class="level2">
+<h2 class="anchored" data-anchor-id="a-new-use-for-alphafold-designing-novel-proteins-with-amyloid-building-blocks">2. A New Use for AlphaFold: Designing Novel Proteins with Amyloid Building Blocks</h2>
+<p><a href="post_all_image/curiosity_driven_de_2026_01_05_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/curiosity_driven_de_2026_01_05_image_1.jpg" class="img-fluid"></a></p>
+<p>In drug development, de novo protein design has always been a tough nut to crack. The usual goal is to design a protein that performs a specific task, like binding to a target. But the process is slow and has a high failure rate. The authors of this paper took a different approach: what if we ignore function for a moment and, purely for “fun” or “curiosity,” just try to create some brand-new, structurally stable protein backbones?</p>
+<p>Their idea is clever, and even a bit counterintuitive. They chose amyloid β42 as their base material—the same “bad protein” that forms plaques in the brains of Alzheimer’s patients. This protein has a special characteristic: it loves to self-aggregate, forming stable β-sheet structures. The researchers saw potential in this “structural stability.”</p>
+<p><strong>Here’s how it works</strong>:</p>
+<p>First, they took two Aβ42 units and treated them as “building blocks.”</p>
+<p>Second, they connected these two blocks with a randomly generated hexapeptide linker. This is like tying two blocks together with a short piece of string.</p>
+<p>Third, they fed this combined sequence into AlphaFold 2. They didn’t ask, “What can this protein do?” Instead, they asked, “Can this sequence fold into a stable 3D structure?” If AlphaFold returned a high-confidence prediction, it meant the model believed the structure was stable.</p>
+<p>The results were surprisingly good. With completely random linkers, over 12% of the designs were given a high score by AlphaFold. For de novo design, this is a very high “hit rate.”</p>
+<p><strong>Next came the more interesting part: computational evolution</strong></p>
+<p>The researchers didn’t stop with the first batch of stable structures. They introduced a genetic algorithm to simulate “evolution” inside the computer.</p>
+<p>They applied small “segmental mutations” to the successful structures and then used AlphaFold to screen them again, keeping the mutants that formed better, more stable structures. This process was repeated over and over, just like natural selection, but many times faster and entirely within a computer.</p>
+<p>Through this method, they “evolved” a series of new proteins with diverse structures. As shown in the image above, these proteins have a variety of folding patterns, including β-solenoids and antiparallel β-sheets. This is equivalent to creating a whole new library of protein structures from scratch.</p>
+<p><strong>Are these designs reliable</strong>?</p>
+<p>AlphaFold’s predictions are, after all, just predictions. To verify whether these new proteins are also stable in the real physical world, the researchers ran Molecular Dynamics (MD) simulations. An MD simulation is like a stress test for molecules inside a computer, seeing if they fall apart in a simulated physiological environment.</p>
+<p>The results once again confirmed the robustness of the method. Most of the de novo designed proteins maintained their predicted 3D structures in the simulation, showing they are not just computationally sound but also physically stable.</p>
+<p>What does this mean for drug developers? It means we have a new and efficient tool for generating protein scaffolds. We can first use this “curiosity-driven” method to quickly and cheaply generate a huge number of novel and stable protein backbones. Then, using these backbones as a base, we can design functional domains—like adding a loop that can bind to a target—to turn them into peptide drugs or enzymes.</p>
+<p>This changes the old “function-first” design paradigm to a “structure-first” strategy. Instead of first having a target and then looking for an arrow, we can now build a massive quiver full of all sorts of unseen “arrows,” and then pick and polish the right one when we need it. This opens a new door for developing novel peptide drugs and functional biomaterials.</p>
+<p>📜Title: Curiosity-driven de novo protein design via polymerized amyloids<br>
+🌐Paper: https://doi.org/10.26434/chemrxiv-2025-tbfjt</p>
+</section>
+<section id="predict-the-forces-first-then-score-a-new-approach-for-ai-in-affinity-prediction" class="level2">
+<h2 class="anchored" data-anchor-id="predict-the-forces-first-then-score-a-new-approach-for-ai-in-affinity-prediction">3. Predict the Forces First, Then Score: A New Approach for AI in Affinity Prediction</h2>
+<p><a href="post_all_image/ed84c3b3e45b9ab9f684bfce373e2ca1_MD5.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/ed84c3b3e45b9ab9f684bfce373e2ca1_MD5.jpg" class="img-fluid"></a></p>
+<p>In drug discovery, predicting the binding affinity between a molecule and a protein target has always been one of the core problems in our field. Traditional docking scoring functions have been used for decades, and everyone knows their limitations. In recent years, deep learning models have emerged one after another, posting impressive numbers on various datasets, but we’ve always had a doubt: do these models truly “understand” the interactions between molecules? Or are they just “black boxes” that are overfitted to a specific dataset?</p>
+<p>A recent work called BindMecNet offers a new way of thinking. The authors didn’t just ask the model to guess the final binding affinity value. They gave it a prerequisite task: you first have to tell me which atom on the small molecule interacts with which amino acid residue on the protein.</p>
+<p>This is like teaching a student to solve a complex physics problem. You don’t just let them give the answer; you make them draw the force diagram first. The core of BindMecNet is this “diagram-drawing” step, which is its “Interfacial Interaction Prediction Module.” This module generates a detailed interaction map, pinpointing which atom-residue pairs are the “key players.”</p>
+<p>Then, the model uses this map, through a “mechanism-aware dual attention module,” to calculate the final binding affinity. The benefit of this is obvious. It introduces a strong “mechanistic inductive bias” into the model. In other words, the model’s prediction is no longer just pattern matching; it’s anchored to real physical and chemical interactions. The model’s attention is forced to focus on the areas where interactions actually happen, rather than learning spurious correlations.</p>
+<p>What’s even more valuable is their training strategy. Anyone working in computational fields knows that high-quality crystal structure data, like what’s in PDBBind, is precious but limited. In real-world projects, we often deal with protein structures predicted by tools like AlphaFold, and these structures are not as perfect.</p>
+<p>BindMecNet uses a two-stage training method. The first step is to pre-train on a high-quality dataset like PDBBind. This is like letting the model build a solid foundation of physical principles in an “ivory tower.” The second step is to fine-tune it on more challenging datasets like DUD-E and LNCaP, which may even include predicted structures. This is like taking a graduate with a strong theoretical background and throwing them into a real project to teach them how to handle all kinds of imperfect situations.</p>
+<p>This training approach significantly improves the model’s ability to generalize. The results prove it. BindMecNet not only achieved top-tier performance on the PDBBind core test set but also clearly outperformed other deep learning models on the more challenging DUD-E benchmark and LNCaP dataset. This shows it’s not just a “good test-taker” on a specific exam but has the ability to solve new problems.</p>
+<p>For medicinal chemists, the most attractive feature of this model is its interpretability. The interaction map it outputs is essentially a “binding hotspot map.” We can directly see which group on the molecule is contributing the most to the binding energy and through which type of force (hydrogen bonds, hydrophobic interactions, etc.). This is invaluable for subsequent molecular optimization and rational design.</p>
+<p>Ablation studies also confirmed that both the pre-training step and the explicit interaction prediction loss function are critical for the model’s performance and generalizability. Removing either part leads to a drop in performance.</p>
+<p>BindMecNet’s design philosophy moves AI one step closer from being a simple “scorer” to an “analytical tool” that provides insight. It tries to find a balance between computational efficiency and predictive power, making the AI’s “thinking” process more aligned with the intuition of human chemists.</p>
+<p>📜Title: A Mechanism-Aware Dual Attention Deep Model for Molecular-Protein Binding Affinity Prediction with Enhanced Generalizability and Interpretability<br>
+🌐Paper: https://www.biorxiv.org/content/10.64898/2025.12.29.696866v1</p>
+</section>
+<section id="stop-using-human-ppi-models-for-bacteria.-try-b-ppi." class="level2">
+<h2 class="anchored" data-anchor-id="stop-using-human-ppi-models-for-bacteria.-try-b-ppi.">4. Stop Using Human PPI Models for Bacteria. Try B-PPI.</h2>
+<p><a href="post_all_image/b_ppi_a_cross_atten_2026_01_05_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="post_all_image/b_ppi_a_cross_atten_2026_01_05_image_1.jpg" class="img-fluid"></a></p>
+<p>Colleagues who study bacteria have probably had this experience: you’re trying to find the interaction partner of a key protein, so you excitedly plug the sequence into a popular online prediction tool, only to get a list of unreliable candidates. What went wrong? Many of these tools are trained on human protein data. Asking them to make predictions for bacteria is like asking someone who only speaks English to translate German—the results are not going to be great.</p>
+<p>The B-PPI project is here to solve this problem. The researchers started from scratch and built a computational tool specifically tailored for bacterial systems.</p>
+<p>Here’s how it works.</p>
+<p>First, the model needs a way to “read” proteins. The researchers used embeddings from ProstT5, a large language model for proteins. You can think of ProstT5 as an expert who is fluent in the “language” of proteins. It has read a vast number of protein sequences and understands not just the order of amino acids but also the hidden structural and functional information within the sequence. This way, what’s fed into the model isn’t just a dry string of letters but a much richer feature vector.</p>
+<p>Next, the model needs to determine if two proteins are a “good match.” For this, it uses a mechanism called Bidirectional Cross-Attention. This mechanism is quite clever; it allows the model to simulate a process of “mutual inspection” when comparing two proteins. The model simultaneously pays attention to which regions of protein A are most important to protein B, and which regions of protein B are most important to protein A. It’s like two people shaking hands—both instinctively focus on the other’s hand and arm to coordinate the movement, not their whole body. This way, the model can precisely locate the interface regions where an interaction is most likely to occur.</p>
+<p>A good model needs good data. The researchers built a new bacterial PPI database, B-PPI-DB, containing over 200,000 interaction pairs. Crucially, they didn’t use the common 1:1 positive-to-negative sample ratio found in academia. Instead, they used a more realistic 1:10 ratio. In a real cell, any two random proteins are unlikely to interact. Training on this kind of “needle-in-a-haystack” dataset forces the model to learn to identify truly meaningful signals instead of just guessing.</p>
+<p>The results showed this approach was worthwhile. On bacterial datasets, B-PPI’s performance far surpassed that of TT3D, a state-of-the-art model trained on human data, especially on key metrics like AUPRC and F1-score. It’s also faster, which means we can use it for large-scale, proteome-wide screening.</p>
+<p>To test the model’s adaptability, the researchers also applied it to an external dataset for <em>H. pylori</em>. With just a little fine-tuning, B-PPI was able to adapt well to the new species. This suggests it has the potential to become a foundational framework for predicting PPIs across various bacteria.</p>
+<p>Of course, the model isn’t perfect. Its predictive power is limited by the coverage and potential biases of its training data. But for drug discovery scientists, B-PPI is a powerful filter. It can help you narrow down a list of thousands of possibilities to a reliable list of candidates worth investing time and resources in for wet lab validation. This can greatly speed up our research.</p>
+<p>📜Title: B-PPI: A Cross-Attention Model for Large-Scale Bacterial Protein-Protein Interaction Prediction<br>
+🌐Paper: https://www.biorxiv.org/content/10.64898/2025.12.23.696145v1<br>
+💻Code: https://github.com/bursteinlab/B-PPI.git</p>
+</section>
+<section id="biggest-hurdle-for-dual-tcr-therapy-solved-computational-design-creates-orthogonal-t-cell-receptors" class="level2">
+<h2 class="anchored" data-anchor-id="biggest-hurdle-for-dual-tcr-therapy-solved-computational-design-creates-orthogonal-t-cell-receptors">5. Biggest Hurdle for Dual TCR Therapy Solved? Computational Design Creates ‘Orthogonal’ T-Cell Receptors</h2>
+<p><a href="post_all_image/computational_design_2026_01_05_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="post_all_image/computational_design_2026_01_05_image_1.jpg" class="img-fluid"></a></p>
+<p>When developing T-cell therapies, especially those that aim to make a single T-cell recognize two different tumor antigens, we always run into a major problem: TCR chain mispairing.</p>
+<p>A natural T-cell receptor (TCR) is made of one α chain and one β chain. If you want a T-cell to recognize two targets, you need to introduce two different TCR sets: TCR-1 (α1/β1) and TCR-2 (α2/β2). In theory, they should assemble correctly. But in reality, these four chains combine randomly, creating unwanted mispaired combinations like α1/β2 and α2/β1. These mispaired TCRs are not only useless but can also recognize self-tissues, leading to dangerous autoimmune reactions. This problem has been a major roadblock in developing dual-target TCR-T therapies.</p>
+<p>Instead of relying on luck-based screening, the authors of this paper acted like architects, using a computational tool (Rosetta) for precise design. Their idea was simple: redesign the binding interface between the α and β chains so that α1 would only “hit it off” with β1, and α2 would only pair with β2.</p>
+<p>Here is how they did it.</p>
+<p>First, they focused their modifications on the constant domains of the TCR. This was a smart choice because the variable domains are responsible for recognizing antigens. By only modifying the constant domains, their design can serve as a “universal chassis” that can be adapted to TCRs with different targets, making it widely applicable.</p>
+<p>Next, they used a multistate design algorithm to introduce mutations at the interface where the α and β chains meet. This process is like designing unique shapes and charges for puzzle pieces. For example, they might introduce positive and negative charges on one TCR pair’s interface to create attraction, while introducing two positive charges on another pair to make them repel each other. This way, α1 is designed to bind tightly only with β1 and to repel β2.</p>
+<p>A design is not enough; it has to be validated. The authors screened over 250 design variants and tested them experimentally. The results were excellent. Using mass spectrometry, they found that the correct pairing rate reached about 95%. They then used X-ray crystallography to determine the protein structure, confirming at the atomic level that the newly introduced mutations indeed acted as a “lock,” forcing the correct pairing.</p>
+<p>To demonstrate the practical value of this design, they took it a step further and built a trispecific T-cell engager (TriTE). This molecule has three “heads”: two heads that each recognize a different cancer-testis antigen, and a third head that binds to the CD3 molecule on the surface of T-cells, “pulling” them in to kill the tumor.</p>
+<p>The results showed that the TriTE molecule performed exceptionally well. When tumor cells expressed both antigens, its killing effect was strongest, with an EC50 (half-maximal effective concentration) as low as 380 fM. This is an extremely low concentration, indicating high potency, which is thanks to the avidity effect from dual-target binding. Even when tumor cells expressed only one of the antigens, it still maintained high activity.</p>
+<p>This work provides a reliable engineering platform. It uses a computation-first approach to solve a fundamental but critical engineering challenge in multi-specific T-cell therapy. This means that in the future, we can develop “dual-target” or even “multi-target” immunotherapies that are safer and more effective against tumor heterogeneity.</p>
+<p>📜Title: Computational Design of Orthogonal TCR α/β Interfaces for Dual‐TCR Therapeutics<br>
+🌐Paper: https://www.biorxiv.org/content/10.64898/2026.01.02.697397v1</p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2026-01-11/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="传统的药物发现为不同分子类型（如小分子、抗体）设计专属模型，壁垒分明。FuncBind 框架提出了一种颠覆性方案，利用神经场 (Neural Fields) 技术将所有分子统一表示为连续的原子密度，从而用单一模型生成多种药物模态。该方法不仅在模拟中媲美专用模型，更通过实验验证了其设计功能性分子的潜力。这一统一视角为跨模态药物设计开辟了新路径，有望成为 AI 药物发现的通用理论基础。">
+
+<title>神经场统一分子生成：AI 药物设计的统一理论？ – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="神经场统一分子生成：AI 药物设计的统一理论？ – MPU">
+<meta property="og:description" content="传统的药物发现为不同分子类型（如小分子、抗体）设计专属模型，壁垒分明。FuncBind 框架提出了一种颠覆性方案，利用神经场 (Neural Fields) 技术将所有分子统一表示为连续的原子密度，从而用单一模型生成多种药物模态。该方法不仅在模拟中媲美专用模型，更通过实验验证了其设计功能性分子的潜力。这一统一视角为跨模态药物设计开辟了新路径，有望成为 AI 药物发现的通用理论基础。">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-12-06/post_all_image/unified_all_atom_mol_2025_11_19_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="一张展示 FuncBind 框架核心理念的示意图。图中心是一个代表统一生成模型的抽象图形，周围环绕着三种不同类型的分子：一个小分子，一个大环肽，以及一个抗体 CDR 环。所有分子都以相似的原子密度云形式呈现，象征着神经场技术将它们统一表示。这张图形象地说明了 FuncBind 如何利用单一模型跨越不同药物模态的界限，实现统一的分子生成，从而为 AI 药物设计提供了一个通用理论框架。
+">
+<meta name="twitter:title" content="神经场统一分子生成：AI 药物设计的统一理论？ – MPU">
+<meta name="twitter:description" content="传统的药物发现为不同分子类型（如小分子、抗体）设计专属模型，壁垒分明。FuncBind 框架提出了一种颠覆性方案，利用神经场 (Neural Fields) 技术将所有分子统一表示为连续的原子密度，从而用单一模型生成多种药物模态。该方法不仅在模拟中媲美专用模型，更通过实验验证了其设计功能性分子的潜力。这一统一视角为跨模态药物设计开辟了新路径，有望成为 AI 药物发现的通用理论基础。">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-12-06/post_all_image/unified_all_atom_mol_2025_11_19_image_1.jpg">
+<meta name="twitter:image:alt" content="一张展示 FuncBind 框架核心理念的示意图。图中心是一个代表统一生成模型的抽象图形，周围环绕着三种不同类型的分子：一个小分子，一个大环肽，以及一个抗体 CDR 环。所有分子都以相似的原子密度云形式呈现，象征着神经场技术将它们统一表示。这张图形象地说明了 FuncBind 如何利用单一模型跨越不同药物模态的界限，实现统一的分子生成，从而为 AI 药物设计提供了一个通用理论框架。
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">神经场统一分子生成：AI 药物设计的统一理论？</h1>
+                  <div>
+        <div class="description">
+          <p>传统的药物发现为不同分子类型（如小分子、抗体）设计专属模型，壁垒分明。FuncBind 框架提出了一种颠覆性方案，利用神经场 (Neural Fields) 技术将所有分子统一表示为连续的原子密度，从而用单一模型生成多种药物模态。该方法不仅在模拟中媲美专用模型，更通过实验验证了其设计功能性分子的潜力。这一统一视角为跨模态药物设计开辟了新路径，有望成为 AI 药物发现的通用理论基础。</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">神经场，FuncBind</div>
+                <div class="quarto-category">药物设计，分子生成，多模态</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Saturday, the 6th of December, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#目录" id="toc-目录" class="nav-link active" data-scroll-target="#目录">目录</a></li>
+  <li><a href="#ai-设计蛋白塞子氢化酶耐氧性提升-3-倍" id="toc-ai-设计蛋白塞子氢化酶耐氧性提升-3-倍" class="nav-link" data-scroll-target="#ai-设计蛋白塞子氢化酶耐氧性提升-3-倍">1. AI 设计蛋白「塞子」：氢化酶耐氧性提升 3 倍</a></li>
+  <li><a href="#神经场统一分子生成ai-药物设计的统一理论" id="toc-神经场统一分子生成ai-药物设计的统一理论" class="nav-link" data-scroll-target="#神经场统一分子生成ai-药物设计的统一理论">2. 神经场统一分子生成：AI 药物设计的统一理论？</a>
+  <ul class="collapse">
+  <li><a href="#核心论点" id="toc-核心论点" class="nav-link" data-scroll-target="#核心论点">核心论点：</a></li>
+  </ul></li>
+  <li><a href="#pgel-在嵌入空间里精准拿捏蛋白质设计" id="toc-pgel-在嵌入空间里精准拿捏蛋白质设计" class="nav-link" data-scroll-target="#pgel-在嵌入空间里精准拿捏蛋白质设计">3. PGEL: 在嵌入空间里精准拿捏蛋白质设计</a></li>
+  <li><a href="#rtmol打破幻觉实现分子与文本的精准双向对齐" id="toc-rtmol打破幻觉实现分子与文本的精准双向对齐" class="nav-link" data-scroll-target="#rtmol打破幻觉实现分子与文本的精准双向对齐">4. RTMol：打破幻觉，实现分子与文本的精准双向对齐</a></li>
+  <li><a href="#dado巧解复杂设计ai-药物发现新思路" id="toc-dado巧解复杂设计ai-药物发现新思路" class="nav-link" data-scroll-target="#dado巧解复杂设计ai-药物发现新思路">5. DADO：巧解复杂设计，AI 药物发现新思路</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-12-06/post_all.zh.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="目录" class="level2">
+<h2 class="anchored" data-anchor-id="目录">目录</h2>
+<ol type="1">
+<li>利用 AI 从头设计的蛋白结合体封堵了 [NiFe]-氢化酶的关键氧气通道，将其耐氧性提升三倍，并首次通过实验证实了酶内部气体传输的层级结构。</li>
+<li>FuncBind 框架利用神经场 (Neural Fields)，将不同类型的分子表示为连续的原子密度，实现了一个能同时生成小分子、大环肽和抗体 CDR 环的统一模型，有望打通不同药物模态间的壁垒。</li>
+<li>PGEL 框架通过在嵌入空间（embedding space）微调，生成多样化且功能完整的蛋白质。</li>
+<li>RTMol 利用「往返」学习机制，解决 AI 在分子与文本转换中「语言通顺但结构错误」的顽疾，达成真正的双向一致。</li>
+<li>DADO 算法将复杂的设计问题拆解成更小的、可管理的部分，为 AI 驱动的蛋白质工程和药物发现开辟了一条新路。</li>
+</ol>
+</section>
+<section id="ai-设计蛋白塞子氢化酶耐氧性提升-3-倍" class="level2">
+<h2 class="anchored" data-anchor-id="ai-设计蛋白塞子氢化酶耐氧性提升-3-倍">1. AI 设计蛋白「塞子」：氢化酶耐氧性提升 3 倍</h2>
+<p><a href="post_all_image/de_novo_design_of_a_2025_11_27_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/de_novo_design_of_a_2025_11_27_image_1.jpg" class="img-fluid"></a></p>
+<p>[NiFe]-氢化酶 (Hydrogenase) 是生物能源领域的关键分子，能高效产氢。但它对氧气极度敏感，微量氧气就能使其活性核心「中毒」失效。传统的酶结构改造往往得不偿失，损害催化效率。</p>
+<p>研究团队决定为它做一个「外挂」——用 AI 从头设计一个蛋白结合体 (Protein Binder)，像塞子一样堵住氧气入侵的通道。</p>
+<p><strong>AI 如何设计「分子塞子</strong>」</p>
+<p>团队利用 AI「三件套」：RFdiffusion 生成骨架，ProteinMPNN 设计序列，AlphaFold 预测结构。从约 100,000 个候选设计中，最终锁定了两个高亲和力结合体 L1 和 L2。</p>
+<p>这两个结合体分别针对预测中的不同气体通道。</p>
+<p><strong>破解气体通道之谜</strong></p>
+<p>L1 用于封堵「通道 1」，L2 封堵「通道 2」。实验结果表明：结合了 L1 的氢化酶在有氧环境下稳定性提升了三倍以上；结合 L2 的酶耐氧性几乎无变化。</p>
+<p>这一结果解决了气体进出氢化酶内部的长期争论。单纯的晶体结构难以看清动态过程，而这种「阻断 - 锁定」 (Block-and-lock) 策略给出了直接证据：<strong>通道 1 才是氧气进入的主干道，通道 2 对氧气运输贡献微乎其微</strong>。</p>
+<p><strong>像守门人一样的疏水空腔</strong></p>
+<p>分子动力学 (MD) 模拟显示，L1 在通道入口处创造了一个疏水空腔，如同分子层面的「守门人」。氧气分子试图进入时，会被暂时困在这个疏水环境中。这种动态阻滞作用减少了氧气向酶活性中心的扩散，同时保留了酶进行正常催化反应的可能性。</p>
+<p>这项工作展示了一种通用方法论：利用 AI 设计高精度蛋白工具，作为探针研究复杂金属酶机理。相比传统的突变方法 (Mutagenesis)，这种方式干扰更小，结论更具说服力。</p>
+<p>📜Title: De Novo Design of a Protein Binder to Probe Gas Channel and Enhance the Oxygen Tolerance of [NiFe] Hydrogenase<br>
+🌐Paper: <a href="https://www.biorxiv.org/content/10.1101/2025.11.19.689374v1" class="uri">https://www.biorxiv.org/content/10.1101/2025.11.19.689374v1</a></p>
+</section>
+<section id="神经场统一分子生成ai-药物设计的统一理论" class="level2">
+<h2 class="anchored" data-anchor-id="神经场统一分子生成ai-药物设计的统一理论">2. 神经场统一分子生成：AI 药物设计的统一理论？</h2>
+<p><a href="post_all_image/unified_all_atom_mol_2025_11_19_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/unified_all_atom_mol_2025_11_19_image_1.jpg" class="img-fluid"></a></p>
+<section id="核心论点" class="level3">
+<h3 class="anchored" data-anchor-id="核心论点">核心论点：</h3>
+<p>药物发现领域通常将分子分为小分子、多肽、抗体等类别，每个类别都有专属的设计规则和计算模型。来自麻省理工学院 (MIT) 和基因泰克 (Genentech) 的研究者开发了 FuncBind 框架，试图用一种统一的方法生成所有类型的分子。</p>
+<p>该方法的核心技术是神经场。传统方法描述分子需要定义每个原子的精确坐标，而神经场将整个分子视为一团连续的原子密度云，密度最高处即为原子核的位置。</p>
+<p>这种表示方法模糊了不同分子类型的界限。小分子、由氨基酸组成的大环肽，或是更大的抗体蛋白，在神经场视角下都是原子密度分布。研究者因此能用同一个生成模型来训练和设计所有这些分子，如同找到了不同分子语言间的共同语法。</p>
+<p>模型在实际测试中表现良好。计算机模拟显示，它生成的小分子、大环肽和抗体互补决定区 (Complementarity-Determining Region, CDR) 环的质量，可与为特定分子类型设计的专用模型相媲美。</p>
+<p>研究者利用一个已知的抗体 - 靶蛋白复合物，让 FuncBind 重新设计其中最关键的 CDR H3 环，以进行实验验证。新设计的抗体在体外实验中表现出了与靶点的结合能力，证明 FuncBind 有潜力设计出具备实际功能的新分子。</p>
+<p>此外，这项工作还贡献了一个包含约 19 万个合成的大环肽 - 蛋白质复合物结构的数据集。大环肽是介于小分子和抗体之间的新兴药物，相关数据稀缺，该数据集将推动领域发展。</p>
+<p>FuncBind 用神经场的统一视角看待分子生成，为跨模态药物设计开辟了新路径。尽管尚处早期阶段，但未来可能拓展至更大的生物分子系统，甚至实现不同类型分子间的「杂交」设计。</p>
+<p>📜标题：Unified All-Atom Molecule Generation with Neural Fields<br>
+🌐论文：https://openreview.net/pdf/6635b183138e1f0d25dfd02911c6d87234a8b01e.pdf</p>
+</section>
+</section>
+<section id="pgel-在嵌入空间里精准拿捏蛋白质设计" class="level2">
+<h2 class="anchored" data-anchor-id="pgel-在嵌入空间里精准拿捏蛋白质设计">3. PGEL: 在嵌入空间里精准拿捏蛋白质设计</h2>
+<p><a href="post_all_image/protein_generation_w_2025_10_28_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/protein_generation_w_2025_10_28_image_1.jpg" class="img-fluid"></a></p>
+<p>蛋白质设计常常面临一个两难困境：既要创造新的蛋白质，又要保留最关键的功能部分，例如酶的活性位点或抗体的结合表位。这好比重新设计一把钥匙，你可以随意改变钥匙柄的形状，但决定开锁的齿纹部分必须分毫不差。</p>
+<p>RFdiffusion 等现有方法采用局部扩散策略，就像焊死钥匙的齿纹，再让模型在周围自由发挥。这种做法的结果不理想，要么为了迁就固定部分，生成的结构与原始结构相差无几，失去了多样性；要么新旧部分衔接混乱，结构不合理，失去了可设计性。</p>
+<p>PGEL (Protein Generation with Embedding Learning) 框架则采用了一种新思路：在更高维度的嵌入空间解决问题。</p>
+<p>它的工作原理如下。</p>
+<p>首先，它借鉴图像生成领域的「文本反演」技术。蛋白质的功能基序可以被看作一个独特的「概念」或「词汇」，比如「p53 结合界面」。PGEL 先学习这个「词汇」的数学表达，即一个浓缩了其序列和结构信息的高维向量，也叫「嵌入」。</p>
+<p>接下来是关键一步。PGEL 直接在这个学习到的嵌入向量上进行微小、可控的「扰动」。这就像用修图软件调整照片，你不是修改百万像素点的 RGB 值，而是拖动「亮度」、「对比度」等滑块。在嵌入空间里操作，就是找到了控制蛋白质性质的「滑块」。每一次微调，都代表着对功能基序在生物学意义上的一次合理探索。</p>
+<p>最后，将微调后的嵌入向量作为新「指令」，交给蛋白质扩散模型生成一个全新的完整蛋白质。由于「指令」本身就蕴含了功能基序的精髓，生成的新蛋白质既保留了核心功能，又在整体结构上呈现出所需的多样性。</p>
+<p>研究者在三个代表性案例上验证了 PGEL 的能力：一个单体蛋白（钙调蛋白），一个蛋白 - 蛋白结合位点（barnase-barstar），以及一个与癌症相关的转录因子复合物（p53-MDM2）。结果显示，在每个案例中，PGEL 生成的结构库在多样性和可设计性上都优于传统的局部扩散方法。</p>
+<p>以 p53-MDM2 这个经典的蛋白间相互作用（PPI）靶点为例，药物研发的目标是找到能阻断其结合的小分子或多肽。利用 PGEL，能以已知的结合基序为起点，生成成千上万种保留了核心结合能力的新型蛋白质或多肽骨架。这拓展了先导化合物的筛选空间，增加了找到高亲和力、高成药性候选药物的机会。</p>
+<p>这个方法将蛋白质设计的操作，从「原子级别」的精雕细琢，提升到了「概念级别」的宏观调控，这既是技术的进步，也是思维方式的转变。我们离像编辑文字一样设计蛋白质的未来，又近了一步。</p>
+<p>📜Title: Protein Generation with Embedding Learning for Motif Diversification<br>
+🌐Paper: <a href="https://arxiv.org/abs/2510.18790" class="uri">https://arxiv.org/abs/2510.18790</a></p>
+</section>
+<section id="rtmol打破幻觉实现分子与文本的精准双向对齐" class="level2">
+<h2 class="anchored" data-anchor-id="rtmol打破幻觉实现分子与文本的精准双向对齐">4. RTMol：打破幻觉，实现分子与文本的精准双向对齐</h2>
+<p><a href="post_all_image/rt_mol_rethinking_mo_2025_11_27_image_1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="post_all_image/rt_mol_rethinking_mo_2025_11_27_image_1.png" class="img-fluid"></a></p>
+<p>计算化学和药物研发人员常遇到这种困境：现在的 AI 模型（如 ChatGPT 或专门的 Mol-LLM）描述分子时语法完美、文采斐然，核对结构时却错漏百出——少个甲基或环大小不对是常态。</p>
+<p>RTMol 旨在解决这一核心痛点。</p>
+<p>现行评价体系过度依赖 BLEU 或 ROUGE 等自然语言处理（NLP）指标。NLP 中 “apple” 和 “fruit” 语义相近，但在化学领域，苯环和吡啶环仅差一个原子，性质却天差地别。传统指标侧重文本重合度，难以识别这种「化学失真」。</p>
+<p>RTMol 引入了「往返（Round-trip）」视角。</p>
+<p>这如同用谷歌翻译检验准确性：将中文译为英文，再译回中文，若意思改变则翻译存疑。RTMol 将此逻辑应用于分子：</p>
+<ol type="1">
+<li><strong>分子转文本</strong>：模型观察分子结构，生成描述。<br>
+</li>
+<li><strong>文本转分子</strong>：模型根据刚才生成的描述，尝试还原结构。<br>
+</li>
+<li><strong>对比</strong>：核对还原后的分子与原始分子是否一致。</li>
+</ol>
+<p>这不仅是评价指标，更是训练框架。同一个大语言模型分饰两角，既是描述者（Captioner）也是生成者（Generator）。</p>
+<p>系统引入强化学习，将奖励信号直接挂钩「化学保真度」。模型必须保证生成的句子能还原出正确结构才能获得奖励。这种机制迫使模型关注决定分子性质的关键特征，而非堆砌辞藻。</p>
+<p>高质量「分子 - 文本」对齐数据稀缺，公开数据集常含噪声或注释不全。RTMol 的自监督训练利用模型内部一致性进行自我修正，降低了对完美数据集的依赖。</p>
+<p>实验显示，在多个大语言模型上双向对齐性能提升显著，Round-trip 一致性最高提升 47%。</p>
+<p>对于药物研发，这代表未来的 AI 助手能真正「读懂」结构。当我们给出复杂的药效团描述时，它生成的分子结构将真实可靠，这才是 AI 辅助药物设计应有的形态。</p>
+<p>📜Title: RTMol: Rethinking Molecule-text Alignment in a Round-trip View<br>
+🌐Paper: <a href="https://arxiv.org/abs/2511.12135v2" class="uri">https://arxiv.org/abs/2511.12135v2</a></p>
+</section>
+<section id="dado巧解复杂设计ai-药物发现新思路" class="level2">
+<h2 class="anchored" data-anchor-id="dado巧解复杂设计ai-药物发现新思路">5. DADO：巧解复杂设计，AI 药物发现新思路</h2>
+<p><a href="post_all_image/leveraging_discrete_2025_11_19_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="post_all_image/leveraging_discrete_2025_11_19_image_1.jpg" class="img-fluid"></a></p>
+<p>药物发现，尤其在蛋白质工程领域，面临着一个巨大挑战：可能的分子组合数量是一个天文数字。例如，仅改变一个蛋白质中的几个氨基酸，其组合数量就能超过宇宙中的原子总数。传统筛选方法如同大海捞针。</p>
+<p>AI 改变了这一领域，但即便使用 AI，在庞大的「解空间」里搜索最佳分子也常常力不从心。传统的估算分布算法（Estimation of Distribution Algorithms, EDA）在处理这类离散且高度结构化的问题时效率不高。它们试图一次性优化所有变量，当变量间相互关联时，计算成本会急剧上升。</p>
+<p>DADO (Decomposition-Aware Distributional Optimization) 算法提供了一个巧妙的解决方案。其核心思想可以用一个比喻解释：组装一台复杂的机器，是把所有零件堆在一起凭感觉拼装，还是按部件（如发动机、底盘）分开组装再进行总装更容易？答案显而易见。</p>
+<p>DADO 做的就是类似的事。它首先分析问题的「可分解性」，即一个分子的整体性质（如活性）能否看作其不同局部结构性质的总和。蛋白质设计等许多科学问题都符合此特点，蛋白质的最终功能很大程度上取决于其各个结构域 (domain) 的局部功能。</p>
+<p>识别出这种结构后，DADO 利用「连接树」 (junction tree) 这种图结构，将整个设计空间分解成一系列更小的、相互关联的子问题。接着，它通过在树状结构上传递信息 (message-passing)，在这些子空间里分别优化，最后将各部分的最优解组合，得到全局的最优设计。</p>
+<p>这种「分而治之」的策略降低了计算复杂度。这意味着，可以先优化一个功能域，再优化另一个，同时考虑它们间的相互作用，而无需一次性考虑蛋白质上所有氨基酸的所有可能组合。</p>
+<p>研究者们在合成数据集和真实的蛋白质设计任务上验证了 DADO 的有效性。结果显示，与传统的 EDA 算法相比，DADO 能更快、更准确地找到具有目标性质的蛋白质序列，证明了该方法具备解决实际问题的潜力。</p>
+<p>从研发科学家的角度看，DADO 的价值在于它提供了一个更符合化学直觉的计算框架。它将问题的内在结构知识（可分解性）融入算法设计中，提升了效率，也让 AI 的决策过程更透明、更可解释。</p>
+<p>未来，DADO 还可以与更先进的生成模型或策略优化算法等其他 AI 技术结合，可能在药物设计、新材料发现等领域发挥更大作用。</p>
+<p>📜Title: Leveraging Discrete Function Decomposability for Scientific Design<br>
+🌐Paper: https://arxiv.org/abs/2511.03032v1</p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-12-06/post_all.zh.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

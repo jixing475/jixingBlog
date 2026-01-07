@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="Standard Graph Neural Networks (GNNs) often overlook deep chemical properties like atomic hybridization when processing molecules. This study gives GNNs a chemist’s perspective by identifying atomic hybridization states, allowing the model to understand molecular structure at an electronic level. By combining the local insights of GNNs with the global physicochemical properties from traditional molecular descriptors, this hybrid framework significantly improves the accuracy of drug target prediction. It offers a more chemically intuitive tool for computer-aided drug discovery.">
+
+<title>Atomic Hybridization Empowers GNNs for More Accurate Drug Target Prediction – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="Atomic Hybridization Empowers GNNs for More Accurate Drug Target Prediction – MPU">
+<meta property="og:description" content="Standard Graph Neural Networks (GNNs) often overlook deep chemical properties like atomic hybridization when processing molecules. This study gives GNNs a chemist’s perspective by identifying atomic hybridization states, allowing the model to understand molecular structure at an electronic level. By combining the local insights of GNNs with the global physicochemical properties from traditional molecular descriptors, this hybrid framework significantly improves the accuracy of drug target prediction. It offers a more chemically intuitive tool for computer-aided drug discovery.">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-12-04/post_all_image/graph_neural_network_2025_11_27_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="A conceptual diagram of a Graph Neural Network (GNN). The image shows multiple interconnected nodes, with information passing between them along edges, forming a complex network. This visually represents how a GNN works by aggregating information from neighboring nodes to update the state of a central node. In the 'Atomic Hybridization Empowers GNNs' section of the article, this image illustrates how the model abstracts molecular structure into graph data. The GNN architecture then learns local chemical features, and its accuracy in predicting drug targets is enhanced by incorporating atomic hybridization states.
+">
+<meta name="twitter:title" content="Atomic Hybridization Empowers GNNs for More Accurate Drug Target Prediction – MPU">
+<meta name="twitter:description" content="Standard Graph Neural Networks (GNNs) often overlook deep chemical properties like atomic hybridization when processing molecules. This study gives GNNs a chemist’s perspective by identifying atomic hybridization states, allowing the model to understand molecular structure at an electronic level. By combining the local insights of GNNs with the global physicochemical properties from traditional molecular descriptors, this hybrid framework significantly improves the accuracy of drug target prediction. It offers a more chemically intuitive tool for computer-aided drug discovery.">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-12-04/post_all_image/graph_neural_network_2025_11_27_image_1.jpg">
+<meta name="twitter:image:alt" content="A conceptual diagram of a Graph Neural Network (GNN). The image shows multiple interconnected nodes, with information passing between them along edges, forming a complex network. This visually represents how a GNN works by aggregating information from neighboring nodes to update the state of a central node. In the 'Atomic Hybridization Empowers GNNs' section of the article, this image illustrates how the model abstracts molecular structure into graph data. The GNN architecture then learns local chemical features, and its accuracy in predicting drug targets is enhanced by incorporating atomic hybridization states.
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">Atomic Hybridization Empowers GNNs for More Accurate Drug Target Prediction</h1>
+                  <div>
+        <div class="description">
+          <p>Standard Graph Neural Networks (GNNs) often overlook deep chemical properties like atomic hybridization when processing molecules. This study gives GNNs a chemist’s perspective by identifying atomic hybridization states, allowing the model to understand molecular structure at an electronic level. By combining the local insights of GNNs with the global physicochemical properties from traditional molecular descriptors, this hybrid framework significantly improves the accuracy of drug target prediction. It offers a more chemically intuitive tool for computer-aided drug discovery.</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">Graph Neural Network</div>
+                <div class="quarto-category">Atomic Hybridization</div>
+                <div class="quarto-category">Drug Target Prediction</div>
+                <div class="quarto-category">Molecular Descriptors</div>
+                <div class="quarto-category">Computer-Aided Drug Discovery</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Thursday, the 4th of December, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#table-of-contents" id="toc-table-of-contents" class="nav-link active" data-scroll-target="#table-of-contents">Table of Contents</a></li>
+  <li><a href="#mergedna-a-dynamic-tokenization-breakthrough-for-genome-modeling" id="toc-mergedna-a-dynamic-tokenization-breakthrough-for-genome-modeling" class="nav-link" data-scroll-target="#mergedna-a-dynamic-tokenization-breakthrough-for-genome-modeling">1. MergeDNA: A Dynamic Tokenization Breakthrough for Genome Modeling</a></li>
+  <li><a href="#atomic-hybridization-empowers-gnns-for-more-accurate-drug-target-prediction" id="toc-atomic-hybridization-empowers-gnns-for-more-accurate-drug-target-prediction" class="nav-link" data-scroll-target="#atomic-hybridization-empowers-gnns-for-more-accurate-drug-target-prediction">2. Atomic Hybridization Empowers GNNs for More Accurate Drug Target Prediction</a></li>
+  <li><a href="#pepbfn-reshaping-full-atom-peptide-design-with-bayesian-flows" id="toc-pepbfn-reshaping-full-atom-peptide-design-with-bayesian-flows" class="nav-link" data-scroll-target="#pepbfn-reshaping-full-atom-peptide-design-with-bayesian-flows">3. PepBFN: Reshaping Full-Atom Peptide Design with Bayesian Flows</a></li>
+  <li><a href="#ssrgnet-3d-graph-neural-networks-and-large-language-models-join-forces-for-protein-structure-prediction" id="toc-ssrgnet-3d-graph-neural-networks-and-large-language-models-join-forces-for-protein-structure-prediction" class="nav-link" data-scroll-target="#ssrgnet-3d-graph-neural-networks-and-large-language-models-join-forces-for-protein-structure-prediction">4. SSRGNet: 3D Graph Neural Networks and Large Language Models Join Forces for Protein Structure Prediction</a></li>
+  <li><a href="#stol-building-3d-conformations-of-large-molecules-with-diffusion-models-like-legos" id="toc-stol-building-3d-conformations-of-large-molecules-with-diffusion-models-like-legos" class="nav-link" data-scroll-target="#stol-building-3d-conformations-of-large-molecules-with-diffusion-models-like-legos">5. StoL: Building 3D Conformations of Large Molecules with Diffusion Models, Like LEGOs</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-12-04/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="table-of-contents" class="level2">
+<h2 class="anchored" data-anchor-id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li>MergeDNA adapts to genomic complexity with a dynamic tokenization strategy, outperforming existing SOTA models on multi-omics tasks.</li>
+<li>A new hybrid deep learning framework incorporates atomic hybridization and traditional molecular descriptors, overcoming the GNN limitation of not capturing global physicochemical properties.</li>
+<li>PepBFN uses a Riemannian–Euclidean Bayesian Flow Network to model sequence and structure in a fully continuous parameter space, solving the multimodal distribution problem of side-chain rotamers.</li>
+<li>SSRGNet combines a sequence language model with a 3D spatial graph network, using multi-relational edges and a parallel fusion strategy to improve protein secondary structure prediction.</li>
+<li>StoL tackles the lack of training data for large molecule conformation generation by breaking molecules into fragments, generating their 3D structures with diffusion models, and then reassembling them.</li>
+</ol>
+</section>
+<section id="mergedna-a-dynamic-tokenization-breakthrough-for-genome-modeling" class="level2">
+<h2 class="anchored" data-anchor-id="mergedna-a-dynamic-tokenization-breakthrough-for-genome-modeling">1. MergeDNA: A Dynamic Tokenization Breakthrough for Genome Modeling</h2>
+<p><a href="post_all_image/merge_dna_context_aw_2025_11_27_image_1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/merge_dna_context_aw_2025_11_27_image_1.png" class="img-fluid"></a></p>
+<p>Existing DNA Foundation Models often struggle because they are heavily influenced by human language models. Common methods like k-mer or Byte Pair Encoding (BPE) can’t handle the highly uneven information density of the genome. A single base change in a dense coding region is critical, while long repetitive sequences contain very little information. Using the same tool to measure both is not effective.</p>
+<p><strong>MergeDNA</strong> introduces a layered architecture that acts like a “zoom lens.” It uses a Local Encoder with a differentiable Token Merging technique to solve this problem.</p>
+<p>When the model encounters highly repetitive, low-information sequences, it automatically merges tokens, essentially skimming through them. But for complex regions like promoters or exons, it keeps tokens fine-grained for a detailed reading. This dynamic adjustment captures short-range motifs while efficiently handling long-range dependencies.</p>
+<p>Training this architecture relies on two key pre-training tasks: 1. <strong>Merged Token Reconstruction</strong>: The model must reconstruct the merged tokens, forcing it to understand the context of the compressed regions. 2. <strong>Adaptive Masked Token Modeling</strong>: An advanced version of masked language modeling that adaptively filters important tokens for prediction.</p>
+<p>MergeDNA achieves state-of-the-art (SOTA) results on multiple DNA benchmarks and multi-omics tasks. It outperforms larger traditional models on difficult tasks like cross-species generalization, RNA splicing site prediction, and zero-shot protein fitness prediction.</p>
+<p>For computer-aided drug discovery (CADD) and synthetic biology, this provides a higher-resolution tool. The model goes beyond mechanical base-pair statistics and starts to identify the real signals and noise within the genome.</p>
+<p>📜Title: MergeDNA: Context-aware Genome Modeling with Dynamic Tokenization through Token Merging<br>
+🌐Paper: <a href="https://arxiv.org/abs/2511.14806v1" class="uri">https://arxiv.org/abs/2511.14806v1</a></p>
+</section>
+<section id="atomic-hybridization-empowers-gnns-for-more-accurate-drug-target-prediction" class="level2">
+<h2 class="anchored" data-anchor-id="atomic-hybridization-empowers-gnns-for-more-accurate-drug-target-prediction">2. Atomic Hybridization Empowers GNNs for More Accurate Drug Target Prediction</h2>
+<p><a href="post_all_image/graph_neural_network_2025_11_27_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/graph_neural_network_2025_11_27_image_1.jpg" class="img-fluid"></a></p>
+<p><strong>Giving AI a Chemist’s Eyes</strong></p>
+<p>Computer-aided drug discovery often simplifies molecules into 2D graphs where atoms are just nodes, ignoring deeper chemical properties. But to a medicinal chemist, a carbon in a benzene ring (sp2 hybridized) is completely different from a carbon with four single bonds (sp3 hybridized). Their spatial arrangement, electron cloud distribution, and reactivity are distinct.</p>
+<p>This research develops a Graph Neural Network (GNN) model based on atomic hybridization. The model looks beyond basic atom types to understand electron configurations and spatial orientations. This approach allows the algorithm to perceive a molecule’s local structure at the electronic level, just like a chemist would.</p>
+<p><strong>Combining Old and New: GNNs Meet Molecular Descriptors</strong></p>
+<p>A pure GNN model tends to focus too much on local connections, sometimes missing global properties like the partition coefficient (logP) or molecular weight. To address this, the researchers designed a hybrid architecture. One branch uses a GNN to process the local structure, while another handles classic molecular descriptors.</p>
+<p>This is like evaluating a drug molecule by both examining its functional groups under a microscope and checking its overall physicochemical stats. This synergy improves prediction accuracy and maintains interpretability—we can see which physical and chemical properties are influential.</p>
+<p><strong>Data and Results: A Clear Improvement</strong></p>
+<p>The researchers trained the model on 14,316 compounds across 9 biological targets. The test set R² reached 0.87, with performance improving by 6% to 42% compared to previous methods. The model showed excellent IC₅₀ prediction for highly druggable targets like kinases and nuclear receptors.</p>
+<p><strong>Multi-target joint training</strong> is another key feature. To address the problem of data scarcity for new targets, the model allows knowledge transfer between different protein families. Patterns learned from data-rich targets can help predict outcomes for data-poor ones. This is very useful for orphan receptors with limited activity data.</p>
+<p>The framework’s potential could be further expanded by incorporating 3D conformational information or by fine-tuning with large-scale pre-trained models.</p>
+<p>📜Title: Graph Neural Networks Model Based on Atomic Hybridization for Predicting Drug Targets<br>
+🌐Paper: <a href="https://www.biorxiv.org/content/10.1101/2025.11.19.689219v1" class="uri">https://www.biorxiv.org/content/10.1101/2025.11.19.689219v1</a></p>
+</section>
+<section id="pepbfn-reshaping-full-atom-peptide-design-with-bayesian-flows" class="level2">
+<h2 class="anchored" data-anchor-id="pepbfn-reshaping-full-atom-peptide-design-with-bayesian-flows">3. PepBFN: Reshaping Full-Atom Peptide Design with Bayesian Flows</h2>
+<p><a href="post_all_image/full_atom_peptide_de_2025_11_27_image_1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/full_atom_peptide_de_2025_11_27_image_1.png" class="img-fluid"></a></p>
+<p>Peptide design has long faced a challenge: it’s hard to coordinate discrete amino acid sequences with continuous 3D structural coordinates. PepBFN introduces Bayesian Flow Networks (BFNs) to address this problem in a mathematically elegant way.</p>
+<p><strong>A Fully Continuous Parameter Space</strong></p>
+<p>Traditional diffusion models lose information when they add and remove noise from discrete sequences. PepBFN places both sequence and structure into a fully continuous parameter space. This is like converting a digital signal to an analog one, giving it a smoothness and coherence that discrete models can’t match when capturing subtle changes.</p>
+<p><strong>Capturing Side-Chain Dynamics</strong></p>
+<p>Amino acid side chains aren’t fixed; they exist as rotamers, like a switch with multiple positions. Traditional models often assume side chains follow a single-peak Gaussian distribution, which is physically unrealistic. PepBFN uses a <strong>Gaussian mixture-based</strong> Bayesian flow to accurately identify the multiple potential stable states of a side chain in space, instead of just averaging them. This ability to capture multimodal properties improves side-chain prediction accuracy.</p>
+<p><strong>Proper Geometry on the SO(3) Manifold</strong></p>
+<p>Calculating protein backbone orientation using Euclidean geometry can easily lead to errors that require constant correction. This model works directly on the <strong>SO(3) manifold</strong>, using a Riemannian flow based on the <strong>Matrix Fisher</strong> distribution. This mathematical language, designed for rotations, makes Bayesian updates easy to compute. Changes in residue orientation are mathematically continuous, so no extra geometric constraints are needed to prevent the structure from falling apart.</p>
+<p><strong>Performance in Practice</strong></p>
+<p>These theoretical advantages translate into real performance. PepBFN has set new records on tasks like side-chain packing, reverse folding, and the difficult task of binder design. By correctly mapping biophysical properties—like rotamer diversity and non-Euclidean geometry—into the mathematical model, the accuracy of computer-aided drug design takes a leap forward.</p>
+<p>📜Title: Full-Atom Peptide Design via Riemannian–Euclidean Bayesian Flow Networks<br>
+🌐Paper: <a href="https://arxiv.org/abs/2511.14516" class="uri">https://arxiv.org/abs/2511.14516</a></p>
+</section>
+<section id="ssrgnet-3d-graph-neural-networks-and-large-language-models-join-forces-for-protein-structure-prediction" class="level2">
+<h2 class="anchored" data-anchor-id="ssrgnet-3d-graph-neural-networks-and-large-language-models-join-forces-for-protein-structure-prediction">4. SSRGNet: 3D Graph Neural Networks and Large Language Models Join Forces for Protein Structure Prediction</h2>
+<p><a href="post_all_image/protein_secondary_st_2025_11_27_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="post_all_image/protein_secondary_st_2025_11_27_image_1.jpg" class="img-fluid"></a></p>
+<ul>
+<li><strong>Dual-Encoding Mechanism</strong>: Uses DistilProtBert to process sequence information and a Relational Graph Convolutional Network (R-GCN) to handle 3D structural features.</li>
+<li><strong>Multidimensional Relationship Modeling</strong>: Builds a protein graph with three types of edges—sequential, spatial, and local environment—to capture complex folding patterns.</li>
+<li><strong>Parallel Fusion Advantage</strong>: Parallel fusion preserves the complementary nature of multimodal information more effectively than serial or cross fusion.</li>
+<li><strong>Performance Validation</strong>: Achieves higher accuracy than current leading methods on benchmark datasets like CB513, TS115, and CASP12.</li>
+</ul>
+<p>The field of protein structure prediction is merging Large Language Models (LLMs) from natural language processing (NLP) with Graph Neural Networks (GNNs) that handle geometric structures. <strong>SSRGNet</strong> shows the power of combining the “reading” of amino acid sequences with the “observation” of 3D topology.</p>
+<p><strong>Considering Both Sequence and Shape</strong></p>
+<p>A protein is fundamentally a spatial structure, and focusing only on its sequence misses key spatial information. SSRGNet uses <strong>DistilProtBert</strong> to extract contextual meaning from the sequence while building a <strong>3D protein residue graph</strong> to capture spatial geometric features with a GNN.</p>
+<p><strong>Defining Residues with Three “Relations”</strong></p>
+<p>Instead of simply connecting adjacent residues, the model uses three different types of “edges” to describe their relationships: 1. <strong>Sequential Edges</strong>: Focus on adjacent amino acids in the sequence. 2. <strong>Spatial Edges</strong>: Connect amino acids that are far apart in the sequence but close in 3D folded space, capturing long-range interactions. 3. <strong>Local Environment Edges</strong>: Describe the features of a residue’s microenvironment.</p>
+<p>Using <strong>Relation-Aware Message Passing</strong>, the model can analyze the combined influence of an amino acid’s identity, position, and its immediate surroundings.</p>
+<p><strong>A Parallel Fusion Strategy</strong></p>
+<p>When dealing with both sequence and structure data, <strong>parallel fusion</strong> works better than serial or cross fusion. This approach allows sequence and structural features to be processed independently before being combined for a final judgment, preserving the maximum amount of complementary information from both modalities.</p>
+<p><strong>Results and Applications</strong></p>
+<p>Tests on datasets like CB513 and CASP12 confirm the model’s effectiveness. Ablation studies proved that all three types of relational edges are essential for its performance. Future plans include pre-training on more external structural datasets. For drug design or enzyme engineering, a model that can finely interpret local protein geometry has significant practical value.</p>
+<p>📜Title: Protein Secondary Structure Prediction Using 3D Graphs and Relation-Aware Message Passing Transformers<br>
+🌐Paper: <a href="https://arxiv.org/abs/2511.13685v1" class="uri">https://arxiv.org/abs/2511.13685v1</a></p>
+</section>
+<section id="stol-building-3d-conformations-of-large-molecules-with-diffusion-models-like-legos" class="level2">
+<h2 class="anchored" data-anchor-id="stol-building-3d-conformations-of-large-molecules-with-diffusion-models-like-legos">5. StoL: Building 3D Conformations of Large Molecules with Diffusion Models, Like LEGOs</h2>
+<p><a href="post_all_image/chemistry_enhanced_d_2025_11_27_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="post_all_image/chemistry_enhanced_d_2025_11_27_image_1.jpg" class="img-fluid"></a></p>
+<p>Drug development starts with an accurate 3D structure of a molecule. For small molecules, data is plentiful and the process is straightforward. But for large molecules, high-quality 3D training data is extremely scarce, and end-to-end deep learning models often perform poorly.</p>
+<p>A study called StoL (Small-to-Large) takes a different approach. If there isn’t enough data for large molecules, it breaks them down and uses the strengths of small-molecule methods to solve the problem.</p>
+<p><strong>Assembling Molecules Like Building Blocks</strong></p>
+<p>StoL’s logic is intuitive and effective. It takes a complex, long-chain molecule and cuts it along rotatable single bonds, breaking it into chemically sensible, rigid fragments.</p>
+<p>This transforms the difficult problem of predicting a large molecule’s complex fold into several simpler, local 3D generation tasks. Existing diffusion models, which are well-trained on small-molecule data, can handle these fragments easily. The system then reassembles the generated 3D fragments based on their connection points. This method successfully bypasses the hurdle of insufficient large-molecule data.</p>
+<p><strong>Injecting “Chemical Common Sense”</strong></p>
+<p>A purely data-driven approach can lead a model to make basic mistakes, like twisting an aromatic ring that should be flat. To prevent this, StoL includes a “chemistry-enhanced” training stage.</p>
+<p>The model first learns the general shape of molecules from a large dataset. Then, it enters a second phase of specialized training on physicochemical rules. This forces the model to obey fundamental principles like correct bond lengths, bond angles, and planarity. The final structures are not only geometrically sound but also have much greater energy stability.</p>
+<p><strong>Searching Beyond RDKit</strong></p>
+<p>The widely used tool RDKit is fast, but it can get stuck in local energy minima and fail to find the lowest-energy natural state.</p>
+<p>StoL performs much better here. When validated against density functional theory (DFT), the gold standard in computational chemistry, the conformations generated by StoL consistently have lower energy. This means it can explore a wider chemical space and find realistic molecular poses that traditional methods might miss. This advantage is critical for designing drugs that need to fit precisely into a protein’s binding pocket.</p>
+<p><strong>Limitations and Lessons</strong></p>
+<p>StoL isn’t perfect. It still struggles with complex fused-ring systems that are difficult to cut into simple pieces. But it is a clever advance in computational chemistry, showing an effective way to solve a complex problem: break it down into simpler ones we already know how to solve.</p>
+<p>📜Title: Chemistry-Enhanced Diffusion-Based Framework for Small-to-Large Molecular Conformation Generation<br>
+🌐Paper: <a href="https://arxiv.org/abs/2511.12182v1" class="uri">https://arxiv.org/abs/2511.12182v1</a></p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-12-04/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

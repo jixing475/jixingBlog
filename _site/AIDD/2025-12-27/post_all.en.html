@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="Traditional AI models for toxicity prediction are like black boxes—they give a conclusion without explaining why. This article introduces an innovative multi-task learning framework that uses a special “sparse mask” (L1 sparse penalty) to force the model to focus on the key chemical groups that actually cause toxicity. This method not only significantly improves prediction accuracy but also makes the model explainable, allowing the AI to pinpoint the “culprit” in a molecule, just like a chemist would. This technology transforms AI from a simple classification tool into an intelligent partner that can guide the optimization of drug molecules.">
+
+<title>AI Predicts Molecular Toxicity: More Accurate, and Now Explainable – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="AI Predicts Molecular Toxicity: More Accurate, and Now Explainable – MPU">
+<meta property="og:description" content="Traditional AI models for toxicity prediction are like black boxes—they give a conclusion without explaining why. This article introduces an innovative multi-task learning framework that uses a special “sparse mask” (L1 sparse penalty) to force the model to focus on the key chemical groups that actually cause toxicity. This method not only significantly improves prediction accuracy but also makes the model explainable, allowing the AI to pinpoint the “culprit” in a molecule, just like a chemist would. This technology transforms AI from a simple classification tool into an intelligent partner that can guide the optimization of drug molecules.">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-12-27/post_all_image/task_specific_sparse_2025_12_16_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="A chemical structure diagram illustrating the explainability of an AI model. The image shows the 2D structure of a complex organic molecule. Parts of the molecule, such as a nitroaromatic ring, are highlighted with a red heatmap. This visualizes the 'sparse mask' technique mentioned in the article, where the AI marks the chemical groups it considers most relevant to a specific toxicity. This transforms the model from a black box into a tool that provides medicinal chemists with concrete, visual evidence for molecular optimization by pointing out potential 'toxicophores'.
+">
+<meta name="twitter:title" content="AI Predicts Molecular Toxicity: More Accurate, and Now Explainable – MPU">
+<meta name="twitter:description" content="Traditional AI models for toxicity prediction are like black boxes—they give a conclusion without explaining why. This article introduces an innovative multi-task learning framework that uses a special “sparse mask” (L1 sparse penalty) to force the model to focus on the key chemical groups that actually cause toxicity. This method not only significantly improves prediction accuracy but also makes the model explainable, allowing the AI to pinpoint the “culprit” in a molecule, just like a chemist would. This technology transforms AI from a simple classification tool into an intelligent partner that can guide the optimization of drug molecules.">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-12-27/post_all_image/task_specific_sparse_2025_12_16_image_1.jpg">
+<meta name="twitter:image:alt" content="A chemical structure diagram illustrating the explainability of an AI model. The image shows the 2D structure of a complex organic molecule. Parts of the molecule, such as a nitroaromatic ring, are highlighted with a red heatmap. This visualizes the 'sparse mask' technique mentioned in the article, where the AI marks the chemical groups it considers most relevant to a specific toxicity. This transforms the model from a black box into a tool that provides medicinal chemists with concrete, visual evidence for molecular optimization by pointing out potential 'toxicophores'.
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">AI Predicts Molecular Toxicity: More Accurate, and Now Explainable</h1>
+                  <div>
+        <div class="description">
+          <p>Traditional AI models for toxicity prediction are like black boxes—they give a conclusion without explaining why. This article introduces an innovative multi-task learning framework that uses a special “sparse mask” (L1 sparse penalty) to force the model to focus on the key chemical groups that actually cause toxicity. This method not only significantly improves prediction accuracy but also makes the model explainable, allowing the AI to pinpoint the “culprit” in a molecule, just like a chemist would. This technology transforms AI from a simple classification tool into an intelligent partner that can guide the optimization of drug molecules.</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">Molecular Toxicity Prediction</div>
+                <div class="quarto-category">Multi-task Learning</div>
+                <div class="quarto-category">Explainable AI</div>
+                <div class="quarto-category">Chemical Language Models</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Saturday, the 27th of December, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#ai-predicts-molecular-toxicity-more-accurate-and-now-explainable" id="toc-ai-predicts-molecular-toxicity-more-accurate-and-now-explainable" class="nav-link active" data-scroll-target="#ai-predicts-molecular-toxicity-more-accurate-and-now-explainable">1. AI Predicts Molecular Toxicity: More Accurate, and Now Explainable</a></li>
+  <li><a href="#enzengdb-integrating-data-and-ai-to-accelerate-enzyme-engineering" id="toc-enzengdb-integrating-data-and-ai-to-accelerate-enzyme-engineering" class="nav-link" data-scroll-target="#enzengdb-integrating-data-and-ai-to-accelerate-enzyme-engineering">2. EnzEngDB: Integrating Data and AI to Accelerate Enzyme Engineering</a></li>
+  <li><a href="#pplm-can-ai-predict-how-proteins-interact-without-looking-at-3d-structures" id="toc-pplm-can-ai-predict-how-proteins-interact-without-looking-at-3d-structures" class="nav-link" data-scroll-target="#pplm-can-ai-predict-how-proteins-interact-without-looking-at-3d-structures">3. PPLM: Can AI Predict How Proteins Interact Without Looking at 3D Structures?</a></li>
+  <li><a href="#the-trio-framework-a-new-approach-to-ai-molecular-discovery-for-better-drug-design" id="toc-the-trio-framework-a-new-approach-to-ai-molecular-discovery-for-better-drug-design" class="nav-link" data-scroll-target="#the-trio-framework-a-new-approach-to-ai-molecular-discovery-for-better-drug-design">4. The Trio Framework: A New Approach to AI Molecular Discovery for Better Drug Design</a></li>
+  <li><a href="#unaagi-ai-designs-non-canonical-amino-acids-at-the-atomic-level" id="toc-unaagi-ai-designs-non-canonical-amino-acids-at-the-atomic-level" class="nav-link" data-scroll-target="#unaagi-ai-designs-non-canonical-amino-acids-at-the-atomic-level">5. UNAAGI: AI Designs Non-Canonical Amino Acids at the Atomic Level</a></li>
+  <li><a href="#ai-generated-data-a-new-way-to-predict-immunopeptides" id="toc-ai-generated-data-a-new-way-to-predict-immunopeptides" class="nav-link" data-scroll-target="#ai-generated-data-a-new-way-to-predict-immunopeptides">6. AI-Generated Data: A New Way to Predict Immunopeptides</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-12-27/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="table-of-contents" class="level4">
+<h4 class="anchored" data-anchor-id="table-of-contents">Table of Contents</h4>
+<ol type="1">
+<li>By giving a multi-task learning model a special “sparse mask,” we not only improved toxicity prediction accuracy but also, for the first time, could see the chemical basis for the AI’s judgments.</li>
+<li>EnzEngDB provides a platform that integrates data storage, 3D visualization, and AI-driven data extraction, solving the problem of scattered and underutilized data in enzyme engineering.</li>
+<li>This work shows how a language model designed for protein pairs can efficiently predict interaction, affinity, and binding interfaces from sequence alone, in some cases outperforming structure-based methods.</li>
+<li>The Trio framework cleverly combines three AI technologies to solve a long-standing problem with generative models, making AI-designed molecules more like those designed by humans and with better drug potential.</li>
+<li>The UNAAGI model uses atom-level diffusion to let AI design proteins with non-canonical amino acids, essentially applying small-molecule drug design principles to protein engineering.</li>
+<li>Using generative AI (specifically GANs) to augment small peptide datasets can significantly improve the accuracy of function prediction models, especially when experimental data is limited.</li>
+</ol>
+</section>
+<section id="ai-predicts-molecular-toxicity-more-accurate-and-now-explainable" class="level2">
+<h2 class="anchored" data-anchor-id="ai-predicts-molecular-toxicity-more-accurate-and-now-explainable">1. AI Predicts Molecular Toxicity: More Accurate, and Now Explainable</h2>
+<p><a href="post_all_image/task_specific_sparse_2025_12_16_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/task_specific_sparse_2025_12_16_image_1.jpg" class="img-fluid"></a></p>
+<p>In computational toxicology, we often face a frustrating problem: a model tells us a molecule is “toxic” but doesn’t explain why. It’s like an experienced medical examiner giving a conclusion without the reasoning. That doesn’t help medicinal chemists on the front lines. What we need to know is which part of the molecule is the culprit.</p>
+<p>This paper offers a clever solution.</p>
+<p>First, the researchers used a framework called Multi-task Learning (MTL). You can think of it as teaching one AI model to recognize many different types of toxicity at once—like liver toxicity, cardiotoxicity, and carcinogenicity. The goal is for the model to learn the general, underlying principles connecting chemical structure to toxicity, rather than just memorizing patterns for a single task.</p>
+<p>But MTL has a common problem: negative transfer. Sometimes, learning about task A can interfere with making judgments on task B. It’s like a student who has learned too many disconnected facts and mixes them up during an exam.</p>
+<p>The first highlight of this paper is how it solves this. Their architecture has all tasks share a powerful chemical language model as a “brain” to understand the basic language of molecules. Then, each specific toxicity task gets its own separate “attention module.” The brain handles the input, and each attention module handles the output in its own domain. This way, they can share knowledge without getting in each other’s way.</p>
+<p>The second and most central innovation is adding an L1 sparse penalty to each attention module. This might sound technical, but the principle is simple. Imagine giving the model a pen with very expensive ink. When analyzing a molecule’s structure, it can’t scribble everywhere. It has to use its limited ink sparingly, marking only the one or two atomic groups most relevant to a specific toxicity.</p>
+<p>The result was unexpected. Usually, we assume that adding more constraints to a model will decrease its performance, like accuracy. But here, this “sparse mask” not only made the model’s predictions explainable—we can clearly see which part of the molecule it focused on—but it also made the predictions more accurate.</p>
+<p>Why? Because it forces the model to learn actual causal relationships instead of relying on coincidences in the data. The model stops memorizing that “molecules that look like this are toxic” and starts learning that “because this molecule has a nitroaromatic ring, it might have this specific toxicity.”</p>
+<p>Look at the visualization in the image. For the same molecule, the model focuses on completely different regions when predicting different toxicity endpoints. This perfectly matches the intuition of a medicinal chemist. Even better, for different molecules that contain the same toxicophore, the model can accurately identify it.</p>
+<p>This changes the tool from a black box that just gives “yes” or “no” answers into an intelligent partner we can talk to. It can tell us: “I think this compound has a risk of liver toxicity, and the problem might be this amide group here. Have you considered modifying it?”</p>
+<p>This is what AI-assisted drug discovery should look like. It provides not just a cold score, but a chemically meaningful insight that can guide the next step in molecular design.</p>
+<p>📜Title: Task-Specific Sparse Feature Masks for Molecular Toxicity Prediction with Chemical Language Models<br>
+🌐Paper: <a href="https://arxiv.org/abs/2512.11412v1" class="uri">https://arxiv.org/abs/2512.11412v1</a></p>
+</section>
+<section id="enzengdb-integrating-data-and-ai-to-accelerate-enzyme-engineering" class="level2">
+<h2 class="anchored" data-anchor-id="enzengdb-integrating-data-and-ai-to-accelerate-enzyme-engineering">2. EnzEngDB: Integrating Data and AI to Accelerate Enzyme Engineering</h2>
+<p><a href="post_all_image/enzyme_engineering_d_2025_12_16_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/enzyme_engineering_d_2025_12_16_image_1.jpg" class="img-fluid"></a></p>
+<p>Anyone in enzyme engineering shares a common frustration: the data is too scattered.</p>
+<p>Data from each lab and every paper is like an isolated island. We create dozens of mutants and measure their activity and stability, but most of this valuable data ends up confined to lab notebooks or supplemental materials. Trying to compare data from different studies or systematically analyze which mutations actually work is an almost impossible task.</p>
+<p>The new EnzEngDB platform seems designed to solve this core problem. It’s not just a data repository but a tool built for the enzyme engineering workflow.</p>
+<p>First, it creates a standardized data framework. The most critical information for an enzyme engineering project—like amino acid sequence, the reaction catalyzed (represented by reaction SMILES, which is key), and performance metrics (like yield or kcat/Km)—can all be systematically recorded. This means if you’re studying a specific enzyme family, like ketoreductases, you can integrate data from dozens of mutants from different sources for a side-by-side comparison. What used to take weeks of sifting through literature can now be done on one platform.</p>
+<p>Its real highlight is the interactive 3D visualization tool. This is the feature most likely to impress researchers on the front lines. Suppose you’ve found 10 mutants with improved activity. Looking at a list like <code>A123G</code> or <code>F45Y</code> makes it hard to spot a pattern. But if you map these mutation sites directly onto the protein’s 3D structure, everything changes. You might instantly see that all the high-activity mutations are clustered at the entrance of the substrate binding pocket. This discovery immediately gives you a clear direction for your next experiment: maybe you should systematically engineer this entrance to optimize substrate entry and exit. This closed loop—from data to structure to a new hypothesis—is key to accelerating research. It turns abstract sequence information into intuitive, actionable structural insights.</p>
+<p>Another clever feature is its use of Large Language Models (LLMs) to automatically extract data from literature. Manually curating data from papers is incredibly tedious and time-consuming, and it’s the bottleneck for building any database. The researchers trained an LLM to read papers and extract key sequence-function data. To ensure quality, they also built a “gold standard” dataset to validate the AI’s accuracy. While the AI may not be 100% perfect, even if it can handle 80% of the initial curation, it frees up a massive amount of human effort and allows the database to grow much faster in both speed and scope.</p>
+<p>Finally, the authors considered data privacy. The platform supports both public and private deployment. Sensitive corporate data can be analyzed using the tool on a local server, while public data can be contributed to the community. This practical model should help the tool get adopted. A good database needs a community to build it, and EnzEngDB provides an excellent starting point.</p>
+<p>📜<strong>Title</strong>: Enzyme Engineering Database (EnzEngDB): a platform for sharing and interpreting sequence–function relationships across protein engineering campaigns<br>
+🌐<strong>Paper</strong>: https://academic.oup.com/nar/article/doi/10.1093/nar/gkaf1142/8373944</p>
+</section>
+<section id="pplm-can-ai-predict-how-proteins-interact-without-looking-at-3d-structures" class="level2">
+<h2 class="anchored" data-anchor-id="pplm-can-ai-predict-how-proteins-interact-without-looking-at-3d-structures">3. PPLM: Can AI Predict How Proteins Interact Without Looking at 3D Structures?</h2>
+<p><a href="post_all_image/9c0e08bb79f4330efa01de79bd35e9e1_MD5.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/9c0e08bb79f4330efa01de79bd35e9e1_MD5.jpg" class="img-fluid"></a></p>
+<p>In drug discovery, we’re always playing a highly complex Lego game. We want to know if two protein “bricks” can fit together, how tightly they’ll bind, and where they make contact. Traditionally, we thought we needed the precise 3D blueprint (the protein structure) for each brick to answer these questions. Getting structures is expensive and slow. AlphaFold solved the problem of getting the blueprint for a single brick, but understanding how two bricks interact is another huge challenge.</p>
+<p>Now, a new paper on a Protein-Protein Language Model (PPLM) suggests we might not need to rely so much on those 3D blueprints.</p>
+<p><strong>The Core Idea: From “Monologue” to “Dialogue”</strong></p>
+<p>Previous protein language models, like the well-known ESM2, were like linguists analyzing one person’s speech. They are good at understanding the grammar and vocabulary of a single protein (its amino acid sequence), but asking them to understand a “dialogue” between two proteins is a stretch. They could read two “speeches” separately and then guess if the two were communicating.</p>
+<p>PPLM takes a completely different approach. It feeds the sequences of two proteins together from the very beginning, letting the model learn their shared linguistic patterns directly. It’s like having the AI listen to a recording of a two-person conversation instead of their individual monologues. The model’s internal attention mechanism is also designed in a hybrid mode. It can focus on the internal structure of each protein (intra-protein attention) and, at the same time, on the regions where the two proteins might interact (inter-protein attention). This allows the model to figure out for itself which amino acid residues are key for cross-protein communication during unsupervised pre-training.</p>
+<p><strong>How does it perform in practice?</strong></p>
+<p>The study used PPLM to build three specialized models to answer our three main questions:</p>
+<ol type="1">
+<li><p><strong>Will they bind? (PPLM-PPI)</strong><br>
+This model acts like a molecular matchmaker. The results show it achieved top-tier performance in determining whether two proteins interact, and it was consistent across datasets from different species. This is critical for mapping complex signaling networks in the cell and finding new drug targets.</p></li>
+<li><p><strong>How strong is the binding? (PPLM-Affinity)</strong><br>
+This is the part that gets drug developers excited. Predicting binding affinity is a core, and very difficult, part of drug design. PPLM-Affinity not only surpassed ESM2 but, in some tests, even beat methods that rely on 3D structures. Its performance was particularly strong on flexible complexes like antibody-antigen pairs, which have many conformational changes. This means we might be able to screen and optimize antibody drugs on a large scale in a faster, less computationally expensive way.</p></li>
+<li><p><strong>Where do they bind? (PPLM-Contact)</strong><br>
+Knowing that two proteins bind isn’t enough; we also need to know the specific binding sites to design small molecules or peptides to interfere with them. PPLM-Contact also outperformed existing methods in predicting the contact residues between proteins.<br>
+What’s more interesting is that the researchers created an upgraded version, PPLM-Contact2. They fused the “interaction knowledge” learned by PPLM from sequences with the complex structure information predicted by AlphaFold. The result? This “hybrid” model beat the latest AlphaFold2.3 and AlphaFold3 on the contact prediction task.</p></li>
+</ol>
+<p>This points to an important trend: neither pure sequence models nor pure structure models may be the final answer. Real power comes from intelligently combining the two. Sequence models can efficiently learn the “chemical intuition” of interactions from massive amounts of data, while structure models provide precise physical constraints.</p>
+<p>For people on the front lines of drug discovery, a tool like PPLM is very valuable. It means we can run larger-scale, faster virtual screens before doing experiments to narrow down candidates and focus our valuable lab resources on the most promising molecules. This once again proves that great AI models can extract deep physical and chemical principles governing 3D interactions from seemingly simple 1D sequence data.</p>
+<p>📜Title: A Corporative Language Model for Protein–Protein Interaction, Binding Affinity, and Interface Contact Prediction<br>
+🌐Paper: https://www.biorxiv.org/content/10.1101/2025.07.07.663595v2</p>
+</section>
+<section id="the-trio-framework-a-new-approach-to-ai-molecular-discovery-for-better-drug-design" class="level2">
+<h2 class="anchored" data-anchor-id="the-trio-framework-a-new-approach-to-ai-molecular-discovery-for-better-drug-design">4. The Trio Framework: A New Approach to AI Molecular Discovery for Better Drug Design</h2>
+<p><a href="post_all_image/toward_closed_loop_m_2025_12_16_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="post_all_image/toward_closed_loop_m_2025_12_16_image_1.jpg" class="img-fluid"></a></p>
+<p>In drug discovery, we often work with various AI generative models. These models can quickly generate tons of new molecular structures, but often, they’re like an artist who doesn’t know the rules of chemistry. The molecules they design are either extremely difficult to synthesize or have terrible drug-like properties. We spend a lot of time sifting through and modifying these results.</p>
+<p>A recent paper proposed a framework called Trio with an interesting approach. It doesn’t invent a new algorithm. Instead, it combines three established technologies like Lego bricks: a fragment-based language model, reinforcement learning, and Monte Carlo Tree Search, to try to solve these problems.</p>
+<p><strong>Step 1: Build molecules using a chemist’s language</strong></p>
+<p>The foundation of Trio is a language model called FRAGPT. It’s different from traditional generative models because it doesn’t build molecules atom by atom. It uses “molecular fragments” as its basic building blocks.</p>
+<p>This is similar to how chemists think. When we design a molecule, we think in terms of functional groups like benzene rings, amide bonds, or hydroxyl groups, not individual carbon or oxygen atoms. Building with fragments has several direct benefits:<br>
+1. <strong>Higher chemical validity</strong>: Since the fragments are themselves stable chemical structures, the resulting molecules are less likely to have strange bond angles or unstable configurations.<br>
+2. <strong>Higher efficiency</strong>: It’s much faster to build a house with large blocks than with individual grains of sand.</p>
+<p>The FRAGPT model was trained on the SMILES notations of millions of known molecules, learning the correct “grammar” for connecting molecular fragments.</p>
+<p><strong>Step 2: Give the model a clear standard for a “good molecule”</strong></p>
+<p>Once the model knows how to build molecules, the next step is to tell it what kind of “good molecules” we want. This is where Reinforcement Learning (RL) comes in.</p>
+<p>The researchers defined a reward function that includes several key drug-like properties we care about, such as Quantitative Estimate of Drug-likeness (QED) and Synthetic Accessibility (SA).</p>
+<p>This way, as the model generates new molecules, it naturally “evolves” toward those with better drug-like properties.</p>
+<p><strong>Step 3: Search the vast chemical space intelligently</strong></p>
+<p>The chemical space is unimaginably vast. If we just let the model generate molecules randomly, it could easily get stuck in a local optimum, repeatedly generating similar high-scoring molecules while missing out on other, more promising new scaffolds.</p>
+<p>Trio uses Monte Carlo Tree Search (MCTS) to solve this. This algorithm is widely known for its role in AlphaGo’s success.</p>
+<p>This strategic search ensures that Trio can not only optimize known good structures but also efficiently discover entirely new and promising chemotypes.</p>
+<p>The results show that Trio performs quite well. Compared to current state-of-the-art models, the molecules it generates show significant improvements in binding affinity, drug-likeness, and synthetic accessibility—by 7.85%, 11.10%, and 12.05%, respectively. More importantly, the molecular diversity was four times greater. This means it is truly exploring a wider chemical space.</p>
+<p>Overall, Trio offers a closed-loop system that more closely resembles our actual workflow. It builds molecules using the fragment-based language chemists are familiar with, guides the process with clear drug-like properties, and uses a strategic search to explore new territory. This “human-AI collaboration” approach may help AI-generated molecules move from the computer screen to the lab flask more quickly.</p>
+<p>📜Title: Toward Closed-loop Molecular Discovery via Language Model, Property Alignment and Strategic Search<br>
+🌐Paper: https://arxiv.org/abs/2512.09566v1</p>
+</section>
+<section id="unaagi-ai-designs-non-canonical-amino-acids-at-the-atomic-level" class="level2">
+<h2 class="anchored" data-anchor-id="unaagi-ai-designs-non-canonical-amino-acids-at-the-atomic-level">5. UNAAGI: AI Designs Non-Canonical Amino Acids at the Atomic Level</h2>
+<p><a href="post_all_image/unaagi_atom_level_d_2025_12_16_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="post_all_image/unaagi_atom_level_d_2025_12_16_image_1.jpg" class="img-fluid"></a></p>
+<p>In protein engineering, our work has been like playing with a Lego set that has only 20 standard bricks. Although we can build all sorts of amazing structures, our imagination is ultimately limited by these 20 basic units. Introducing non-canonical amino acids (ncAAs) is like adding hundreds or thousands of special-shaped bricks to that set, which has huge potential. But this also brings a new problem: with so many new bricks, where should we put them to get the best fit?</p>
+<p>Traditional computational methods do reasonably well with the 20 standard amino acids, but they are often helpless when it comes to ncAAs. That’s because most of them treat an amino acid residue as a single unit, not as a collection of atoms.</p>
+<p>Now, a new model called UNAAGI offers a completely new solution.</p>
+<p>Its working principle is direct. Instead of trying to “swap bricks” on an existing structure like traditional methods, it does something more fundamental: it erases the amino acid at a specific position and then “redraws” it, atom by atom. This is the idea behind a diffusion model: starting from a disordered cloud of atomic coordinates and gradually generating a chemically valid and structurally compatible side chain.</p>
+<p>The model is built on an E(3)-equivariant framework. In simple terms, this means it understands 3D space. If you rotate the entire protein, the model still knows which amino acid is best for that position. This is a fundamental requirement for any serious structural biology model.</p>
+<p>What I find clever is how it handles side chains of different sizes. A glycine side chain is just a single hydrogen atom, while a tryptophan side chain is a large aromatic ring. It’s very tricky to get a single model to handle things with such huge size differences. The researchers used a “virtual node” strategy to solve this. It’s like placing a universal “placeholder” before building the structure, allowing the model to first learn what chemical properties and spatial shape are needed at that position, and then generating the specific atoms based on that information. This is a smart piece of engineering.</p>
+<p>Of course, no matter how elegant a model is, performance is what counts. The researchers’ data show that UNAAGI performs better than the current best methods for handling ncAAs. More importantly, its predictions correlate well with real experimental data. This suggests it’s not just making things up but has actually captured some underlying physical and chemical principles.</p>
+<p>For me, the most insightful part of this work is that it blurs the line between protein engineering and structure-based drug design. Essentially, both fields are solving the same problem: how to place the right set of atoms in a specific pocket of a protein to perform a particular function. What UNAAGI does is successfully apply the atom-based, 3D structure-based thinking from drug design to the task of building the protein itself.</p>
+<p>This points to a future where designing new proteins might become more like how we design small-molecule drugs today—with precision down to every single atomic interaction.</p>
+<p>📜Title: UNAAGI: Atom-Level Diffusion for Generating Non-Canonical Amino Acid Substitutions<br>
+🌐Paper: https://arxiv.org/abs/2512.10515v1</p>
+</section>
+<section id="ai-generated-data-a-new-way-to-predict-immunopeptides" class="level2">
+<h2 class="anchored" data-anchor-id="ai-generated-data-a-new-way-to-predict-immunopeptides">6. AI-Generated Data: A New Way to Predict Immunopeptides</h2>
+<p><a href="post_all_image/gda_pred_generative_2025_12_16_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-6"><img src="post_all_image/gda_pred_generative_2025_12_16_image_1.jpg" class="img-fluid"></a></p>
+<p>In peptide drug discovery, we always run into an old problem: we have too little positive data. Without enough data, it’s hard for machine learning models to learn, and their predictive performance suffers.</p>
+<p>The authors of this paper came up with a solution: if real data is insufficient, use Generative AI to create some.</p>
+<p>Their framework is called GDA-Pred. They tested three popular types of generative models: Generative Adversarial Networks (GANs), diffusion models, and Variational Autoencoders (VAEs). You can think of it as hiring three “apprentices” with different styles to imitate the work of a master (the known active peptides).</p>
+<p>What was the result? GANs came out on top. The sequences they generated not only looked plausible but also had good diversity. This is critical for training a model because we don’t want the new data to be a simple copy-paste of the old data. We need it to fill in the gaps in the sequence space, making the model’s decision boundary smoother and more robust.</p>
+<p>There’s a clever design choice here. The authors didn’t tune the model’s hyperparameters directly on the target datasets (IL-6 and IL-13 inducing peptides) because the datasets are too small, which could easily lead to overfitting. Instead, they first used a medium-sized dataset of anti-inflammatory peptides (AIPs) to “practice” and find the optimal settings for key parameters like sequence consistency and probability thresholds. This is like calibrating an instrument with a standard before using it to measure unknown samples; the results are more reliable.</p>
+<p>Of course, claims need to be backed by solid testing. They used a rigorous, stratified 5-fold cross-validation to evaluate performance. To prevent artificially high scores from “related” sequences in the training and testing sets, they also performed clustering based on sequence similarity. This ensures the model is being tested on data that is truly “unseen.”</p>
+<p>The results showed that models trained on data augmented by GDA had significantly better performance in predicting IL-6 and IL-13 inducing peptides, leaving traditional data augmentation methods like SMOTE and KDE behind.</p>
+<p>This means that even with only a small amount of experimental data, it might be possible to train powerful predictive models. This is definitely good news for research on many niche targets or new peptide functions. It can help us more quickly screen promising candidates from vast sequence libraries and accelerate the early stages of drug discovery.</p>
+<p>📜Title: GDA-Pred: Generative AI-Driven Data Augmentation for Improved Prediction of IL-6 and IL-13 Inducing Peptides<br>
+🌐Paper: https://www.biorxiv.org/content/10.64898/2025.12.07.692883v1</p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-12-27/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

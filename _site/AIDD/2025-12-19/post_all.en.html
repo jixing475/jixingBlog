@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="Building Quantitative Systems Pharmacology (QSP) models usually requires deep programming knowledge, which limits their use. The GRASP framework changes this by combining multi-agent and graph reasoning technologies. It turns complex code into a knowledge graph, letting pharmacologists build and modify models directly with natural language. GRASP acts like a virtual assistant that understands both biology and programming. It handles complex coding tasks automatically, freeing scientists from coding to speed up drug development.">
+
+<title>GRASP: Building Complex Pharmacology Models with Conversation – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="GRASP: Building Complex Pharmacology Models with Conversation – MPU">
+<meta property="og:description" content="Building Quantitative Systems Pharmacology (QSP) models usually requires deep programming knowledge, which limits their use. The GRASP framework changes this by combining multi-agent and graph reasoning technologies. It turns complex code into a knowledge graph, letting pharmacologists build and modify models directly with natural language. GRASP acts like a virtual assistant that understands both biology and programming. It handles complex coding tasks automatically, freeing scientists from coding to speed up drug development.">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-12-19/post_all_image/grasp_graph_reasoni_2025_12_11_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="A flowchart showing how the GRASP framework operates. In the center, a hexagonal module labeled 'GRASP' represents the system. Arrows indicate the flow of information: A 'Human Expert' provides instructions in natural language; GRASP parses MATLAB code into a 'Knowledge Graph'; a 'Reasoning' module then operates on the graph; finally, a 'Code Generation' module produces new MATLAB code based on the updated graph. The process forms a closed loop, illustrating how GRASP acts as an intelligent translator and executor between human experts and complex pharmacology model code, enabling model construction and modification through conversational interaction.
+">
+<meta name="twitter:title" content="GRASP: Building Complex Pharmacology Models with Conversation – MPU">
+<meta name="twitter:description" content="Building Quantitative Systems Pharmacology (QSP) models usually requires deep programming knowledge, which limits their use. The GRASP framework changes this by combining multi-agent and graph reasoning technologies. It turns complex code into a knowledge graph, letting pharmacologists build and modify models directly with natural language. GRASP acts like a virtual assistant that understands both biology and programming. It handles complex coding tasks automatically, freeing scientists from coding to speed up drug development.">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-12-19/post_all_image/grasp_graph_reasoni_2025_12_11_image_1.jpg">
+<meta name="twitter:image:alt" content="A flowchart showing how the GRASP framework operates. In the center, a hexagonal module labeled 'GRASP' represents the system. Arrows indicate the flow of information: A 'Human Expert' provides instructions in natural language; GRASP parses MATLAB code into a 'Knowledge Graph'; a 'Reasoning' module then operates on the graph; finally, a 'Code Generation' module produces new MATLAB code based on the updated graph. The process forms a closed loop, illustrating how GRASP acts as an intelligent translator and executor between human experts and complex pharmacology model code, enabling model construction and modification through conversational interaction.
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">GRASP: Building Complex Pharmacology Models with Conversation</h1>
+                  <div>
+        <div class="description">
+          <p>Building Quantitative Systems Pharmacology (QSP) models usually requires deep programming knowledge, which limits their use. The GRASP framework changes this by combining multi-agent and graph reasoning technologies. It turns complex code into a knowledge graph, letting pharmacologists build and modify models directly with natural language. GRASP acts like a virtual assistant that understands both biology and programming. It handles complex coding tasks automatically, freeing scientists from coding to speed up drug development.</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">Quantitative Systems Pharmacology</div>
+                <div class="quarto-category">GRASP</div>
+                <div class="quarto-category">AI Agent</div>
+                <div class="quarto-category">Graph Reasoning</div>
+                <div class="quarto-category">Knowledge Graph</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Friday, the 19th of December, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#table-of-contents" id="toc-table-of-contents" class="nav-link active" data-scroll-target="#table-of-contents">Table of Contents</a></li>
+  <li><a href="#fine-tuning-diffdock-to-solve-allosteric-kinase-docking" id="toc-fine-tuning-diffdock-to-solve-allosteric-kinase-docking" class="nav-link" data-scroll-target="#fine-tuning-diffdock-to-solve-allosteric-kinase-docking">1. Fine-tuning DiffDock to Solve Allosteric Kinase Docking</a></li>
+  <li><a href="#the-ai-black-box-is-opened-decoding-the-inner-workings-of-single-cell-models" id="toc-the-ai-black-box-is-opened-decoding-the-inner-workings-of-single-cell-models" class="nav-link" data-scroll-target="#the-ai-black-box-is-opened-decoding-the-inner-workings-of-single-cell-models">2. The AI Black Box Is Opened: Decoding the Inner Workings of Single-Cell Models</a></li>
+  <li><a href="#crossppi-fusing-structure-and-sequence-to-accurately-predict-protein-binding-affinity" id="toc-crossppi-fusing-structure-and-sequence-to-accurately-predict-protein-binding-affinity" class="nav-link" data-scroll-target="#crossppi-fusing-structure-and-sequence-to-accurately-predict-protein-binding-affinity">3. CrossPPI: Fusing Structure and Sequence to Accurately Predict Protein Binding Affinity</a></li>
+  <li><a href="#ai-designs-a-plasmid-from-scratch-validated-in-living-cells-for-the-first-time" id="toc-ai-designs-a-plasmid-from-scratch-validated-in-living-cells-for-the-first-time" class="nav-link" data-scroll-target="#ai-designs-a-plasmid-from-scratch-validated-in-living-cells-for-the-first-time">4. AI Designs a Plasmid from Scratch, Validated in Living Cells for the First Time</a></li>
+  <li><a href="#grasp-building-complex-pharmacology-models-with-conversation" id="toc-grasp-building-complex-pharmacology-models-with-conversation" class="nav-link" data-scroll-target="#grasp-building-complex-pharmacology-models-with-conversation">5. GRASP: Building Complex Pharmacology Models with Conversation</a></li>
+  <li><a href="#omtra-one-model-for-drug-design-docking-and-conformation-generation" id="toc-omtra-one-model-for-drug-design-docking-and-conformation-generation" class="nav-link" data-scroll-target="#omtra-one-model-for-drug-design-docking-and-conformation-generation">6. OMTRA: One Model for Drug Design, Docking, and Conformation Generation</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-12-19/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="table-of-contents" class="level3">
+<h3 class="anchored" data-anchor-id="table-of-contents">Table of Contents</h3>
+<ol type="1">
+<li>The DiffDock-L model, fine-tuned on a specific dataset, doubled its success rate in predicting the binding poses of difficult allosteric kinase inhibitors, offering a new way to solve these docking problems.</li>
+<li>Researchers used sparse autoencoders to open the “black box” of single-cell foundation models, allowing us to understand and correct what the AI learns.</li>
+<li>CrossPPI integrates protein structure graphs and sequence features using a Transformer cross-fusion module, significantly improving the accuracy of binding affinity predictions.</li>
+<li>For the first time, an AI has not only generated DNA sequences but also designed a complete, functional plasmid that works in living cells.</li>
+<li>The GRASP framework combines multi-agent and graph reasoning technologies, allowing scientists to build and modify complex quantitative systems pharmacology models using natural language, which greatly lowers the programming barrier.</li>
+<li>OMTRA uses a single generative model with flow matching to handle de novo drug design, molecular docking, and conformation generation at the same time. The model performs well, but the benefits of multi-task learning were limited.</li>
+</ol>
+</section>
+<section id="fine-tuning-diffdock-to-solve-allosteric-kinase-docking" class="level2">
+<h2 class="anchored" data-anchor-id="fine-tuning-diffdock-to-solve-allosteric-kinase-docking">1. Fine-tuning DiffDock to Solve Allosteric Kinase Docking</h2>
+<p><a href="post_all_image/fine_tuning_diff_dock_2025_12_11_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/fine_tuning_diff_dock_2025_12_11_image_1.jpg" class="img-fluid"></a></p>
+<p>Kinases are common targets in drug development, but past research has mostly focused on the ATP binding pocket. This pocket is structurally conserved, making the design of inhibitors (Type I/II) straightforward. Now, allosteric sites are getting more attention.</p>
+<p>Allosteric sites can achieve higher selectivity and even overcome drug resistance. But these sites have diverse shapes and are often shallow and hydrophobic, unlike the deep ATP pocket. Traditional molecular docking software struggles to provide reliable predictions for this kind of open terrain.</p>
+<p>To solve this, researchers took a practical approach: they used a generative AI docking model, DiffDock-L, and gave it specialized training.</p>
+<p>The first key step was preparing the training data. They collected high-quality crystal structures of kinase-allosteric inhibitor complexes from the Protein Data Bank (PDB) to build a dedicated dataset called AlloSet. High-quality data is the foundation for a model’s performance.</p>
+<p>DiffDock works by progressively “denoising” a ligand’s pose, starting from a random position to generate the most plausible binding conformation. Because it has seen so many examples of the ATP pocket during training, the model has a bias toward placing inhibitors in deep pockets.</p>
+<p>To correct this bias, the researchers used a clever fine-tuning strategy called <code>tr/rot_only</code>. This strategy only adjusts the molecule’s translation and rotation, temporarily freezing its internal rotatable bonds (torsion).</p>
+<p>It’s like parking a car. First, you drive the car to the general area of the parking spot (translation and rotation). Then, you make small adjustments to the steering wheel to park it perfectly (adjusting internal conformation). This “big picture first, details later” approach prevents the model from getting stuck in a locally optimal conformation too early, helping it find the correct general area of the allosteric site first.</p>
+<p>The results were significant. For Type III allosteric inhibitors, after fine-tuning with the <code>tr/rot_only</code> strategy, the proportion of correct poses with a Root Mean Square Deviation (RMSD) of less than 2Å in the top 10 predictions increased from the baseline model’s 18% to 36%. The success rate doubled.</p>
+<p>This work shows that in AI-assisted drug design, “expert models” tailored for specific target families or binding modes can be more effective than general-purpose models. By fine-tuning a “generalist” model on a small, high-quality dataset, it can be quickly trained to become a “specialist” for solving a specific problem.</p>
+<p>For drug developers, this method could lead to faster, more reliable molecular docking results when working on new allosteric targets, guiding subsequent structural optimization and synthesis.</p>
+<p>📜Title: Fine-Tuning DiffDock-L for Allosteric Kinase Docking 🌐Paper: <a href="https://doi.org/10.26434/chemrxiv-2025-b8k76" class="uri">https://doi.org/10.26434/chemrxiv-2025-b8k76</a> 💻Code: <a href="https://github.com/electrojustin/DiffDock-Fine-Tune" class="uri">https://github.com/electrojustin/DiffDock-Fine-Tune</a></p>
+</section>
+<section id="the-ai-black-box-is-opened-decoding-the-inner-workings-of-single-cell-models" class="level2">
+<h2 class="anchored" data-anchor-id="the-ai-black-box-is-opened-decoding-the-inner-workings-of-single-cell-models">2. The AI Black Box Is Opened: Decoding the Inner Workings of Single-Cell Models</h2>
+<p><a href="post_all_image/sparse_autoencoders_2025_10_28_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/sparse_autoencoders_2025_10_28_image_1.jpg" class="img-fluid"></a></p>
+<p>Large models in single-cell analysis, like scGPT, are powerful, but how they work internally is a black box. The models can give accurate cell classifications and annotations, but they can’t explain the basis for their judgments. In high-stakes fields like drug development, this lack of interpretability creates a trust issue. A single wrong judgment could lead to losses of millions of dollars.</p>
+<p>Research by Pedrocchi et al.&nbsp;offers a new way to solve this problem. They found a way to make the black box “speak.”</p>
+<p>The core tool they used is the <strong>Sparse Autoencoder (SAE)</strong>, which can be thought of as an efficient “information compressor.” When a <strong>Single-cell Foundation Model (scFM)</strong> processes data, it generates complex high-dimensional vectors internally, known as the model’s “hidden representations.” These vectors contain a mix of useful biological signals and useless technical noise.</p>
+<p>An SAE works by taking these complex hidden representations, forcing them to be compressed into a limited set of highly concentrated “features,” and then trying to reconstruct the original representations from these features. This process forces the SAE to learn the most essential and representative patterns in the data.</p>
+<p>The team applied SAEs to two major models, scGPT and scFoundation. They found that many of the features extracted by the SAEs corresponded directly to clear biological concepts. For example, one feature was activated only when gene expression profiles related to T cells appeared, representing “T-cell identity.” Another feature corresponded specifically to a metabolic pathway. This shows that the model learned real biological knowledge, not just unexplainable statistical correlations.</p>
+<p>These features are causal. The researchers identified a feature representing the <strong>“batch effect”</strong>—a common source of technical noise in single-cell experiments. They performed a kind of “neurosurgery” by manually setting the activation value of this feature to zero inside the model, successfully removing the noise signal. The results showed that the batch effect was eliminated from the model’s output data, and data from different batches merged together better.</p>
+<p>This is like an audio engineer identifying and removing the hum of an air conditioner from a recording, leaving only the clear human voice. It shows we can not only diagnose problems with the model but also directly correct them.</p>
+<p>The study also found that a model’s training method and architecture determine how it learns. Different models might both be able to perform cell annotation tasks, but their internal “thought processes” can be completely different. This reminds us that understanding a model’s internal mechanisms is important for selecting and optimizing it. We can’t just treat it as a plug-and-play tool.</p>
+<p>The research also pointed out the limitations of current models. An scFM can identify the same cell type across different datasets but often fails to form a single, universal concept for it. For example, macrophages from one study and macrophages from another might be encoded as two slightly different features inside the model. This indicates that the model’s ability to generalize still needs improvement.</p>
+<p>This study provides an effective set of methods for analyzing and manipulating large single-cell models, transforming us from model users into developers who can “talk” with the model. In the future, this kind of interpretability could help build more reliable and controllable AI tools for drug target discovery and clinical translation.</p>
+<p>📜Title: Sparse Autoencoders Reveal Interpretable Features in Single-Cell Foundation Models 🌐Paper: <a href="https://www.biorxiv.org/content/10.1101/2025.10.22.681631v1" class="uri">https://www.biorxiv.org/content/10.1101/2025.10.22.681631v1</a></p>
+</section>
+<section id="crossppi-fusing-structure-and-sequence-to-accurately-predict-protein-binding-affinity" class="level2">
+<h2 class="anchored" data-anchor-id="crossppi-fusing-structure-and-sequence-to-accurately-predict-protein-binding-affinity">3. CrossPPI: Fusing Structure and Sequence to Accurately Predict Protein Binding Affinity</h2>
+<p><a href="post_all_image/cross_ppi_a_cross_fu_2025_12_04_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/cross_ppi_a_cross_fu_2025_12_04_image_1.jpg" class="img-fluid"></a></p>
+<p>In drug development, it’s relatively easy to predict if two proteins will “meet,” but determining how tightly they “bind” (binding affinity) is key to making a successful drug. Current tools are often limited by a single perspective: looking only at the sequence is fast but lacks spatial context, while looking only at the 3D structure is accurate but limited by the scarcity of crystal data. CrossPPI solves this problem by directly fusing structural and sequence features.</p>
+<p><strong>How It Works</strong> The authors designed a Transformer-based cross-fusion module. This is like assembling a model kit by looking at both the instruction manual (sequence features) and the parts diagram (structural features). The model uses Graph Attention Networks (GATs) to parse the protein’s spatial geometry and Convolutional Neural Networks (CNNs) to extract sequence patterns.</p>
+<p>The core of the model is “interaction.” Sequence and structural information are deeply fused in the Transformer layers. This allows the model to capture the complex, nonlinear effects of sequence mutations on the 3D spatial charge distribution. The inclusion of ESM2 embeddings and Contact Maps is like equipping the model with a “brain” pre-trained on massive amounts of data, deepening its understanding of protein context.</p>
+<p><strong>Performance</strong> On an independent test set of 300 protein-protein pairs, CrossPPI performed well. Its Pearson Correlation Coefficient (PCC) was 0.7616, Spearman Correlation Coefficient (SCC) was 0.7644, and Mean Absolute Error (MAE) was down to 1.2869. In the noisy field of affinity prediction, this result confirms the model’s robustness.</p>
+<p><strong>Industry Value</strong> For Computer-Aided Drug Design (CADD), CrossPPI’s modular design is a significant advantage. Its architecture is not a closed black box. In the future, the ESM2 module can be replaced as protein language models evolve, continuously improving accuracy. This flexibility is useful for virtual screening, PPI site prediction, and de novo protein design. It can effectively filter out “false positive” molecules before wet-lab experiments, reducing development costs.</p>
+<p>📜Title: CrossPPI: A Cross-Fusion Based Model for Protein–Protein Binding Affinity Prediction 🌐Paper: <a href="https://www.biorxiv.org/content/10.1101/2025.11.25.690371v1" class="uri">https://www.biorxiv.org/content/10.1101/2025.11.25.690371v1</a></p>
+</section>
+<section id="ai-designs-a-plasmid-from-scratch-validated-in-living-cells-for-the-first-time" class="level2">
+<h2 class="anchored" data-anchor-id="ai-designs-a-plasmid-from-scratch-validated-in-living-cells-for-the-first-time">4. AI Designs a Plasmid from Scratch, Validated in Living Cells for the First Time</h2>
+<p><a href="post_all_image/generative_design_an_2025_12_11_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="post_all_image/generative_design_an_2025_12_11_image_1.jpg" class="img-fluid"></a></p>
+<p>In synthetic biology, designing a completely new plasmid backbone from scratch is hard. The usual approach is to modify an existing template. Now, researchers have tried letting an AI design one from the ground up, and they succeeded.</p>
+<p>At the core of this research is a DNA large language model called PlasmidGPT. It’s like a GPT that has been trained to read only DNA sequences. Researchers trained it on a huge dataset of plasmid sequences, teaching it the “grammar” of plasmids, such as the structure and arrangement of essential elements like the origin of replication and selection markers (e.g., antibiotic resistance genes).</p>
+<p>The researchers tried two methods to guide the AI’s design. The first was to give the model a simple promoter, <code>ATG</code>, as a seed and let it generate freely. This method didn’t work well; the quality of the generated sequences was inconsistent.</p>
+<p>The second method was to give the model a complete Green Fluorescent Protein (GFP) expression cassette as a prompt. This is like giving an AI a key paragraph and asking it to write the rest of the article around it. With the clear functional module of GFP as an anchor, the plasmid backbones generated by PlasmidGPT were structurally more sound.</p>
+<p>The AI’s output needed to be filtered. The team generated 1,000 sequences and then used bioinformatics tools to screen them, checking for essential components and the absence of unusual restriction sites. After filtering, they had 16 candidate sequences.</p>
+<p>They chose three of these for experimental validation. The researchers chemically synthesized the three DNA sequences and transformed them into <em>E. coli</em>. The results showed: 1. The bacteria successfully grew on a medium containing antibiotics, proving that the AI-designed resistance gene was functional. 2. The bacteria glowed green under UV light, proving that the AI-designed plasmid backbone could support the expression of the GFP gene.</p>
+<p>This is the first time an AI-generated plasmid has been successfully validated in living cells. A string of code in a computer became a functional biological component inside a cell. In the future, it might be possible to give an AI a direct request, such as “design a plasmid to express insulin in yeast,” and then synthesize and test it. Although the current success rate for filtering is low (16 candidates from 1,000 sequences), the entire workflow from design to validation has now been established.</p>
+<p>📜Title: Generative design and construction of functional plasmids with a DNA language model 🌐Paper: https://www.biorxiv.org/content/10.64898/2025.12.06.692736v1</p>
+</section>
+<section id="grasp-building-complex-pharmacology-models-with-conversation" class="level2">
+<h2 class="anchored" data-anchor-id="grasp-building-complex-pharmacology-models-with-conversation">5. GRASP: Building Complex Pharmacology Models with Conversation</h2>
+<p><a href="post_all_image/grasp_graph_reasoni_2025_12_11_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="post_all_image/grasp_graph_reasoni_2025_12_11_image_1.jpg" class="img-fluid"></a></p>
+<p>Drug development, especially for large molecules or drugs with complex mechanisms, relies on Quantitative Systems Pharmacology (QSP) models. These models predict a drug’s dynamics in the body and are an important tool for guiding decisions. But the barrier to QSP modeling is high. It usually requires a team of pharmacologists and modeling experts proficient in MATLAB. The process is time-consuming, labor-intensive, and dependent on individual experience.</p>
+<p>The GRASP framework aims to change this. Its idea is to have an AI agent handle the programming and mathematical work, allowing domain experts to focus on the biology by giving instructions in natural language.</p>
+<p><strong>GRASP works in two steps.</strong></p>
+<p>The first step is “understanding.” Modeling work often involves modifying existing QSP models. This MATLAB code is usually complex and hard to read. GRASP first reads the code and “translates” it into a structured knowledge graph. This graph is like a mind map, showing all the components, parameters, and their relationships within the model. To ensure its understanding is accurate, GRASP also generates new code from the graph and runs it to verify that the results match the original code. This process is repeated until it can perfectly reproduce the original.</p>
+<p>The second step is “acting.” Once the model is converted into a knowledge graph, a pharmacologist can give GRASP instructions in natural language, such as: “Add a target-mediated drug disposition (TMDD) mechanism to this model.”</p>
+<p><a href="post_all_image/grasp_graph_reasoni_2025_12_11_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-6"><img src="post_all_image/grasp_graph_reasoni_2025_12_11_image_1.jpg" class="img-fluid"></a></p>
+<p>Upon receiving the instruction, GRASP’s agent reasons on the knowledge graph. It knows that TMDD requires introducing new entities like a drug-target complex and defining new reactions like binding (kon), dissociation (koff), and internalization (kint) rates. It automatically updates the graph and modifies the MATLAB code to complete the model upgrade.</p>
+<p><strong>GRASP’s technical highlight: automatically maintaining model consistency.</strong></p>
+<p>The biggest challenge in adding new elements to a complex model is maintaining the consistency and accuracy of the entire system. It’s like adding a new gear to a precision watch; you have to make sure it works seamlessly with all the other gears.</p>
+<p>GRASP uses a “breadth-first parameter alignment system” to solve this. Whenever a new entity or reaction is added, the system automatically checks all its dependencies on existing parts of the model to ensure that mass balance laws and physiological constraints are met. The system will even recommend a biologically plausible range for new parameter values based on existing ones. This frees experts from the tedious work of debugging equations and parameters.</p>
+<p>A case study in the paper demonstrates GRASP’s real-world capabilities. Researchers had it handle a series of increasingly complex biological scenarios, from simple drug metabolism to adding TMDD and simulating multi-receptor interactions and cooperative binding. The entire process was done through natural language commands, and GRASP consistently maintained the model’s pharmacological validity and mathematical consistency.</p>
+<p>GRASP is like a virtual assistant that understands both biology and programming. It makes building and iterating on QSP models as simple as discussing a plan with a colleague, freeing scientists from coding. If this technology matures, it will speed up the drug development process.</p>
+<p>📜Title: GRASP: Graph Reasoning Agents for Systems Pharmacology with Human-in-the-Loop 🌐Paper: <a href="https://arxiv.org/abs/2512.05502v1" class="uri">https://arxiv.org/abs/2512.05502v1</a></p>
+</section>
+<section id="omtra-one-model-for-drug-design-docking-and-conformation-generation" class="level2">
+<h2 class="anchored" data-anchor-id="omtra-one-model-for-drug-design-docking-and-conformation-generation">6. OMTRA: One Model for Drug Design, Docking, and Conformation Generation</h2>
+<p><a href="post_all_image/omtra_a_multi_task_2025_12_11_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-7"><img src="post_all_image/omtra_a_multi_task_2025_12_11_image_1.jpg" class="img-fluid"></a></p>
+<p>Structure-Based Drug Design (SBDD) typically requires several specialized tools: one for molecular docking, another for generating new molecular scaffolds, and a third for generating a molecule’s 3D conformation. These tools work separately, making the workflow cumbersome. The OMTRA model attempts to complete all these tasks with a single “Swiss Army knife.”</p>
+<p>OMTRA’s core technology is Flow Matching. The process of generating a molecule is like sculpting. Traditional methods like diffusion models are like condensing a molecule’s shape from a random “fog.” The process works, but the path is indirect. Flow Matching, on the other hand, sets a clear, smooth “track” for the model. The model starts from a simple, known distribution and transforms precisely along this track to arrive at the target molecule’s 3D structure.</p>
+<p>This method can naturally handle two different types of data at the same time: continuously changing 3D atomic coordinates and discrete atom types (carbon, nitrogen, oxygen, etc.). OMTRA solves both of these problems within a single framework.</p>
+<p>How well does this “Swiss Army knife” work in practice? The researchers tested OMTRA’s ability on specific tasks. For example, given a protein’s active pocket, they asked it to design a new molecule that could bind to it. The results showed that the molecules generated by OMTRA were chemically reasonable, and their predicted binding modes were reliable. It outperformed previous models on several evaluation metrics, demonstrating its practical utility.</p>
+<p>A good model needs good data. Another highlight of this work is the creation of a large-scale dataset containing 500 million 3D molecular conformations. This “encyclopedia” allowed the model to see a sufficiently diverse molecular world, which is crucial for improving its ability to generalize. The dataset itself is a major contribution to the field.</p>
+<p>An interesting finding was that as a multi-task model, OMTRA did not show significant synergy between tasks. Intuitively, one might think that learning molecular design, docking, and conformation generation at the same time would be mutually beneficial, creating a “1+1 &gt; 2” effect. For example, learning to generate reasonable 3D conformations should help with protein docking. But the experimental results showed that this synergistic gain was limited or nonexistent. This reveals an important issue: how to achieve effective multi-task learning and knowledge transfer in the field of molecular generation is still an open challenge. Simply stacking tasks together does not guarantee a leap in performance.</p>
+<p>The authors look toward the future of the model, planning to teach OMTRA to generate protein structures. If achieved, this would be a huge step forward. It would mean the model could handle docking with flexible proteins and even design drugs when the protein structure is unknown. It’s like being able to design a key not just for a fixed lock, but for a lock that can change its shape.</p>
+<p>Overall, OMTRA is a well-designed and solid generative model that offers a viable way to unify multiple tasks in SBDD. At the same time, its experimental results reveal the limitations of multi-task learning at its current stage, and this honesty makes the work even more valuable.</p>
+<p>📜Title: OMTRA: A Multi-Task Generative Model for Structure-Based Drug Design 🌐Paper: https://arxiv.org/abs/2512.05080 💻Code: https://github.com/gnina/OMTRA</p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-12-19/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

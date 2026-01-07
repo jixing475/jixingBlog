@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="传统药物设计常因蛋白质的柔性而陷入「刻舟求剑」的困境，尤其在仅有空载结构（Apo structure）时。Apo2Mol 模型为此提供了突破性解决方案，它采用动态口袋感知扩散模型，在生成药物分子的同时，实时调整蛋白质口袋的构象。这种同步优化的方法能够模拟真实的「诱导契合」效应，准确预测配体与蛋白结合后的稳定状态。该技术攻克了蛋白质柔性这一核心难题，为针对高柔性或全新靶点的 AI 药物设计开辟了新道路。">
+
+<title>Apo2Mol：攻克蛋白质柔性难题的 AI 药物设计新路 – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="Apo2Mol：攻克蛋白质柔性难题的 AI 药物设计新路 – MPU">
+<meta property="og:description" content="传统药物设计常因蛋白质的柔性而陷入「刻舟求剑」的困境，尤其在仅有空载结构（Apo structure）时。Apo2Mol 模型为此提供了突破性解决方案，它采用动态口袋感知扩散模型，在生成药物分子的同时，实时调整蛋白质口袋的构象。这种同步优化的方法能够模拟真实的「诱导契合」效应，准确预测配体与蛋白结合后的稳定状态。该技术攻克了蛋白质柔性这一核心难题，为针对高柔性或全新靶点的 AI 药物设计开辟了新道路。">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-12-08/post_all_image/apo2mol_3d_molecule_2025_11_27_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="这张图展示了 Apo2Mol 模型在药物设计中的核心工作原理。图像中央是一个复杂的三维蛋白质结构，其表面有一个凹陷的口袋区域，这是药物分子的结合位点。在这个口袋内部，一个小分子结构正在被生成和优化。关键在于，蛋白质口袋的构象并非静止不变，而是动态调整的，以适应正在生成的分子。这张图形象地说明了 Apo2Mol 如何通过扩散模型同步生成配体并调整口袋构象，解决了传统方法中因忽略蛋白质柔性而导致的预测不准问题。它体现了'诱导契合'的生物学过程，是攻克基于 Apo 结构进行药物设计的关键技术。
+">
+<meta name="twitter:title" content="Apo2Mol：攻克蛋白质柔性难题的 AI 药物设计新路 – MPU">
+<meta name="twitter:description" content="传统药物设计常因蛋白质的柔性而陷入「刻舟求剑」的困境，尤其在仅有空载结构（Apo structure）时。Apo2Mol 模型为此提供了突破性解决方案，它采用动态口袋感知扩散模型，在生成药物分子的同时，实时调整蛋白质口袋的构象。这种同步优化的方法能够模拟真实的「诱导契合」效应，准确预测配体与蛋白结合后的稳定状态。该技术攻克了蛋白质柔性这一核心难题，为针对高柔性或全新靶点的 AI 药物设计开辟了新道路。">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-12-08/post_all_image/apo2mol_3d_molecule_2025_11_27_image_1.jpg">
+<meta name="twitter:image:alt" content="这张图展示了 Apo2Mol 模型在药物设计中的核心工作原理。图像中央是一个复杂的三维蛋白质结构，其表面有一个凹陷的口袋区域，这是药物分子的结合位点。在这个口袋内部，一个小分子结构正在被生成和优化。关键在于，蛋白质口袋的构象并非静止不变，而是动态调整的，以适应正在生成的分子。这张图形象地说明了 Apo2Mol 如何通过扩散模型同步生成配体并调整口袋构象，解决了传统方法中因忽略蛋白质柔性而导致的预测不准问题。它体现了'诱导契合'的生物学过程，是攻克基于 Apo 结构进行药物设计的关键技术。
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">Apo2Mol：攻克蛋白质柔性难题的 AI 药物设计新路</h1>
+                  <div>
+        <div class="description">
+          <p>传统药物设计常因蛋白质的柔性而陷入「刻舟求剑」的困境，尤其在仅有空载结构（Apo structure）时。Apo2Mol 模型为此提供了突破性解决方案，它采用动态口袋感知扩散模型，在生成药物分子的同时，实时调整蛋白质口袋的构象。这种同步优化的方法能够模拟真实的「诱导契合」效应，准确预测配体与蛋白结合后的稳定状态。该技术攻克了蛋白质柔性这一核心难题，为针对高柔性或全新靶点的 AI 药物设计开辟了新道路。</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">Apo2Mol</div>
+                <div class="quarto-category">扩散模型，蛋白质柔性，药物设计，诱导契合</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Monday, the 8th of December, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#目录" id="toc-目录" class="nav-link active" data-scroll-target="#目录">目录</a></li>
+  <li><a href="#scldm用潜扩散模型生成单细胞基因表达谱" id="toc-scldm用潜扩散模型生成单细胞基因表达谱" class="nav-link" data-scroll-target="#scldm用潜扩散模型生成单细胞基因表达谱">1. scLDM：用潜扩散模型生成单细胞基因表达谱</a></li>
+  <li><a href="#ai-分子对接新范式力引导流匹配模型-forcefm" id="toc-ai-分子对接新范式力引导流匹配模型-forcefm" class="nav-link" data-scroll-target="#ai-分子对接新范式力引导流匹配模型-forcefm">2. AI 分子对接新范式：力引导流匹配模型 ForceFM</a></li>
+  <li><a href="#hyperbind2多轮学习提升抗体发现效率" id="toc-hyperbind2多轮学习提升抗体发现效率" class="nav-link" data-scroll-target="#hyperbind2多轮学习提升抗体发现效率">3. HyperBind2：多轮学习提升抗体发现效率</a></li>
+  <li><a href="#ai-药物发现新策略分而治之各个击破" id="toc-ai-药物发现新策略分而治之各个击破" class="nav-link" data-scroll-target="#ai-药物发现新策略分而治之各个击破">4. AI 药物发现新策略：分而治之，各个击破</a></li>
+  <li><a href="#apo2mol攻克蛋白质柔性难题的-ai-药物设计新路" id="toc-apo2mol攻克蛋白质柔性难题的-ai-药物设计新路" class="nav-link" data-scroll-target="#apo2mol攻克蛋白质柔性难题的-ai-药物设计新路">5. Apo2Mol：攻克蛋白质柔性难题的 AI 药物设计新路</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-12-08/post_all.zh.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="目录" class="level2">
+<h2 class="anchored" data-anchor-id="目录">目录</h2>
+<ol type="1">
+<li>研究者开发了 scLDM，一个新型潜扩散模型，能高质量、可扩展地生成单细胞基因表达数据，解决了现有模型的关键痛点。</li>
+<li>ForceFM 模型将物理力场引入深度学习，通过力引导的流匹配技术，提升了蛋白质 - 配体对接预测的准确性和物理真实性，并降低了计算成本。</li>
+<li>HyperBind2 融合计算筛选与实验验证，通过多轮学习（Multi-Shot Learning）迭代，显著提升了计算抗体发现的成功率和效率。</li>
+<li>一种新的主动学习方法，为每个靶点训练独立模型并智能分配计算资源，在多靶点药物优化中更高效地找到优质化合物。</li>
+<li>蛋白质是动态的。Apo2Mol 利用扩散模型同步生成配体并调整口袋构象，破解基于 Apo 结构设计药物的「刻舟求剑」困局。</li>
+</ol>
+</section>
+<section id="scldm用潜扩散模型生成单细胞基因表达谱" class="level2">
+<h2 class="anchored" data-anchor-id="scldm用潜扩散模型生成单细胞基因表达谱">1. scLDM：用潜扩散模型生成单细胞基因表达谱</h2>
+<p><a href="post_all_image/scalable_single_cell_2025_11_19_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/scalable_single_cell_2025_11_19_image_1.jpg" class="img-fluid"></a></p>
+<ul>
+<li><strong>架构创新</strong>：scLDM 采用全 Transformer 架构和潜扩散框架，通过多头交叉注意力模块（MCAB）解决了基因排序人造性和训练不稳定的问题。<br>
+</li>
+<li><strong>性能优越</strong>：在多个基准数据集上，scLDM 的数据重建和生成能力优于 scVI 和 CFGen 等现有方法。<br>
+</li>
+<li><strong>可控生成与应用</strong>：模型支持基于多种属性的条件性生成，能模拟细胞对扰动的响应，其学习到的嵌入向量在下游分类任务中表现出色。</li>
+</ul>
+<p>高质量模拟单细胞基因表达数据是该领域的一个挑战。现有的生成模型通常需要人为设定基因顺序，这种设定缺乏生物学依据，且导致训练过程不稳定。一篇新论文介绍的 scLDM 模型旨在解决这些问题。</p>
+<p>scLDM 模型结合了<strong>变分自编码器（Variational Autoencoder, VAE</strong>）和<strong>潜扩散模型（Latent Diffusion Model</strong>）。</p>
+<p>第一步，VAE 将高维复杂的单细胞基因表达数据压缩到低维紧凑的「潜空间」。为处理单细胞数据基因「顺序无关」的特性，研究者设计了<strong>多头交叉注意力模块（Multi-head Cross-Attention Block, MCAB</strong>）。编码时，该模块无偏见地汇集所有基因信息；解码时，则能准确将信息还原到每个基因上，尊重了数据的内在生物学特性。</p>
+<p>第二步，在信息密集的潜空间里训练一个扩散模型。scLDM 使用一个<strong>扩散 Transformer（Diffusion Transformer</strong>）学习潜空间的复杂结构，而非传统 VAE 所假定的简单高斯分布。模型能通过「无分类器指导（classifier-free guidance）」技术，精准控制生成过程。例如，可以指定生成「某个特定细胞类型」在「受某种药物刺激后」的基因表达谱，甚至可以同时处理多个条件。这对于模拟细胞如何响应遗传或化学扰动等复杂生物学场景至关重要。</p>
+<p>在一系列公开数据集上与 scVI、CFGen 等主流模型的比较中，scLDM 在数据重建和生成任务上表现出更高的皮尔逊相关系数和更低的重建误差，生成的数据更逼真。</p>
+<p>scLDM 也是一个有效的特征提取工具。它在数据压缩中学到的细胞嵌入表示，对下游生物学发现很有用。例如，在分析新冠病毒感染数据集时，这些嵌入向量能有效识别被感染的细胞；在处理大型细胞图谱 Tabula Sapiens 2.0 时，也能准确分类细胞类型。这说明模型抓住了细胞状态的关键生物学信息。</p>
+<p>这项工作为单细胞数据的生成式建模提供了一个扎实且可扩展的框架。这种能精准模拟细胞在不同扰动下状态变化的技术，为药物研发领域理解疾病机理、发现新靶点提供了强有力的计算工具。</p>
+<p>📜Title: Scalable Single-Cell Gene Expression Generation with Latent Diffusion Models<br>
+🌐Paper: https://arxiv.org/abs/2511.02986<br>
+💻Code: https://github.com/czi-ai/scLDM</p>
+</section>
+<section id="ai-分子对接新范式力引导流匹配模型-forcefm" class="level2">
+<h2 class="anchored" data-anchor-id="ai-分子对接新范式力引导流匹配模型-forcefm">2. AI 分子对接新范式：力引导流匹配模型 ForceFM</h2>
+<p><a href="../../Users/zero/Documents/_00_A-Z/Brain/Obsidian_Brain_Cards/Fleeting_Notes/Inbox/__post/__post_topo/AIDD/2025-12-08/force_fm_enhancing_p_2025_11_19/force_fm_enhancing_p_2025_11_19/force_fm_enhancing_p_2025_11_19_image/force_fm_enhancing_p_2025_11_19_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="../../Users/zero/Documents/_00_A-Z/Brain/Obsidian_Brain_Cards/Fleeting_Notes/Inbox/__post/__post_topo/AIDD/2025-12-08/force_fm_enhancing_p_2025_11_19/force_fm_enhancing_p_2025_11_19/force_fm_enhancing_p_2025_11_19_image/force_fm_enhancing_p_2025_11_19_image_1.jpg" class="img-fluid"></a></p>
+<p>分子对接（Molecular Docking）旨在为小分子配体在蛋白质的口袋里找到最稳定的结合姿态。传统方法依赖打分函数（Scoring Function）评估构象优劣，而深度学习模型是近年来的研究热点。但许多 AI 模型在生成构象时缺乏物理逻辑，其结果可能不符合能量最低原理。</p>
+<p>ForceFM 模型引入「力引导网络」，将物理力场概念与流匹配（Flow Matching）生成模型结合。这好比为一个在复杂山谷中寻找最低点的小球安装了导航系统。这个导航系统（力引导网络）实时指示能量下降最快的方向，引导小球高效地朝向能量最低点，即最稳定的结合构象移动，避免了随机探索。</p>
+<p>这种方法的优势在于准确性。在 PDBBind 标准数据集上测试，ForceFM 预测的构象与实验真实构象的均方根偏差（RMSD）值更低，说明其预测结果更接近正确结构。</p>
+<p>其次是效率。在物理力场的指引下，模型减少了无效尝试，采样效率得以提高。用更少的计算步数收敛到理想结果，解决了许多深度学习对接方法计算成本高的问题。</p>
+<p>ForceFM 的适应性也很强。研究显示，使用不同的打分函数（如 Vina、Glide、Gnina）训练力引导网络，模型均能良好适应，并在各项盲对接和跨域评估中表现出色。这说明其核心框架具有普适性，可作为插件增强不同类型的对接工具。</p>
+<p>该模型目前主要处理刚性对接，假定蛋白质口袋的形状固定不变。真实的结合过程涉及蛋白质与配体的相互作用和动态构象变化，这是 ForceFM 下一步需要解决的挑战。未来的研究方向是将分子动力学（Molecular Dynamics）等体现蛋白质柔性的技术整合进来，使模型更贴近生物真实过程。</p>
+<p>📜Title: <em>ForceFM: Enhancing Protein-Ligand Predictions through Force-Guided Flow Matching</em><br>
+🌐Paper: https://openreview.net/pdf/ae92f0c9f07e2cab91eda336c624dcc34cb3fd7b.pdf</p>
+</section>
+<section id="hyperbind2多轮学习提升抗体发现效率" class="level2">
+<h2 class="anchored" data-anchor-id="hyperbind2多轮学习提升抗体发现效率">3. HyperBind2：多轮学习提升抗体发现效率</h2>
+<p><a href="post_all_image/hyper_bind2_multi_sh_2025_11_19_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/hyper_bind2_multi_sh_2025_11_19_image_1.jpg" class="img-fluid"></a></p>
+<p>抗体发现好比大海捞针。传统方法如展示技术或高通量筛选，均耗时费力，成本高昂。计算方法被寄予厚望，但预测准确性常不理想，导致大量计算筛选的候选分子在实验中失败。</p>
+<p>HyperBind2 为此提供了新思路。它没有追求一步到位找到完美抗体，而是采取了<strong>多轮学习</strong>的策略。</p>
+<p><strong>具体流程如下</strong>：</p>
+<p>首先，平台仅根据靶点的氨基酸序列进行大规模计算预筛选。模型将抗体和抗原的序列信息嵌入共享的表示空间，通过学习它们的几何关系来预测结合亲和力。这一步的优势在于，完全无需靶点三维结构，而获取结构正是药物研发中最耗时费力的环节之一。</p>
+<p>然后，从海量计算候选分子中挑选一小部分进行实验验证。此阶段规模不大，目的在于收集实验数据——确认哪些分子有效、哪些无效。</p>
+<p>最关键的一步，平台将这些新的实验数据反馈给模型，进行再训练与微调。通过学习真实的结合数据，模型能更准确地理解特定靶点的结合偏好，从而提升下一轮预测的性能。</p>
+<p>通过「计算预测 -&gt; 实验验证 -&gt; 模型优化」的循环，HyperBind2 的预测能力得以迭代增强。在一个针对高难度多跨膜受体的项目中，仅用三轮优化，实验成功率就达到了 21%。这个数字在计算领域，尤其是针对这类棘手靶点时，是一个巨大飞跃。这意味着研发人员能大幅减少湿实验需要验证的分子数量，节省时间和资源。</p>
+<p><strong>应用前景</strong></p>
+<p>HyperBind2 支持单链抗体 (scFvs)、纳米抗体 (VHHs) 和全长 IgG 等多种抗体格式，因此可以整合到嵌合抗原受体 T 细胞疗法 (CAR-T) 或双特异性 T 细胞衔接器 (BiTE) 等前沿疗法的开发流程中。</p>
+<p>目前，该平台已向学术界开源，并为工业界提供商业版。这使得不具备计算背景的实验室也能直接获得优化好的抗体序列，用于后续实验开发。</p>
+<p>📜<strong>论文标题</strong>: HyperBind2: Multi-Shot Learning Enables Progressive Improvement in Computational Antibody Discovery<br>
+🌐<strong>论文链接</strong>: <a href="https://www.biorxiv.org/content/10.1101/2025.11.06.687005v2" class="uri">https://www.biorxiv.org/content/10.1101/2025.11.06.687005v2</a></p>
+</section>
+<section id="ai-药物发现新策略分而治之各个击破" class="level2">
+<h2 class="anchored" data-anchor-id="ai-药物发现新策略分而治之各个击破">4. AI 药物发现新策略：分而治之，各个击破</h2>
+<p><a href="post_all_image/a_simple_compound_pr_2025_10_28_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="post_all_image/a_simple_compound_pr_2025_10_28_image_1.jpg" class="img-fluid"></a></p>
+<p>药物研发是一门平衡的艺术。我们希望化合物能强效作用于目标靶点，同时避开所有脱靶靶点。当需要优化的属性超过一个，比如要同时考虑靶点 A 的活性、靶点 B 的选择性以及溶解度时，问题就变得复杂。</p>
+<p>传统的计算方法，通常将所有目标打包成一个总的「目标函数」，再让一个机器学习模型去优化这个总分。</p>
+<p><strong>拆分任务，效果更好</strong></p>
+<p>这篇论文的作者们换了思路，采用「分离式采集」（separated acquisition）策略，组建了一个「专家团队」，每个模型负责一个任务。</p>
+<p>它的工作原理如下：<br>
+1. 为每个需要优化的属性，训练一个专门的机器学习模型。例如，一个模型预测分子与 JAK2 的结合能力，另一个模型预测它与其他激酶的结合能力。<br>
+2. 在主动学习的每一轮，算法会评估下一步该把计算资源用在哪里，才能让最终的总分最大化。是多计算几个分子在 JAK2 上的得分，还是在脱靶上的得分？</p>
+<p>这个决策过程很智能。如果某个属性对总分影响大，或某个模型的预测不确定性高、有提升空间，算法就会向它倾斜更多的计算预算（如昂贵的分子对接或动力学模拟）。这好比项目经理将经费优先投给项目中最关键或最薄弱的环节。</p>
+<p><strong>用真实数据说话</strong></p>
+<p>研究者们使用 DOCKSTRING 公开数据集进行回溯性验证，模拟了两个药物发现场景：</p>
+<ul>
+<li><strong>追求选择性</strong>：优化一个 JAK2 抑制剂，要求高活性命中 JAK2，同时避开结构相似的其他激酶。<br>
+</li>
+<li><strong>追求广谱性</strong>：优化一个 PPAR 激动剂，要求它能同时激活多个 PPAR 亚型。</li>
+</ul>
+<p><a href="../../Users/zero/Documents/_00_A-Z/Brain/Obsidian_Brain_Cards/Fleeting_Notes/Inbox/__post/__post_topo/AIDD/2025-12-07/New Folder With Items 8/a_simple_compound_pr_2025_10_28/a_simple_compound_pr_2025_10_28_image/a_simple_compound_pr_2025_10_28_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="../../Users/zero/Documents/_00_A-Z/Brain/Obsidian_Brain_Cards/Fleeting_Notes/Inbox/__post/__post_topo/AIDD/2025-12-07/New Folder With Items 8/a_simple_compound_pr_2025_10_28/a_simple_compound_pr_2025_10_28_image/a_simple_compound_pr_2025_10_28_image_1.jpg" class="img-fluid"></a></p>
+<p>结果显示，在两个场景中，「分离式」策略找到的优质化合物命中率都高于传统的「联合」策略。用同样多的计算资源，这套新方法能更快发现有潜力的分子。</p>
+<p><strong>实践价值与展望</strong></p>
+<p>这个方法有几个优点。</p>
+<p>首先，它符合药物化学家的工作直觉。实际项目中，研发人员也常聚焦于特定问题，比如先解决活性，再处理选择性。这种「分而治之」的计算策略，模拟并优化了现实研发流程。</p>
+<p>其次，它的扩展性好。真实的药物发现要考虑的属性远不止两三个，还包括 ADME（吸收、分布、代谢、排泄）、毒性等。该框架可以方便地加入更多「专家模型」，应对更复杂的优化任务。</p>
+<p>作者也指出了方法的局限。例如，需要预先定义一个明确的目标函数。此外，该方法目前未显式考虑分子多样性，可能导致搜索范围局限在较窄的化学空间。</p>
+<p>他们接下来的计划是将这套方法用于结合自由能计算。分子对接分数计算成本低但结果粗糙，而基于分子动力学（MD）的自由能计算更准但成本高昂。用这种智能分配策略来决定哪些分子值得进行昂贵的自由能计算，可能会提升先导化合物优化阶段的效率。</p>
+<p>📜论文：A Simple Compound Prioritization Method for Drug Discovery Considering Multi-Target Binding<br>
+🌐论文链接：https://doi.org/10.26434/chemrxiv-2025-vqg5k<br>
+💻代码链接：https://github.com/MobleyLab/active-learning-notebooks/blob/main/MultiobjectiveAL.ipynb</p>
+</section>
+<section id="apo2mol攻克蛋白质柔性难题的-ai-药物设计新路" class="level2">
+<h2 class="anchored" data-anchor-id="apo2mol攻克蛋白质柔性难题的-ai-药物设计新路">5. Apo2Mol：攻克蛋白质柔性难题的 AI 药物设计新路</h2>
+<p><a href="post_all_image/apo2mol_3d_molecule_2025_11_27_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-6"><img src="post_all_image/apo2mol_3d_molecule_2025_11_27_image_1.jpg" class="img-fluid"></a></p>
+<p>药物化学中我们一定要考虑一个情况：蛋白质并非静止不动的石头。</p>
+<p>传统基于结构的药物设计（SBDD）常面临棘手情况：只有蛋白质未结合配体时的<strong>空载结构（Apo structure</strong>）。如同为一只张开的手设计手套，手中却只有握拳时的照片。</p>
+<p>药物分子进入蛋白口袋时，会引发构象改变，即「诱导契合（Induced fit）」效应。现有 AI 模型多假设蛋白质为刚性，导致生成的分子理论完美，实际结合时亲和力不足。</p>
+<p><strong>Apo2Mol</strong> 引入<strong>动态口袋感知扩散模型（Dynamic Pocket-Aware Diffusion Model</strong>）解决这一难题。该模型在生成药物分子的同时实时调整蛋白质口袋形状，如同揉面团般让分子与口袋相互适应，最终达到能量最低的结合状态（Holo state）。</p>
+<p>团队对 <strong>PDB（蛋白质数据库</strong>）进行深度清洗，整理出超过 <strong>24,000 对</strong>经实验验证的 Apo-Holo 结构对。模型据此学习真实的物理法则，掌握配体进入时残基旋转与侧链避让的规律，从而准确预测新的配体 - 蛋白复合物。</p>
+<p>Apo2Mol 在生成高亲和力配体方面表现优异，且能生成逼真的口袋构象。这对针对全新靶点（First-in-class）的药物研发价值巨大——此类靶点通常仅有 Apo 结构，结合后的形态未知。对于面对高柔性、难成药靶点的计算辅助药物设计（CADD）研究，这是一种突破性的解决思路。</p>
+<p>📜Title: Apo2Mol: 3D Molecule Generation via Dynamic Pocket-Aware Diffusion Model<br>
+🌐Paper: <a href="https://arxiv.org/abs/2511.14559v1" class="uri">https://arxiv.org/abs/2511.14559v1</a></p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-12-08/post_all.zh.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

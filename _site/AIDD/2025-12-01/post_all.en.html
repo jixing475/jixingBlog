@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="Traditional retrosynthesis methods rely on huge amounts of data, like making a model memorize recipes. A new study proposes an “Atom-Anchoring” method that teaches a Large Language Model (LLM) to reason at the atomic level, just like a chemist, by giving each atom in a molecule a unique number. The method doesn’t require training on special reaction data. Using only zero-shot and few-shot prompts, it enables an LLM to accurately find breaking points in a molecule and predict the reactants. This shifts the AI from a search tool to a reasoning assistant with chemical intuition.">
+
+<title>A New Way to Use Large Models: Atom-Level Reasoning for Retrosynthesis – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="A New Way to Use Large Models: Atom-Level Reasoning for Retrosynthesis – MPU">
+<meta property="og:description" content="Traditional retrosynthesis methods rely on huge amounts of data, like making a model memorize recipes. A new study proposes an “Atom-Anchoring” method that teaches a Large Language Model (LLM) to reason at the atomic level, just like a chemist, by giving each atom in a molecule a unique number. The method doesn’t require training on special reaction data. Using only zero-shot and few-shot prompts, it enables an LLM to accurately find breaking points in a molecule and predict the reactants. This shifts the AI from a search tool to a reasoning assistant with chemical intuition.">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-12-01/post_all_image/atom_anchored_ll_ms_s_2025_10_28_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="A flowchart shows how the 'Atom-Anchoring' Large Language Model works for
+retrosynthesis. On the left is a target molecule with numbered atoms. The
+middle section shows the LLM reasoning to identify a suitable bond to
+break. On the right are the two starting reactants predicted by the model
+based on that break. The diagram illustrates how the model simulates a
+chemist's thinking process, using atom-level reasoning to plan a synthesis
+route rather than just matching a database.
+">
+<meta name="twitter:title" content="A New Way to Use Large Models: Atom-Level Reasoning for Retrosynthesis – MPU">
+<meta name="twitter:description" content="Traditional retrosynthesis methods rely on huge amounts of data, like making a model memorize recipes. A new study proposes an “Atom-Anchoring” method that teaches a Large Language Model (LLM) to reason at the atomic level, just like a chemist, by giving each atom in a molecule a unique number. The method doesn’t require training on special reaction data. Using only zero-shot and few-shot prompts, it enables an LLM to accurately find breaking points in a molecule and predict the reactants. This shifts the AI from a search tool to a reasoning assistant with chemical intuition.">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-12-01/post_all_image/atom_anchored_ll_ms_s_2025_10_28_image_1.jpg">
+<meta name="twitter:image:alt" content="A flowchart shows how the 'Atom-Anchoring' Large Language Model works for
+retrosynthesis. On the left is a target molecule with numbered atoms. The
+middle section shows the LLM reasoning to identify a suitable bond to
+break. On the right are the two starting reactants predicted by the model
+based on that break. The diagram illustrates how the model simulates a
+chemist's thinking process, using atom-level reasoning to plan a synthesis
+route rather than just matching a database.
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">A New Way to Use Large Models: Atom-Level Reasoning for Retrosynthesis</h1>
+                  <div>
+        <div class="description">
+          <p>Traditional retrosynthesis methods rely on huge amounts of data, like making a model memorize recipes. A new study proposes an “Atom-Anchoring” method that teaches a Large Language Model (LLM) to reason at the atomic level, just like a chemist, by giving each atom in a molecule a unique number. The method doesn’t require training on special reaction data. Using only zero-shot and few-shot prompts, it enables an LLM to accurately find breaking points in a molecule and predict the reactants. This shifts the AI from a search tool to a reasoning assistant with chemical intuition.</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">Retrosynthesis</div>
+                <div class="quarto-category">Large Language Models</div>
+                <div class="quarto-category">Atom-Anchoring</div>
+                <div class="quarto-category">Chemical Reasoning</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Monday, the 1st of December, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#table-of-contents" id="toc-table-of-contents" class="nav-link active" data-scroll-target="#table-of-contents">Table of Contents</a></li>
+  <li><a href="#do-llms-understand-chemistry-extending-vocabulary-to-break-the-smiles-bottleneck" id="toc-do-llms-understand-chemistry-extending-vocabulary-to-break-the-smiles-bottleneck" class="nav-link" data-scroll-target="#do-llms-understand-chemistry-extending-vocabulary-to-break-the-smiles-bottleneck">1. Do LLMs Understand Chemistry? Extending Vocabulary to Break the SMILES Bottleneck</a></li>
+  <li><a href="#the-mist-chemistry-large-model-ai-starts-to-understand-chemistrys-first-principles" id="toc-the-mist-chemistry-large-model-ai-starts-to-understand-chemistrys-first-principles" class="nav-link" data-scroll-target="#the-mist-chemistry-large-model-ai-starts-to-understand-chemistrys-first-principles">2. The MIST Chemistry Large Model: AI Starts to Understand Chemistry’s First Principles</a></li>
+  <li><a href="#a-new-way-to-use-large-models-atom-level-reasoning-for-retrosynthesis" id="toc-a-new-way-to-use-large-models-atom-level-reasoning-for-retrosynthesis" class="nav-link" data-scroll-target="#a-new-way-to-use-large-models-atom-level-reasoning-for-retrosynthesis">3. A New Way to Use Large Models: Atom-Level Reasoning for Retrosynthesis</a></li>
+  <li><a href="#ai-and-ppi-networks-predict-cancer-targets" id="toc-ai-and-ppi-networks-predict-cancer-targets" class="nav-link" data-scroll-target="#ai-and-ppi-networks-predict-cancer-targets">4. AI and PPI Networks Predict Cancer Targets</a></li>
+  <li><a href="#knowmol-giving-molecular-large-models-a-chemistry-lesson" id="toc-knowmol-giving-molecular-large-models-a-chemistry-lesson" class="nav-link" data-scroll-target="#knowmol-giving-molecular-large-models-a-chemistry-lesson">5. KnowMol: Giving Molecular Large Models a Chemistry Lesson</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-12-01/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="table-of-contents" class="level2">
+<h2 class="anchored" data-anchor-id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li>Giving general Large Language Models (LLMs) a specialized chemistry vocabulary helps them understand SMILES like text, improving drug synthesis design and property prediction.</li>
+<li>MIST sets new records in scale and performance. It uses a new molecular representation to understand the fundamental principles of chemistry, moving beyond simple pattern matching.</li>
+<li>By giving each atom in a molecule a unique number, a Large Language Model can think like a chemist about how to deconstruct it, with almost no need for specialized reaction data training.</li>
+<li>By combining Protein-Protein Interaction (PPI) network centrality with node embeddings, this research achieved a high accuracy of 0.930 and used GradientSHAP to show that “degree centrality” is the key metric for predicting gene essentiality.</li>
+<li>KnowMol uses a carefully built set of chemical knowledge to teach a Large Language Model how a chemist thinks, enabling it to not just recognize molecules but understand the principles behind them.</li>
+</ol>
+</section>
+<section id="do-llms-understand-chemistry-extending-vocabulary-to-break-the-smiles-bottleneck" class="level2">
+<h2 class="anchored" data-anchor-id="do-llms-understand-chemistry-extending-vocabulary-to-break-the-smiles-bottleneck">1. Do LLMs Understand Chemistry? Extending Vocabulary to Break the SMILES Bottleneck</h2>
+<p><a href="post_all_image/the_tokenization_bot_2025_11_27_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/the_tokenization_bot_2025_11_27_image_1.jpg" class="img-fluid"></a></p>
+<p>Large Language Models (LLMs) often struggle with chemistry. To a standard LLM, a molecule’s SMILES string looks like nonsense. A general-purpose tokenizer, trained on plain text, will mechanically chop up a chemical string like <code>c1ccccc1</code> into meaningless character fragments. The model can then recognize the characters but not the chemical logic behind them. This is known as the “Tokenization Bottleneck.”</p>
+<p>To fix this, the researchers rebuilt the model’s vocabulary instead of changing its architecture. They avoided complex dual-encoder setups or external graph neural networks and instead taught the model “chemistry words.” Through data-driven analysis, they extracted 17,795 new tokens from a massive corpus of SMILES strings.</p>
+<p>Extending the vocabulary changes how the model sees a molecule. A benzene ring, once split into isolated characters, is now recognized as a complete substructure with chemical meaning. This approach significantly reduces information fragmentation.</p>
+<p>To get the model to internalize these new words, the team performed continued pre-training. By mixing chemistry-specific text with general-purpose text, the model learned specialized chemical knowledge while retaining its original language capabilities, which helped avoid catastrophic forgetting.</p>
+<p>Experiments showed that this “extended-vocabulary” model outperformed both the original base model and models that only underwent simple continued training. This was true across core tasks like retrosynthesis, forward synthesis prediction, molecule captioning, and property prediction.</p>
+<p>This work shows that SMILES is, in essence, a language. Molecular structures don’t need to be treated as a special modality. As long as the vocabulary is adapted, an LLM can understand the word “benzene” and its chemical structure within the same semantic space. This helps lay the groundwork for building a unified, general-purpose foundation model for chemistry.</p>
+<p>📜Title: The Tokenization Bottleneck: How Vocabulary Extension Improves Chemistry Representation Learning in Pretrained Language Models<br>
+🌐Paper: <a href="https://arxiv.org/abs/2511.14365v1" class="uri">https://arxiv.org/abs/2511.14365v1</a></p>
+</section>
+<section id="the-mist-chemistry-large-model-ai-starts-to-understand-chemistrys-first-principles" class="level2">
+<h2 class="anchored" data-anchor-id="the-mist-chemistry-large-model-ai-starts-to-understand-chemistrys-first-principles">2. The MIST Chemistry Large Model: AI Starts to Understand Chemistry’s First Principles</h2>
+<p><a href="post_all_image/foundation_models_fo_2025_10_28_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/foundation_models_fo_2025_10_28_image_1.jpg" class="img-fluid"></a></p>
+<p>Past methods for teaching computers chemistry, like molecular fingerprints, SMILES strings, or graph representations, were all high-level abstractions of molecules. They lost a lot of information, like describing a person only by their ID number.</p>
+<p>The researchers behind MIST broke molecules down into their most basic information: atomic nuclei (element type), electron clouds (key to chemical reactions), and 3D geometry (which determines how molecules interact). They packaged this information into a new “language” of tokens for the model to learn.</p>
+<p>This approach is like teaching a child about the world. Instead of just showing a photo of an apple (2D structure), you let them touch its shape, feel its texture, and smell it (3D geometry and electronic information). Knowledge learned this way is deeper and more generalizable.</p>
+<p>During training on massive datasets, the model independently “discovered” the patterns of the periodic table. By analyzing basic information like nuclei and electrons, it figured out trends on its own, such as “lithium and sodium have similar properties,” even though no one explicitly taught it that. MIST is learning to understand chemistry from underlying physical laws, moving beyond simple interpolation of input data. This is a key step from rote memorization to genuine understanding.</p>
+<p>Understanding isn’t enough; the model also has to solve problems. MIST was applied to two real-world challenges: screening solvents for battery electrolytes and predicting the odor of molecules. Both tasks are complex. The first requires predicting multiple macroscopic physicochemical properties, while the second touches the intersection of biology and chemistry. MIST achieved state-of-the-art results on both. A good foundation model, like a chemist with a solid foundation, can be quickly fine-tuned to solve specific problems in different fields.</p>
+<p>A major challenge in training large models is tuning hyperparameters, which consumes huge computational resources. This team proposed “hyperparameter-penalized Bayesian neural scaling laws,” an efficient model training method that can reduce computational costs by an order of magnitude. This is good news for academic labs or startups with limited resources.</p>
+<p>They have released all their code, model weights, and training methods. Anyone can build on their work to explore unknown areas of chemical space. This is how you push an entire field forward.</p>
+<p>Work like MIST points to a future for AI for Science where AI transforms from a computational tool into a research partner, discovering new scientific principles from the vast amounts of data we overlook.</p>
+<p>📜Title: Foundation Models for Discovery and Exploration in Chemical Space<br>
+🌐Paper: https://arxiv.org/abs/2510.18900</p>
+</section>
+<section id="a-new-way-to-use-large-models-atom-level-reasoning-for-retrosynthesis" class="level2">
+<h2 class="anchored" data-anchor-id="a-new-way-to-use-large-models-atom-level-reasoning-for-retrosynthesis">3. A New Way to Use Large Models: Atom-Level Reasoning for Retrosynthesis</h2>
+<p><a href="post_all_image/atom_anchored_ll_ms_s_2025_10_28_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/atom_anchored_ll_ms_s_2025_10_28_image_1.jpg" class="img-fluid"></a></p>
+<p>In synthetic chemistry, planning a retrosynthesis route is like disassembling a precision watch without a blueprint. It requires experience and intuition to know where to start. Traditional computational methods rely on huge, annotated databases of chemical reactions, which is like making a model “memorize recipes.” The problem is that if the model encounters a new molecule or reaction, it fails because it has no precedent.</p>
+<p>Researchers have proposed a new method to teach a Large Language Model (LLM) to analyze molecular structures through reasoning, just like a chemist.</p>
+<p>The core of this method is “Atom-Anchoring.”</p>
+<p>Molecules are often represented by SMILES strings. For example, isopropanol is <code>CC(C)O</code>. In this format, it’s hard for a computer to tell the different carbon atoms apart. The researchers introduced a simple change: give every atom a unique number, like <code>C1C2(C3)O4</code>.</p>
+<p>This change makes a fundamental difference.</p>
+<p>It’s like telling a robot to assemble LEGOs. The instructions change from a vague “connect the red block and the blue block” to a precise “connect red block #A73 to blue block #B12.” With atom numbers, the LLM has a tool to accurately refer to any part of the molecule. It can focus on the fundamental level of atoms and bonds instead of looking at a fuzzy overall structure.</p>
+<p>Based on this tool, they designed a two-step process that mimics a chemist’s thought process.</p>
+<p><strong>Step 1: Find the Break Point (Position Model)</strong></p>
+<p>The researchers gave a molecule with numbered atoms to an LLM (like GPT-4) and asked a zero-shot question: “Looking at this molecule, which chemical bond is the best one to break for retrosynthesis? What type of reaction might this be?”</p>
+<p>Zero-shot means they provided no examples, relying entirely on the chemical knowledge the model learned from massive amounts of text. It’s like consulting a chemistry student who can make judgments based on first principles.</p>
+<p>The results showed that the model has strong “chemical intuition.” Its success rate in identifying reasonable break points was over 90%, showing that it could already spot the “weak links” in a molecule.</p>
+<p><strong>Step 2: Predict the Reactants (Transition Model)</strong></p>
+<p>Once the model identified a break point (e.g., cutting the bond between <code>C5</code> and <code>N2</code>) and a possible reaction type (e.g., amide bond formation), it moved to the second step.</p>
+<p>Here, the researchers provided a few simple examples—a few-shot prompt—like a teacher highlighting key topics before an exam. Then they asked: “If you cut between <code>C5</code> and <code>N2</code> for an amidation reaction, what are the starting materials?”</p>
+<p>The model used this information to output the corresponding reactant molecules. For a model with almost no training on specific chemical reaction data, a final success rate of over 74% is a significant achievement.</p>
+<p>This work shows a new way to work with large language models, turning them from a database for search and matching into a “chemistry assistant” with reasoning abilities.</p>
+<p>The atom-anchoring method allows LLMs to be useful for chemistry problems where data is scarce, like predicting molecular properties or designing new catalysts. It provides a general blueprint for mapping abstract chemical knowledge onto specific molecular structures. The model’s success rate for correctly naming the reaction type was 40%, indicating its “knowledge base” still has gaps. But it has learned the right “thinking method,” which is a critical step.</p>
+<p>📜Title: Atom-Anchored LLMs Speak Chemistry: A Retrosynthesis Demonstration<br>
+🌐Paper: <a href="https://arxiv.org/abs/2510.16590v1" class="uri">https://arxiv.org/abs/2510.16590v1</a></p>
+</section>
+<section id="ai-and-ppi-networks-predict-cancer-targets" class="level2">
+<h2 class="anchored" data-anchor-id="ai-and-ppi-networks-predict-cancer-targets">4. AI and PPI Networks Predict Cancer Targets</h2>
+<p><a href="post_all_image/explainable_deep_lea_2025_11_27_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="post_all_image/explainable_deep_lea_2025_11_27_image_1.jpg" class="img-fluid"></a></p>
+<p>In drug development, target selection is the most expensive and failure-prone stage. AI can help with screening, but it often suffers from the “black box” problem: the machine gives a recommendation but can’t explain why. For a project that costs a huge amount of money and time, a cold probability score is not nearly enough. A new study on ArXiv aims to solve this problem.</p>
+<p><strong>Looking at “relationships,” not just “who”</strong></p>
+<p>Instead of just piling on omics data, this study uses the high-quality Protein-Protein Interaction (PPI) network from the STRING database. It combines traditional network centrality measures (which gauge a protein’s importance as a hub) with Node2Vec embeddings. This is like studying both the protein itself and its “status” and “social circle” within the network. The results showed the model achieved an AUROC of 0.930, which is state-of-the-art in computational oncology.</p>
+<p><strong>SHAP values reveal the truth</strong></p>
+<p>The core highlight of the paper is its use of GradientSHAP analysis to reverse-engineer the model’s decisions. The data showed that “degree centrality” is highly correlated with a gene’s importance (correlation of -0.357). The biological explanation is simple: the more connections a protein has, the more likely it is to be essential for a cancer cell’s survival. The data provided hard evidence for this biological intuition.</p>
+<p><strong>A better way to rank</strong></p>
+<p>The study proposes a “Blended Scoring” mechanism, which combines the model’s predicted probability with the magnitude of its SHAP attribution. This screening method is like an audition where judges consider both the high score and whether the reasons for that score are solid. The resulting list of targets has both statistical confidence and a clear mechanistic explanation.</p>
+<p><strong>Putting it to the test</strong></p>
+<p>In the validation phase, the model accurately identified ribosomal proteins (like RPS27A, RPS17) and the well-known oncogene MYC. The fact that these widely recognized “essential genes” were successfully captured proves that the model has grasped the underlying logic of cancer biology.</p>
+<p>This kind of transparent, explainable <em>in silico</em> design could gradually reduce our reliance on animal models. For drug development, knowing <em>why</em> a target was chosen is more valuable than just getting a high score.</p>
+<p>📜Title: Explainable deep learning framework for cancer therapeutic target prioritization leveraging PPI centrality and node embeddings<br>
+🌐Paper: <a href="https://arxiv.org/abs/2511.12463" class="uri">https://arxiv.org/abs/2511.12463</a></p>
+</section>
+<section id="knowmol-giving-molecular-large-models-a-chemistry-lesson" class="level2">
+<h2 class="anchored" data-anchor-id="knowmol-giving-molecular-large-models-a-chemistry-lesson">5. KnowMol: Giving Molecular Large Models a Chemistry Lesson</h2>
+<p><a href="post_all_image/know_mol_advancing_m_2025_10_28_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="post_all_image/know_mol_advancing_m_2025_10_28_image_1.jpg" class="img-fluid"></a></p>
+<p>In drug discovery, we’ve been looking for an AI that can “understand” chemistry. Some past Molecular Large Language Models (Mol-LLMs) are good at finding patterns, like a student who gets high scores by cramming for tests. If you give them a SMILES string, they can predict properties or even generate new molecules, but they can’t explain the reasons behind the chemical structure. They recognize patterns, but they don’t understand the chemical principles.</p>
+<p>The work behind KnowMol is about giving this specialized student the critical chemistry lesson it’s missing.</p>
+<section id="the-core-idea-feed-it-knowledge-not-just-data" class="level4">
+<h4 class="anchored" data-anchor-id="the-core-idea-feed-it-knowledge-not-just-data">The Core Idea: Feed it knowledge, not just data</h4>
+<p>Many AI models are trained on huge amounts of data. But chemistry is a science with its own internal logic and hierarchical structure. A molecule has functional groups, scaffolds, and pharmacophores—concepts that chemists have developed over hundreds of years.</p>
+<p>The KnowMol researchers first systematically organized this chemical knowledge into a high-quality dataset called KnowMol-100K. This dataset contains detailed annotations for 100,000 molecules, covering multiple levels from atoms and functional groups to overall molecular properties. This is like giving the AI a chemistry textbook with detailed notes, rather than letting it wander through a massive library of scientific papers on its own. By learning these annotations, the model can connect text descriptions to specific chemical structures.</p>
+</section>
+<section id="talking-to-the-ai-in-a-chemists-language" class="level4">
+<h4 class="anchored" data-anchor-id="talking-to-the-ai-in-a-chemists-language">Talking to the AI in a chemist’s language</h4>
+<p>To help the model understand molecules better, the first step was to fix the way they are represented.</p>
+<p>The commonly used SMILES strings are concise but “brittle” for a machine. A tiny change can produce an invalid or completely unrelated molecule, causing the model to generate a lot of meaningless “gibberish.”</p>
+<p>KnowMol uses a more robust language called SELFIES. SELFIES is designed to ensure that almost any string corresponds to a valid chemical structure. This is like installing a grammar checker for the model, making sure every molecule it generates follows the basic rules of chemistry and improving the efficiency and success rate of generation tasks.</p>
+<p><a href="post_all_image/know_mol_advancing_m_2025_10_28_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-6"><img src="post_all_image/know_mol_advancing_m_2025_10_28_image_1.jpg" class="img-fluid"></a></p>
+<p>Besides optimizing the 1D string representation, the researchers also improved the model’s understanding of 2D graphs by designing a hierarchical graph encoder. A normal encoder sees a molecule as a flat graph of atoms and bonds. But this hierarchical encoder can think like a chemist, identifying the “neighborhoods” (functional groups) and “main roads” (molecular scaffold) in the graph and understanding their relationships. This part-to-whole way of understanding is closer to how human chemists think.</p>
+</section>
+<section id="how-well-does-it-actually-work" class="level4">
+<h4 class="anchored" data-anchor-id="how-well-does-it-actually-work">How well does it actually work?</h4>
+<p>The experimental results show that this approach works well. Whether for molecule captioning tasks or generating molecules from a description, KnowMol outperformed previous models.</p>
+<p>For example, in question-answering tasks, it can more accurately identify molecular formulas, functional groups, and analyze structure and properties. It hasn’t just memorized knowledge; it has learned to apply it. For drug discovery, researchers can make more specific requests, like “I want a small molecule that can bind to the hinge region of a specific kinase and also has good solubility,” and the model is more likely to give a reasonable answer.</p>
+<p>KnowMol’s work suggests that in the field of AI for drug discovery, simply chasing bigger models and more data may not be the best solution. Figuring out how to efficiently “teach” AI the valuable knowledge that human chemists have accumulated—turning it from a pattern-recognition tool into a partner that truly understands chemistry—may be a more important direction for the future.</p>
+<p>📜Title: KnowMol: Advancing Molecular Large Language Models with Multi-Level Chemical Knowledge<br>
+🌐Paper: https://arxiv.org/abs/2510.19484</p>
+
+
+</section>
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-12-01/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

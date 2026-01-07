@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="How does the Rep3Net model fuse multimodal information to accurately predict the activity of PARP-1 inhibitors? This framework combines molecular descriptors, ChemBERTa language model embeddings, and graph neural network features to overcome the limitations of single molecular representations. Benchmarked on the cancer target PARP-1, Rep3Net shows superior performance over traditional QSAR models, providing a more reliable tool for virtual screening in early-stage drug discovery.">
+
+<title>Rep3Net: Using Multimodal Information to Accurately Predict PARP-1 Inhibitor Activity – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="Rep3Net: Using Multimodal Information to Accurately Predict PARP-1 Inhibitor Activity – MPU">
+<meta property="og:description" content="How does the Rep3Net model fuse multimodal information to accurately predict the activity of PARP-1 inhibitors? This framework combines molecular descriptors, ChemBERTa language model embeddings, and graph neural network features to overcome the limitations of single molecular representations. Benchmarked on the cancer target PARP-1, Rep3Net shows superior performance over traditional QSAR models, providing a more reliable tool for virtual screening in early-stage drug discovery.">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-12-11/post_all_image/rep3net_an_approach_2025_12_04_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="An abstract digital art illustration shows a glowing sphere in the center, symbolizing a molecule. Multiple blue and purple data streams flow into it, forming a complex network. The image visualizes the core idea of the Rep3Net model: fusing multimodal information to predict drug activity. The central molecule represents a PARP-1 inhibitor, while the different data streams represent molecular descriptors, ChemBERTa embeddings, and graph features. The overall network structure illustrates how the model integrates this heterogeneous data to achieve accurate predictions of molecular bioactivity.
+">
+<meta name="twitter:title" content="Rep3Net: Using Multimodal Information to Accurately Predict PARP-1 Inhibitor Activity – MPU">
+<meta name="twitter:description" content="How does the Rep3Net model fuse multimodal information to accurately predict the activity of PARP-1 inhibitors? This framework combines molecular descriptors, ChemBERTa language model embeddings, and graph neural network features to overcome the limitations of single molecular representations. Benchmarked on the cancer target PARP-1, Rep3Net shows superior performance over traditional QSAR models, providing a more reliable tool for virtual screening in early-stage drug discovery.">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-12-11/post_all_image/rep3net_an_approach_2025_12_04_image_1.jpg">
+<meta name="twitter:image:alt" content="An abstract digital art illustration shows a glowing sphere in the center, symbolizing a molecule. Multiple blue and purple data streams flow into it, forming a complex network. The image visualizes the core idea of the Rep3Net model: fusing multimodal information to predict drug activity. The central molecule represents a PARP-1 inhibitor, while the different data streams represent molecular descriptors, ChemBERTa embeddings, and graph features. The overall network structure illustrates how the model integrates this heterogeneous data to achieve accurate predictions of molecular bioactivity.
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">Rep3Net: Using Multimodal Information to Accurately Predict PARP-1 Inhibitor Activity</h1>
+                  <div>
+        <div class="description">
+          <p>How does the Rep3Net model fuse multimodal information to accurately predict the activity of PARP-1 inhibitors? This framework combines molecular descriptors, ChemBERTa language model embeddings, and graph neural network features to overcome the limitations of single molecular representations. Benchmarked on the cancer target PARP-1, Rep3Net shows superior performance over traditional QSAR models, providing a more reliable tool for virtual screening in early-stage drug discovery.</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">Multimodal Learning</div>
+                <div class="quarto-category">Drug Activity Prediction</div>
+                <div class="quarto-category">PARP-1</div>
+                <div class="quarto-category">Graph Neural Network</div>
+                <div class="quarto-category">ChemBERTa</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Thursday, the 11th of December, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#table-of-contents" id="toc-table-of-contents" class="nav-link active" data-scroll-target="#table-of-contents">Table of Contents</a></li>
+  <li><a href="#apexgen-simultaneously-generating-peptide-sequence-and-structure-with-flow-matching" id="toc-apexgen-simultaneously-generating-peptide-sequence-and-structure-with-flow-matching" class="nav-link" data-scroll-target="#apexgen-simultaneously-generating-peptide-sequence-and-structure-with-flow-matching">1. ApexGen: Simultaneously Generating Peptide Sequence and Structure with Flow Matching</a></li>
+  <li><a href="#primo-solving-few-shot-prediction-in-protein-engineering" id="toc-primo-solving-few-shot-prediction-in-protein-engineering" class="nav-link" data-scroll-target="#primo-solving-few-shot-prediction-in-protein-engineering">2. PRIMO: Solving Few-Shot Prediction in Protein Engineering</a></li>
+  <li><a href="#combining-multi-omics-and-temporal-dynamics-to-reconstruct-gene-regulatory-network-analysis" id="toc-combining-multi-omics-and-temporal-dynamics-to-reconstruct-gene-regulatory-network-analysis" class="nav-link" data-scroll-target="#combining-multi-omics-and-temporal-dynamics-to-reconstruct-gene-regulatory-network-analysis">3. Combining Multi-omics and Temporal Dynamics to Reconstruct Gene Regulatory Network Analysis</a></li>
+  <li><a href="#rep3net-fusing-multimodal-information-to-accurately-predict-parp-1-inhibitor-activity" id="toc-rep3net-fusing-multimodal-information-to-accurately-predict-parp-1-inhibitor-activity" class="nav-link" data-scroll-target="#rep3net-fusing-multimodal-information-to-accurately-predict-parp-1-inhibitor-activity">4. Rep3Net: Fusing Multimodal Information to Accurately Predict PARP-1 Inhibitor Activity</a></li>
+  <li><a href="#fine-tuning-esm2-to-accurately-identify-transcription-factors-and-their-methylation-binding" id="toc-fine-tuning-esm2-to-accurately-identify-transcription-factors-and-their-methylation-binding" class="nav-link" data-scroll-target="#fine-tuning-esm2-to-accurately-identify-transcription-factors-and-their-methylation-binding">5. Fine-Tuning ESM2 to Accurately Identify Transcription Factors and Their Methylation Binding</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-12-11/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="table-of-contents" class="level2">
+<h2 class="anchored" data-anchor-id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li>ApexGen uses flow matching to simultaneously optimize peptide sequence and 3D structure in a single, deterministic process, solving the traditional problem of disconnected sequence and structure design to improve binding affinity and physical realism.</li>
+<li>The PRIMO framework combines in-context learning with test-time training to predict protein fitness, including complex insertion and deletion mutations, using only a small amount of experimental data.</li>
+<li>Traditional static models struggle to capture the transient interactions in gene regulation. This study proposes a new computational framework that integrates multi-omics data with temporal dynamics to solve this problem.</li>
+<li>Rep3Net fuses molecular descriptors, ChemBERTa, and graph features to accurately predict the activity of PARP-1 inhibitors, outperforming single-modality models.</li>
+<li>Using a fine-tuned ESM2, a two-layer prediction framework accurately identifies transcription factors and reveals their binding preferences for DNA methylation and key sequence motifs.</li>
+</ol>
+</section>
+<section id="apexgen-simultaneously-generating-peptide-sequence-and-structure-with-flow-matching" class="level2">
+<h2 class="anchored" data-anchor-id="apexgen-simultaneously-generating-peptide-sequence-and-structure-with-flow-matching">1. ApexGen: Simultaneously Generating Peptide Sequence and Structure with Flow Matching</h2>
+<p><a href="post_all_image/apex_gen_simultaneou_2025_11_27_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/apex_gen_simultaneou_2025_11_27_image_1.jpg" class="img-fluid"></a></p>
+<p>Peptide drug design has long been held back by computational complexity. Traditional methods usually treat “sequence optimization” and “structure generation” as separate steps. This approach often leads to a trade-off: a seemingly good sequence can’t fold into the right shape, or a perfect structure is chemically impossible to synthesize.</p>
+<p><strong>ApexGen</strong> offers a new AI framework to break this deadlock. It uses flow matching in a mathematical space called a “product manifold” to handle a peptide’s backbone torsion, rigid body position, amino acid type, and side-chain angles all at once. The peptide’s sequence identity and geometric structure evolve together in the same process.</p>
+<p>The advantage of this method is <strong>geometric consistency</strong>. Unlike many models that generate structures needing a “fix” to obey physical laws, ApexGen produces structures that are physically plausible from the start, with no extra corrections needed.</p>
+<p>In comparisons with existing models like PepFlow, ApexGen shows strong performance. Its generated structures are highly similar to naturally folded peptides, with an average TM-score of 0.99, which is close to the theoretical limit in computational structural biology.</p>
+<p><strong>Whole-receptor conditioning</strong> shows the depth of this model’s design. The AI no longer just focuses on the binding pocket but perceives the context of the entire receptor protein. This global view ensures the peptide fits precisely into the binding site and avoids steric clashes with other parts of the receptor.</p>
+<p>From a chemical perspective, the generated peptides are highly realistic. They follow natural Ramachandran plot distributions, have natural backbone angles, and show good chemical intuition—they know to use polar and aromatic residues at key interfaces to enhance binding. Evaluations with Boltz-2 and PyRosetta also confirm that these designs are more energetically favorable.</p>
+<p>ApexGen provides a powerful tool for tackling difficult protein-protein interaction (PPI) targets in drug development. It can quickly generate diverse and structurally sound candidate molecules, significantly shortening the early screening cycle. As the library of non-natural amino acids expands and experimental data is fed back into the loop, this tool will become even more useful.</p>
+<p>📜Title: ApexGen: Simultaneous design of peptide binder sequence and structure for target proteins 🌐Paper: https://arxiv.org/abs/2511.14663</p>
+</section>
+<section id="primo-solving-few-shot-prediction-in-protein-engineering" class="level2">
+<h2 class="anchored" data-anchor-id="primo-solving-few-shot-prediction-in-protein-engineering">2. PRIMO: Solving Few-Shot Prediction in Protein Engineering</h2>
+<p><a href="post_all_image/few_shot_protein_fit_2025_12_04_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/few_shot_protein_fit_2025_12_04_image_1.jpg" class="img-fluid"></a></p>
+<p>Protein and antibody engineering often faces a dilemma: you need a lot of data to predict the effect of a mutation, but you usually only have a handful of wet lab results. Deep learning models typically require massive datasets to train. Zero-shot models that rely on evolutionary information can run, but they struggle to capture the nuances of specific experimental conditions. The PRIMO framework was designed to solve this “few-shot” problem.</p>
+<p><strong>Core Logic: In-Context Learning and Test-Time Training</strong></p>
+<p>PRIMO uses an in-context learning approach similar to GPT: you show the model a few examples like “mutant A has high activity, mutant B has low activity,” and it learns to predict the activity of mutant C.</p>
+<p>On top of this, PRIMO introduces <strong>test-time training</strong>. During the inference stage, the model quickly fine-tunes itself using the scarce experimental data available. It’s like cramming for a test by focusing on specific types of questions, adapting to the current prediction task.</p>
+<p><strong>How It Works</strong></p>
+<p>The researchers designed a unified encoding method to feed three types of information into the model: 1. Protein sequence information. 2. Auxiliary zero-shot prediction scores (baseline values calculated from existing evolutionary models). 3. Sparse experimental labels.</p>
+<p>This information is converted into tokens and processed in a pre-trained masked-language modeling framework. To distinguish between good and bad mutations, the researchers use a preference-based loss function. The model focuses on the relative ranking of mutants rather than their exact values, which is more practical for screening highly active molecules.</p>
+<p><strong>Tackling “Insertion and Deletion” Mutations</strong></p>
+<p>Substitutions are relatively easy to handle. Insertions and deletions (indels), which change the length of the sequence, often cause alignment-based models to fail. PRIMO can effectively handle these complex changes to protein structure, showing strong robustness.</p>
+<p><strong>No “Gaming the Leaderboard”: More Realistic Benchmarking</strong></p>
+<p>Randomly splitting datasets can lead to overly high similarity between the training and test sets, inflating performance scores. The researchers introduced a “natural evolution benchmark” to ensure that training and test sequences are sufficiently different. The results show that even in this more challenging setup, PRIMO outperforms existing zero-shot and fully supervised benchmark models.</p>
+<p>For drug development professionals who are working with a new target and only have a few dozen data points, PRIMO is a tool worth trying.</p>
+<p>📜Title: Few-shot Protein Fitness Prediction via In-context Learning and Test-time Training 🌐Paper: <a href="https://arxiv.org/abs/2512.02315v1" class="uri">https://arxiv.org/abs/2512.02315v1</a></p>
+</section>
+<section id="combining-multi-omics-and-temporal-dynamics-to-reconstruct-gene-regulatory-network-analysis" class="level2">
+<h2 class="anchored" data-anchor-id="combining-multi-omics-and-temporal-dynamics-to-reconstruct-gene-regulatory-network-analysis">3. Combining Multi-omics and Temporal Dynamics to Reconstruct Gene Regulatory Network Analysis</h2>
+<p><a href="post_all_image/a_new_approach_in_co_2025_11_27_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/a_new_approach_in_co_2025_11_27_image_1.jpg" class="img-fluid"></a></p>
+<p>The field of computational biology has long worked to simulate Gene Regulatory Networks (GRNs). Old models were like static photographs—they could capture the relationships between molecules at a single moment but missed the process of their interaction. A new study has built a computational framework that strings these “photographs” together into a continuous “movie.”</p>
+<p><strong>Breaking Down Data Silos</strong></p>
+<p>The core of this framework is the integration of multi-omics data. Understanding complex cellular states requires this kind of holistic perspective. Biological processes are intricate, with genetic and epigenetic factors intertwined. The new framework reveals how different layers of regulators work together to influence gene expression.</p>
+<p><strong>Introducing the Time Dimension</strong></p>
+<p>Traditional analysis often ignores fleeting signals, but this research focuses on the temporal dynamics of gene regulation. During development or disease progression, key regulatory events are often transient. The new framework shows how these brief interactions can trigger a “butterfly effect,” leading to long-term changes in cell function. This ability to capture dynamic changes is crucial for understanding biochemical mechanisms.</p>
+<p><strong>From Simulation to Practice</strong></p>
+<p>An algorithm’s real-world use depends on its ability to handle data. The researchers optimized the framework’s scalability, allowing it to efficiently process terabyte-scale high-throughput sequencing data, which is essential for industrial applications. Validated through both simulated experiments and real biological scenarios (like developmental biology case studies), this tool is not just theoretical—it can uncover regulatory mechanisms that were previously overlooked.</p>
+<p>📜Title: A New Approach in Computational Biology: Exploring the Dynamics of Gene Regulatory Networks 🌐Paper: <a href="https://arxiv.org/abs/2511.14676" class="uri">https://arxiv.org/abs/2511.14676</a></p>
+</section>
+<section id="rep3net-fusing-multimodal-information-to-accurately-predict-parp-1-inhibitor-activity" class="level2">
+<h2 class="anchored" data-anchor-id="rep3net-fusing-multimodal-information-to-accurately-predict-parp-1-inhibitor-activity">4. Rep3Net: Fusing Multimodal Information to Accurately Predict PARP-1 Inhibitor Activity</h2>
+<p><a href="post_all_image/rep3net_an_approach_2025_12_04_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="post_all_image/rep3net_an_approach_2025_12_04_image_1.jpg" class="img-fluid"></a></p>
+<p>When predicting drug activity, researchers often choose between different methods: classic molecular fingerprints, Graph Neural Networks (GNNs), or Transformer-based Large Language Models (LLMs). This study on Rep3Net shows that fusing multiple methods is a better solution.</p>
+<p><strong>The Need for a Multimodal Perspective</strong></p>
+<p>Any single way of representing a molecule has its limits. Rep3Net’s architecture is designed to fuse three sources of information: 1. <strong>Molecular descriptors</strong>: These capture the physicochemical properties of a molecule, like molecular weight and LogP. 2. <strong>ChemBERTa embeddings</strong>: A pre-trained model based on Transformers that treats SMILES strings as a chemical language to extract contextual information. 3. <strong>Graph features</strong>: These directly process the molecule’s topological structure, focusing on the connections and spatial relationships between atoms.</p>
+<p>This multimodal strategy is designed to make up for the shortfalls of any single approach. Data from an ablation study confirmed that removing any one module causes the model’s prediction performance to drop. All three together achieve the best results.</p>
+<p><strong>Performance in Action: PARP-1 Inhibitors</strong></p>
+<p>The researchers chose Poly(ADP-ribose) polymerase 1 (PARP-1) as their test target. PARP-1 is a well-established and important target in cancer therapy, with a large amount of high-quality activity data available, making it a convincing benchmark.</p>
+<p>The results showed that Rep3Net performed better than traditional QSAR models on metrics like mean squared error, coefficient of determination, and Pearson correlation coefficient. This means its predictions and ranking ability are more reliable when screening for new compound scaffolds targeting PARP-1.</p>
+<p><strong>Balancing Computing Power and Engineering</strong></p>
+<p>Rep3Net has been optimized in its engineering implementation. It uses a parallel architecture to process the different molecular representations. This ensures the model is powerful enough to capture complex structure-activity relationships while maintaining reasonable computational efficiency. This is critical for early-stage drug discovery, which requires rapid screening of large virtual compound libraries.</p>
+<p><strong>What’s Next?</strong></p>
+<p>The model has mainly been validated on PARP-1. The future challenge is to generalize this architecture to other targets where the chemical space is broader and the data is more sparse. Also, multimodal models often face issues with interpretability. Using explainable AI techniques to clarify the basis for the model’s decisions will be crucial for earning the trust of chemists.</p>
+<p>📜Title: Rep3Net: An Approach Exploiting Multimodal Representation for Molecular Bioactivity Prediction 🌐Paper: <a href="https://arxiv.org/abs/2512.00521v1" class="uri">https://arxiv.org/abs/2512.00521v1</a></p>
+</section>
+<section id="fine-tuning-esm2-to-accurately-identify-transcription-factors-and-their-methylation-binding" class="level2">
+<h2 class="anchored" data-anchor-id="fine-tuning-esm2-to-accurately-identify-transcription-factors-and-their-methylation-binding">5. Fine-Tuning ESM2 to Accurately Identify Transcription Factors and Their Methylation Binding</h2>
+<p><a href="post_all_image/fine_tuning_protein_2025_12_04_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="post_all_image/fine_tuning_protein_2025_12_04_image_1.jpg" class="img-fluid"></a></p>
+<p>Protein language models (pLMs) are evolving from general-purpose tools into specialized experts. A new study on bioRxiv uses Meta’s ESM2 model and fine-tuning to tackle a core problem: <strong>identifying transcription factors (TFs) and their sensitivity to DNA methylation</strong>.</p>
+<p><strong>A Two-Layer Prediction Architecture</strong></p>
+<p>Transcription factors are numerous and have diverse functions. The study designed a two-layer prediction framework:</p>
+<p>The first layer identifies the protein. The model analyzes a protein sequence to determine if it is a transcription factor. Compared to traditional sequence alignment, this method understands the “grammar” behind the sequence and is more accurate.</p>
+<p>The second layer determines binding preference. After confirming a protein is a TF, the model analyzes whether it tends to bind to methylated DNA. This is a critical feature in epigenetics and cancer research.</p>
+<p><strong>The Balance of ESM2-650M and LoRA</strong></p>
+<p>Full fine-tuning is computationally expensive. After comparing models of different sizes, the authors found that <strong>ESM2-650M</strong> offered the best balance between parameter size and representation power.</p>
+<p>Combined with <strong>LoRA (Low-Rank Adaptation)</strong>, the study achieved parameter-efficient fine-tuning (PEFT). This strategy only requires training a small number of parameters, maintaining accuracy comparable to full fine-tuning while significantly lowering the computational cost. This makes it possible to deploy on local servers.</p>
+<p><strong>Explainability and Validation</strong></p>
+<p>To verify that the model truly understands the biological mechanisms, the authors extracted and visualized its attention weights.</p>
+<p>The results showed that <strong>the regions the model paid high attention to matched known protein sequence motifs</strong>. The model accurately located the DNA-binding domains and the positions that determine methylation preference. This proves its predictions are based on biological principles, not just statistical noise.</p>
+<p>📜Title: Fine-Tuning Protein Language Models Enhances the Identification and Interpretation of the Transcription Factors 🌐Paper: <a href="https://www.biorxiv.org/content/10.1101/2025.11.27.691010v1" class="uri">https://www.biorxiv.org/content/10.1101/2025.11.27.691010v1</a></p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-12-11/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

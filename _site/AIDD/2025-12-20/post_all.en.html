@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="Tired of writing complex scripts to query GFF files? GFFUTILSAI introduces an AI agent framework that lets you talk to your genomic data using natural language. The tool uses a Large Language Model (LLM) as a “translator” to break down user commands into precise tasks that local, specialized tools can execute. This effectively solves the “hallucination” and context window limitations of LLMs in bioinformatics. This “zero-to-hero” model allows non-experts to explore GFF files efficiently and accurately, significantly lowering the barrier to genomic data analysis.">
+
+<title>A New AI Agent Tool: Talk Directly to Your Genome GFF Files – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="A New AI Agent Tool: Talk Directly to Your Genome GFF Files – MPU">
+<meta property="og:description" content="Tired of writing complex scripts to query GFF files? GFFUTILSAI introduces an AI agent framework that lets you talk to your genomic data using natural language. The tool uses a Large Language Model (LLM) as a “translator” to break down user commands into precise tasks that local, specialized tools can execute. This effectively solves the “hallucination” and context window limitations of LLMs in bioinformatics. This “zero-to-hero” model allows non-experts to explore GFF files efficiently and accurately, significantly lowering the barrier to genomic data analysis.">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-12-20/post_all_image/gffutilsai_an_ai_ag_2025_12_11_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="A diagram showing the workflow of the GFFUTILSAI tool. On the left, a user's natural language question points to a central 'GFFUTILSAI Agent' module. This agent then breaks down the task, pointing to a 'Toolkit' and a 'GFF Database' on the right. The flow clearly illustrates how the AI agent translates human language commands into executable code to query genomic data, solving the efficiency and accuracy problems of large language models directly handling GFF files. The image visualizes the core concept from the fourth section of the article: using an AI agent framework to enable interactive conversation with genomic data.
+">
+<meta name="twitter:title" content="A New AI Agent Tool: Talk Directly to Your Genome GFF Files – MPU">
+<meta name="twitter:description" content="Tired of writing complex scripts to query GFF files? GFFUTILSAI introduces an AI agent framework that lets you talk to your genomic data using natural language. The tool uses a Large Language Model (LLM) as a “translator” to break down user commands into precise tasks that local, specialized tools can execute. This effectively solves the “hallucination” and context window limitations of LLMs in bioinformatics. This “zero-to-hero” model allows non-experts to explore GFF files efficiently and accurately, significantly lowering the barrier to genomic data analysis.">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-12-20/post_all_image/gffutilsai_an_ai_ag_2025_12_11_image_1.jpg">
+<meta name="twitter:image:alt" content="A diagram showing the workflow of the GFFUTILSAI tool. On the left, a user's natural language question points to a central 'GFFUTILSAI Agent' module. This agent then breaks down the task, pointing to a 'Toolkit' and a 'GFF Database' on the right. The flow clearly illustrates how the AI agent translates human language commands into executable code to query genomic data, solving the efficiency and accuracy problems of large language models directly handling GFF files. The image visualizes the core concept from the fourth section of the article: using an AI agent framework to enable interactive conversation with genomic data.
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">A New AI Agent Tool: Talk Directly to Your Genome GFF Files</h1>
+                  <div>
+        <div class="description">
+          <p>Tired of writing complex scripts to query GFF files? GFFUTILSAI introduces an AI agent framework that lets you talk to your genomic data using natural language. The tool uses a Large Language Model (LLM) as a “translator” to break down user commands into precise tasks that local, specialized tools can execute. This effectively solves the “hallucination” and context window limitations of LLMs in bioinformatics. This “zero-to-hero” model allows non-experts to explore GFF files efficiently and accurately, significantly lowering the barrier to genomic data analysis.</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">AI Agent</div>
+                <div class="quarto-category">GFF File</div>
+                <div class="quarto-category">Bioinformatics</div>
+                <div class="quarto-category">Natural Language Processing</div>
+                <div class="quarto-category">Genomics</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Saturday, the 20th of December, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#table-of-contents" id="toc-table-of-contents" class="nav-link active" data-scroll-target="#table-of-contents">Table of Contents</a></li>
+  <li><a href="#atomdisc-a-new-take-on-molecular-llms-with-an-atomic-level-tokenizer" id="toc-atomdisc-a-new-take-on-molecular-llms-with-an-atomic-level-tokenizer" class="nav-link" data-scroll-target="#atomdisc-a-new-take-on-molecular-llms-with-an-atomic-level-tokenizer">1. AtomDisc: A New Take on Molecular LLMs with an Atomic-level Tokenizer</a></li>
+  <li><a href="#boltz-2-for-protein-interactions-is-structural-information-enough" id="toc-boltz-2-for-protein-interactions-is-structural-information-enough" class="nav-link" data-scroll-target="#boltz-2-for-protein-interactions-is-structural-information-enough">2. Boltz-2 for Protein Interactions: Is Structural Information Enough?</a></li>
+  <li><a href="#predicting-drug-affinity-with-ai-affinitynet-moves-beyond-3d-structures" id="toc-predicting-drug-affinity-with-ai-affinitynet-moves-beyond-3d-structures" class="nav-link" data-scroll-target="#predicting-drug-affinity-with-ai-affinitynet-moves-beyond-3d-structures">3. Predicting Drug Affinity with AI: AffinityNet Moves Beyond 3D Structures</a></li>
+  <li><a href="#a-new-ai-agent-tool-talk-directly-to-your-genome-gff-files" id="toc-a-new-ai-agent-tool-talk-directly-to-your-genome-gff-files" class="nav-link" data-scroll-target="#a-new-ai-agent-tool-talk-directly-to-your-genome-gff-files">4. A New AI Agent Tool: Talk Directly to Your Genome GFF Files</a></li>
+  <li><a href="#fine-tuning-chemberta-to-predict-tdp1-inhibitors-with-the-mtr-strategy" id="toc-fine-tuning-chemberta-to-predict-tdp1-inhibitors-with-the-mtr-strategy" class="nav-link" data-scroll-target="#fine-tuning-chemberta-to-predict-tdp1-inhibitors-with-the-mtr-strategy">5. Fine-Tuning ChemBERTa to Predict TDP1 Inhibitors with the MTR Strategy</a></li>
+  <li><a href="#a-new-compass-for-ai-drug-discovery-beyond-judging-molecular-beauty" id="toc-a-new-compass-for-ai-drug-discovery-beyond-judging-molecular-beauty" class="nav-link" data-scroll-target="#a-new-compass-for-ai-drug-discovery-beyond-judging-molecular-beauty">6. A New Compass for AI Drug Discovery: Beyond Judging Molecular ‘Beauty’</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-12-20/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="table-of-contents" class="level3">
+<h3 class="anchored" data-anchor-id="table-of-contents">Table of Contents</h3>
+<ol type="1">
+<li>AtomDisc is a new atomic-level tokenizer that encodes the precise chemical environment of each atom into discrete tokens, improving the performance and interpretability of molecular Large Language Models (LLMs).</li>
+<li>Top-performing protein-small molecule structure models are surprisingly outperformed by simpler sequence-based models when predicting protein-protein interaction affinity.</li>
+<li>Researchers developed AffinityNet, a sequence-only model that shows excellent generalization in predicting drug-target affinity, thanks to a more rigorous dataset and architecture design.</li>
+<li>The core idea of this tool is an AI Agent framework. It breaks down natural language commands into tasks that specialized tools can execute, solving the “hallucination” and efficiency problems of large language models in bioinformatics.</li>
+<li>With the right pre-training method, chemical language models can predict molecular activity from SMILES strings alone, improving the efficiency of virtual screening.</li>
+<li>OiiSTER-map uses bioactivity data to calibrate molecular evaluation, helping us move beyond traditional metrics like QED to find promising, innovative molecules.</li>
+</ol>
+</section>
+<section id="atomdisc-a-new-take-on-molecular-llms-with-an-atomic-level-tokenizer" class="level2">
+<h2 class="anchored" data-anchor-id="atomdisc-a-new-take-on-molecular-llms-with-an-atomic-level-tokenizer">1. AtomDisc: A New Take on Molecular LLMs with an Atomic-level Tokenizer</h2>
+<p><a href="post_all_image/atom_disc_an_atom_le_2025_12_11_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/atom_disc_an_atom_le_2025_12_11_image_1.jpg" class="img-fluid"></a></p>
+<p>For the last few years, the most common way to teach large language models chemistry was to represent molecules as a line of text, known as a SMILES string. This method is direct, but it loses key details like the molecule’s 3D structure and electronic environment. It’s like trying to describe a painting using only words. As a result, the model learns character patterns, not the underlying chemistry.</p>
+<p>AtomDisc goes back to the fundamentals of chemistry, treating a molecule as a collection of atoms.</p>
+<p>Its core idea is to create an “atomic dictionary.” Each “word” (token) in this dictionary represents a specific local atomic environment, including the atom’s electronic state, its bonds, and its neighbors. It’s like taking a high-resolution snapshot of each atom.</p>
+<p>Here’s how it works:<br>
+1. <strong>Train an atomic codebook</strong>: A Graph Neural Network (GNN) learns to describe the local environment of each atom. These descriptions are then clustered into a discrete codebook using vector quantization. This codebook is the “atomic dictionary.”<br>
+2. <strong>Learn a projection network</strong>: A projection network is trained to map a molecule’s SMILES string directly to its sequence of atomic tokens. This allows the model to get a structurally rich, atom-level representation from a simple SMILES input.<br>
+3. <strong>Pre-train and fine-tune</strong>: This new tokenizer is integrated into a large language model for pre-training, then fine-tuned for specific tasks like predicting solubility or designing synthesis routes.</p>
+<p>This approach lets the model learn to “see” chemistry.</p>
+<p>For example, the model can distinguish between hydroxyl (-OH) groups in different chemical environments. A hydroxyl group on a ring structure and one on a chain structure are two different tokens in its “atomic dictionary.” Chemically, these two groups have very different reactivity and physical properties (like pKa). Traditional SMILES representations struggle to capture this nuance, but AtomDisc can.</p>
+<p>The model learns this ability from data on its own, without needing pre-defined functional groups. This means it could discover new structure-property relationships that humans haven’t yet identified, offering new perspectives for understanding reaction mechanisms and discovering new drugs. The model transforms from a “black box” mimic into a tool that provides chemical insights.</p>
+<p>AtomDisc achieved top results on multiple benchmarks, performing well on both basic tasks like property prediction and complex reasoning tasks like retrosynthesis. This shows that giving the model higher-quality input that is closer to the chemical reality can unlock its potential.</p>
+<p>In drug development, AtomDisc can help build more accurate models for predicting ADMET (absorption, distribution, metabolism, excretion, and toxicity) properties, filtering out unsuitable candidates early. It can also plan more reliable synthesis routes, helping researchers obtain target compounds faster. This shift from a “character game” to “chemical reasoning” is a key step for AI to mature in drug discovery.</p>
+<p>📜Title: AtomDisc: An Atom-level Tokenizer that Boosts Molecular LLMs and Reveals Structure–Property Associations<br>
+🌐Paper: https://arxiv.org/abs/2512.03080v1</p>
+</section>
+<section id="boltz-2-for-protein-interactions-is-structural-information-enough" class="level2">
+<h2 class="anchored" data-anchor-id="boltz-2-for-protein-interactions-is-structural-information-enough">2. Boltz-2 for Protein Interactions: Is Structural Information Enough?</h2>
+<p><a href="post_all_image/on_fine_tuning_boltz_2025_12_11_image_1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/on_fine_tuning_boltz_2025_12_11_image_1.png" class="img-fluid"></a></p>
+<p>Boltz-2 is a model that excels at predicting the affinity between proteins and small molecules. A new study tested whether it could be adapted for the more complex task of predicting protein-protein interaction (PPI) affinity.</p>
+<p>The researchers fine-tuned the model, designing a loss function that combined Huber and ranking losses to handle PPI data. They also adjusted how data batches were constructed to avoid experimental bias. It’s like taking a model trained to recognize cats, making a few tweaks, and then asking it to identify dogs.</p>
+<p>On two datasets, TCR3d and PPB-affinity, the fine-tuned Boltz-2-PPI performed worse than models based only on amino acid sequences, such as ESM2 and ProtT5.</p>
+<p>On the TCR3d dataset, ESM2-650M achieved a Pearson correlation of 0.239, while Boltz-2-PPI scored 0.153. On the larger PPB-affinity dataset, ProtT5-PAD had a correlation of 0.48, compared to 0.338 for Boltz-2-PPI.</p>
+<p>This result is thought-provoking. 3D structural information is usually considered key to understanding molecular recognition, so why did 1D sequence models perform better?</p>
+<p>The reasons might be:</p>
+<p>Protein-small molecule binding and protein-protein interactions have different patterns. The former is like a “lock and key,” where a small molecule fits into a well-defined pocket, a scenario Boltz-2 is good at capturing. PPI interfaces are larger, flatter, and more flexible, more like two pieces of clay sticking together. The features the model learned from small-molecule tasks may not apply to PPIs.</p>
+<p>Sequence models leverage evolutionary information. Large language models like ESM2 and ProtT5 have learned from billions of protein sequences, which contain evolutionary patterns. Interacting proteins often co-evolve, and these co-evolutionary signals in the sequence are strong indicators of affinity. By learning from massive amounts of sequence data, these models have picked up on these evolutionary rules.</p>
+<p>The study found that combining structural features from Boltz-2 with features from sequence models improved prediction performance, suggesting the two types of information are complementary. The structure model captures the “final form” of the binding, while the sequence model reveals the “evolutionary blueprint” that drives it. Together, they provide a more complete picture.</p>
+<p>High-resolution, static structures may not be enough. Models might need more diverse data to learn general rules. The future lies in fusing structural, sequence, and dynamic information, rather than relying on a single type of model.</p>
+<p>📜Title: On fine-tuning Boltz-2 for protein-protein affinity prediction<br>
+🌐Paper: <a href="https://arxiv.org/abs/2512.06592v1" class="uri">https://arxiv.org/abs/2512.06592v1</a></p>
+</section>
+<section id="predicting-drug-affinity-with-ai-affinitynet-moves-beyond-3d-structures" class="level2">
+<h2 class="anchored" data-anchor-id="predicting-drug-affinity-with-ai-affinitynet-moves-beyond-3d-structures">3. Predicting Drug Affinity with AI: AffinityNet Moves Beyond 3D Structures</h2>
+<p><a href="post_all_image/learning_to_generali_2025_12_11_image_1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/learning_to_generali_2025_12_11_image_1.png" class="img-fluid"></a></p>
+<p>A central question in drug discovery is: how strongly will a small molecule bind to a target protein? Traditional methods like molecular docking and physics-based simulations rely on precise 3D protein structures. But obtaining these structures is time-consuming and expensive, and many proteins have no solved structure.</p>
+<p>The authors of this paper tried a more direct approach: predicting binding affinity using only the small molecule’s SMILES sequence and the protein’s FASTA sequence.</p>
+<p>They developed two deep learning models.</p>
+<p>The first is called <strong>AffinityLM</strong>. It uses two pre-trained Large Language Models (LLMs): ESM-2 to read the protein sequence and MolFormer to read the chemical formula. AffinityLM feeds the protein and molecule sequences into their respective models, extracts feature vectors, and then combines them to predict binding affinity.</p>
+<p>The second model, <strong>AffinityNet</strong>, has a more tailored design. Instead of using existing large models, the researchers built an architecture specifically for this task. It uses a Graph Attention network to capture the local chemical environment within the small molecule and a Transformer module to understand long-range dependencies in the protein sequence. Finally, an attention mechanism allows the molecular and protein features to interact, identifying the key information that determines binding.</p>
+<p>To train and test their models, the authors also built a high-quality dataset. In machine learning, dataset quality is often more important than the model itself. Many existing models perform well because of information “leaks” between the training and test sets—for example, a protein in the test set is highly similar to one in the training set, so the model may have just “memorized” features instead of truly learning to predict.</p>
+<p>To prevent this, the authors built a new dataset of about 14,000 protein-ligand pairs and used a cluster-based split. This method ensures that proteins and ligands in the training, validation, and test sets have no structural overlap, providing a better test of the model’s true ability to generalize.</p>
+<p>Under this rigorous test, <strong>AffinityNet</strong> performed well, achieving a Pearson correlation of 0.67 between its predictions and experimental values. AffinityLM performed slightly worse. This suggests that an end-to-end architecture designed for the specific task of predicting binding affinity works better than simply using general-purpose large language models.</p>
+<p>To further validate AffinityNet’s capabilities, the researchers tested it on two independent external datasets. On the CSAR-HiQ dataset, it achieved a correlation coefficient of 0.78, outperforming other published models. This demonstrates that AffinityNet has learned generalizable biochemical principles, not just fit to its training data.</p>
+<p>This work shows that clean, rigorously evaluated data and benchmarks are key to making AI models practical for drug discovery. AffinityNet’s success also proves that even without 3D structures, we can screen for drug candidates from sequence data, opening new doors for targets with no known structure.</p>
+<p>📜Title: Learning to Generalize: Deep Models and Robust Benchmarks for Drug–Target Affinity Prediction<br>
+🌐Paper: https://doi.org/10.26434/chemrxiv-2025-gmrdb</p>
+</section>
+<section id="a-new-ai-agent-tool-talk-directly-to-your-genome-gff-files" class="level2">
+<h2 class="anchored" data-anchor-id="a-new-ai-agent-tool-talk-directly-to-your-genome-gff-files">4. A New AI Agent Tool: Talk Directly to Your Genome GFF Files</h2>
+<p><a href="post_all_image/gffutilsai_an_ai_ag_2025_12_11_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="post_all_image/gffutilsai_an_ai_ag_2025_12_11_image_1.jpg" class="img-fluid"></a></p>
+<p>Researchers who work with genomic data are familiar with GFF (General Feature Format) files, which map features like genes, exons, and promoters to their locations on the genome. But extracting information from these files usually requires writing Python or Perl scripts or using complex command-line tools, which is a high barrier for many experimental scientists.</p>
+<p>The GFFUTILSAI tool aims to change this. It lets you query GFF files using everyday language. For example, you can ask: “Find all genes on chromosome 3 between 10,000 and 50,000 bp, and export their IDs and functional annotations to a CSV file.”</p>
+<section id="how-it-works-the-project-manager-model" class="level4">
+<h4 class="anchored" data-anchor-id="how-it-works-the-project-manager-model">How It Works: The “Project Manager” Model</h4>
+<p>You might think this is just a matter of feeding the question to a large model.</p>
+<p>It’s not that simple. If you try to upload a multi-hundred-megabyte GFF file directly to a Large Language Model (LLM), the results are usually a mess. LLMs have several inherent weaknesses:</p>
+<ol type="1">
+<li><strong>Limited context window</strong>: They can only process a limited amount of text at once and can’t handle an entire GFF file.<br>
+</li>
+<li><strong>Lack of domain logic</strong>: They don’t understand the hierarchical relationship between genes and exons; they just match text patterns, which leads to errors.<br>
+</li>
+<li><strong>Computational inefficiency</strong>: Using a model designed for language tasks to perform precise coordinate calculations and data filtering is like using a translation app to do math. It’s slow and prone to “hallucinations.”</li>
+</ol>
+<p>GFFUTILSAI’s cleverness lies in its use of an “AI Agent” workflow, which prevents the LLM from performing tasks it’s not good at.</p>
+<p>You can think of this agent as an experienced bioinformatics analyst. When you make a request:</p>
+<p>Throughout this process, the LLM’s only jobs are “translation” and “direction.” The actual analysis is handled efficiently by local code specifically designed for the task.</p>
+</section>
+<section id="zero-to-hero-performance-leap" class="level4">
+<h4 class="anchored" data-anchor-id="zero-to-hero-performance-leap">“Zero-to-Hero” Performance Leap</h4>
+<p>The researchers call this phenomenon the “Zero-to-Hero” effect. A standalone large model might have near-zero accuracy when processing a GFF query. But within an agent framework that directs specialized tools, its performance can match that of a domain expert.</p>
+<p>Data shows this method significantly improves efficiency. For a complex query, GFFUTILSAI can deliver a high-accuracy result in two minutes, while other methods might take eight minutes. More importantly, you can use a smaller, local model running on your own computer to achieve results comparable to expensive cloud-based LLM APIs. This is a huge advantage for protecting data privacy and controlling research costs.</p>
+<p>This tool is now open source on GitHub. For labs that want to explore data quickly or empower more team members to analyze data themselves, this is a new option worth trying. It won’t replace professional bioinformaticians, but it can free them from many repetitive, basic queries while giving more frontline researchers the ability to talk directly to their data.</p>
+<p>📜Title: GFFUTILSAI: An AI-Agent for Interactive Genomic Feature Exploration in GFF Files<br>
+🌐Paper: https://www.biorxiv.org/content/10.64898/2025.12.02.690645v1<br>
+💻Code: https://github.com/ToyokoLabs/gffutilsAI</p>
+</section>
+</section>
+<section id="fine-tuning-chemberta-to-predict-tdp1-inhibitors-with-the-mtr-strategy" class="level2">
+<h2 class="anchored" data-anchor-id="fine-tuning-chemberta-to-predict-tdp1-inhibitors-with-the-mtr-strategy">5. Fine-Tuning ChemBERTa to Predict TDP1 Inhibitors with the MTR Strategy</h2>
+<p><a href="post_all_image/fine_tuning_chem_bert_2025_12_11_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="post_all_image/fine_tuning_chem_bert_2025_12_11_image_1.jpg" class="img-fluid"></a></p>
+<p>In drug development, finding effective inhibitors for a specific target is like finding a needle in a haystack. TDP1 (Tyrosyl-DNA Phosphodiesterase 1) is a promising cancer target; inhibiting it can enhance the effects of existing chemotherapy drugs. But how can we find TDP1 inhibitors from millions of molecules cheaply and efficiently? Traditional high-throughput screening (HTS) is expensive.</p>
+<p>This paper offers an AI screening solution. Researchers used the chemical Large Language Model (LLM) ChemBERTa, teaching it to “read” a molecule’s SMILES string (a text-based representation) to understand its structure and predict its activity.</p>
+<section id="data-preparation-even-the-best-model-is-useless-without-data" class="level4">
+<h4 class="anchored" data-anchor-id="data-preparation-even-the-best-model-is-useless-without-data">Data Preparation: Even the Best Model Is Useless Without Data</h4>
+<p>The foundation of any model is data. The researchers collected 177,092 test compounds for TDP1 from multiple databases to build their dataset. This dataset faced a classic problem: it was extremely imbalanced, with only 2.1% of the molecules being active compounds. If a model just learned to predict every molecule as “inactive,” it could achieve 97.9% accuracy, but this would be useless in practice. To solve this, the researchers used stratified sampling and sample weighting to ensure the model could learn to identify the rare active molecules.</p>
+</section>
+<section id="core-innovation-the-success-of-the-mtr-pre-training-strategy" class="level4">
+<h4 class="anchored" data-anchor-id="core-innovation-the-success-of-the-mtr-pre-training-strategy">Core Innovation: The Success of the MTR Pre-training Strategy</h4>
+<p>The highlight of this work is the optimization of ChemBERTa’s pre-training method. A common pre-training approach is Masked Language Modeling (MLM), which works like a fill-in-the-blanks exercise. The model is given a partial chemical structure, like <code>C-C-(=[MASK])-N</code>, and has to predict the missing part. This practice helps the model learn the basic rules of chemical structures.</p>
+<p>However, for regression tasks like predicting a continuous value such as pIC50, MLM is not the best approach. The researchers proposed Masked Token Regression (MTR) instead. MTR’s objective is more direct: it asks the model to predict a relevant numerical property based on partial structural information.</p>
+<p>To make an analogy, MLM is like having a medical student memorize anatomy textbooks, while MTR is like having them practice making diagnoses from X-rays. The latter is more effective for developing diagnostic skills. Experiments confirmed that the model pre-trained with MTR and then fine-tuned consistently outperformed the MLM version in predicting pIC50.</p>
+</section>
+<section id="what-were-the-results" class="level4">
+<h4 class="anchored" data-anchor-id="what-were-the-results">What Were the Results?</h4>
+<p>The optimized ChemBERTa-MTR model performed well. Its enrichment factor (EF@1%) reached 17.4. This metric means that if you use this model to screen a compound library, you are 17.4 times more likely to find an active molecule in the top 1% of scored compounds than if you picked them randomly. This significantly reduces experimental costs.</p>
+<p>The model achieved this without needing 3D structural information or manually calculated molecular descriptors (like molecular weight or lipophilicity). It relied solely on the SMILES string. This lowers the technical and computational barriers to virtual screening. Complex calculations that used to take days can now be done in hours.</p>
+<p>Overall, this study shows that in AI-driven drug discovery, optimizing the model’s training method for a specific task is critical. Text-based chemical language models are a powerful tool for accelerating the drug discovery pipeline.</p>
+<p>📜Title: Fine-Tuning ChemBERTa for Predicting Inhibitory Activity Against TDP1 Using Deep Learning<br>
+🌐Paper: https://arxiv.org/abs/2512.04252v1</p>
+</section>
+</section>
+<section id="a-new-compass-for-ai-drug-discovery-beyond-judging-molecular-beauty" class="level2">
+<h2 class="anchored" data-anchor-id="a-new-compass-for-ai-drug-discovery-beyond-judging-molecular-beauty">6. A New Compass for AI Drug Discovery: Beyond Judging Molecular ‘Beauty’</h2>
+<p><a href="post_all_image/rethinking_molecular_2025_12_11_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-6"><img src="post_all_image/rethinking_molecular_2025_12_11_image_1.jpg" class="img-fluid"></a></p>
+<p>Drug discovery, especially when aided by AI, generates a massive number of molecules. A core challenge is how to quickly screen them for promising candidates.</p>
+<p>In the past, we relied on tools like QED (Quantitative Estimate of Druglikeness) and the SA Score (Synthetic Accessibility Score). These tools tend to reward “average molecules” that look similar to known drugs. This is like using the Body Mass Index (BMI) to evaluate athletes; it can filter out extreme cases but might miss top talent. A novel molecular scaffold with breakthrough potential could be dismissed with a low score just because it doesn’t look “mainstream.”</p>
+<p>A preprint paper introduces a new tool called OiiSTER-map. It takes a different approach by evaluating a molecule’s “position” in chemical space.</p>
+<p>OiiSTER-map is a 2D heatmap.</p>
+<p>The y-axis is the molecule’s <strong>structural complexity</strong>, measured by the number of bits in its ECFP4 molecular fingerprint. More bits usually means the molecule is larger and structurally richer.</p>
+<p>The x-axis is the <strong>usuality score</strong>. This measures how frequently a molecule’s chemical fragments appear in a database of known bioactive compounds (like ChEMBL). In short, are the “building blocks” of this molecule common or rare?</p>
+<p>Based on these two dimensions, any molecule can be plotted on the map. The map is divided into several main regions:</p>
+<p>When researchers used OiiSTER-map to analyze AI-generated molecules, they found that many molecules that scored highly on QED and SA Score were not located in the “sweet spot.”</p>
+<p>This suggests that many AI models are simply imitating known drugs and generating mediocre molecules, not truly innovating. OiiSTER-map reveals the limitations of these models.</p>
+<p>The map can also reflect historical trends in drug discovery. Drugs that came to market in the early days tended to be “minimalist,” while recent drugs have become increasingly complex. This aligns with the “molecular weight inflation” trend observed in the industry and validates the tool’s effectiveness.</p>
+<p>When an AI model generates a batch of new molecules, we can now project them onto the OiiSTER-map in addition to checking their QED scores. The map provides richer information than a single number, helping us determine whether a molecule is a true innovation or just a mediocre one that looks good on the surface.</p>
+<p>📜Title: Rethinking Molecular Beauty in the Deep Learning Era<br>
+🌐Paper: https://www.biorxiv.org/content/10.64898/2025.12.03.692079v1</p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-12-20/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

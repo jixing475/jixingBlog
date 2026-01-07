@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="传统方法难以让 AI 有效理解复杂的高分子。CI-LLM 框架通过分层抽象的表征方法，将高分子拆解为化学家熟悉的结构单元，从而教会大语言模型像专家一样思考。该模型不仅能准确预测分子性能，更能实现从需求到分子的’逆向设计’，其可解释性也为理性材料开发提供了关键洞见，是高分子信息学领域的重要突破。">
+
+<title>CI-LLM: 让大模型像化学家一样思考高分子 – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="CI-LLM: 让大模型像化学家一样思考高分子 – MPU">
+<meta property="og:description" content="传统方法难以让 AI 有效理解复杂的高分子。CI-LLM 框架通过分层抽象的表征方法，将高分子拆解为化学家熟悉的结构单元，从而教会大语言模型像专家一样思考。该模型不仅能准确预测分子性能，更能实现从需求到分子的’逆向设计’，其可解释性也为理性材料开发提供了关键洞见，是高分子信息学领域的重要突破。">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-12-22/post_all_image/chemistry_integrated_2025_12_11_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="一张展示 CI-LLM 框架概念的示意图。图中包含多个化学高分子结构式，并用图形和线条连接，象征着 HAPPY (Hierarchically Abstracted Repeat Units) 表征方法。该方法将复杂的长链高分子分解为重复单元和端基等有化学意义的子结构。这张图旨在说明 CI-LLM 如何教会大语言模型像化学家一样，从宏观到微观分层理解分子构成，从而实现更精准的性能预测和'逆向设计'. 它体现了文章核心观点：将化学知识集成到语言模型中，以解决高分子信息学的难题。
+">
+<meta name="twitter:title" content="CI-LLM: 让大模型像化学家一样思考高分子 – MPU">
+<meta name="twitter:description" content="传统方法难以让 AI 有效理解复杂的高分子。CI-LLM 框架通过分层抽象的表征方法，将高分子拆解为化学家熟悉的结构单元，从而教会大语言模型像专家一样思考。该模型不仅能准确预测分子性能，更能实现从需求到分子的’逆向设计’，其可解释性也为理性材料开发提供了关键洞见，是高分子信息学领域的重要突破。">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-12-22/post_all_image/chemistry_integrated_2025_12_11_image_1.jpg">
+<meta name="twitter:image:alt" content="一张展示 CI-LLM 框架概念的示意图。图中包含多个化学高分子结构式，并用图形和线条连接，象征着 HAPPY (Hierarchically Abstracted Repeat Units) 表征方法。该方法将复杂的长链高分子分解为重复单元和端基等有化学意义的子结构。这张图旨在说明 CI-LLM 如何教会大语言模型像化学家一样，从宏观到微观分层理解分子构成，从而实现更精准的性能预测和'逆向设计'. 它体现了文章核心观点：将化学知识集成到语言模型中，以解决高分子信息学的难题。
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">CI-LLM: 让大模型像化学家一样思考高分子</h1>
+                  <div>
+        <div class="description">
+          <p>传统方法难以让 AI 有效理解复杂的高分子。CI-LLM 框架通过分层抽象的表征方法，将高分子拆解为化学家熟悉的结构单元，从而教会大语言模型像专家一样思考。该模型不仅能准确预测分子性能，更能实现从需求到分子的’逆向设计’，其可解释性也为理性材料开发提供了关键洞见，是高分子信息学领域的重要突破。</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">大语言模型</div>
+                <div class="quarto-category">高分子信息学</div>
+                <div class="quarto-category">逆向设计</div>
+                <div class="quarto-category">可解释性 AI</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Monday, the 22nd of December, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#目录" id="toc-目录" class="nav-link active" data-scroll-target="#目录">目录</a></li>
+  <li><a href="#biodynagenai-首次看懂蛋白质与药物的动态结合" id="toc-biodynagenai-首次看懂蛋白质与药物的动态结合" class="nav-link" data-scroll-target="#biodynagenai-首次看懂蛋白质与药物的动态结合">1. BioDynaGen：AI 首次看懂蛋白质与药物的动态结合</a></li>
+  <li><a href="#ai-药物发现的泛化鸿沟模型如何应对全新靶点" id="toc-ai-药物发现的泛化鸿沟模型如何应对全新靶点" class="nav-link" data-scroll-target="#ai-药物发现的泛化鸿沟模型如何应对全新靶点">2. AI 药物发现的「泛化鸿沟」：模型如何应对全新靶点？</a></li>
+  <li><a href="#ci-llm-让大模型像化学家一样思考高分子" id="toc-ci-llm-让大模型像化学家一样思考高分子" class="nav-link" data-scroll-target="#ci-llm-让大模型像化学家一样思考高分子">3. CI-LLM: 让大模型像化学家一样思考高分子</a></li>
+  <li><a href="#gamic图神经网络助力大语言模型理解分子" id="toc-gamic图神经网络助力大语言模型理解分子" class="nav-link" data-scroll-target="#gamic图神经网络助力大语言模型理解分子">4. GAMIC：图神经网络助力大语言模型理解分子</a></li>
+  <li><a href="#bioarc用-nas-重新定义生物基础模型120-参数量超越-dnabert-2" id="toc-bioarc用-nas-重新定义生物基础模型120-参数量超越-dnabert-2" class="nav-link" data-scroll-target="#bioarc用-nas-重新定义生物基础模型120-参数量超越-dnabert-2">5. BIOARC：用 NAS 重新定义生物基础模型，1/20 参数量超越 DNABERT-2</a></li>
+  <li><a href="#解剖抗体-ai-大脑能否用-sae-看懂并控制新药设计" id="toc-解剖抗体-ai-大脑能否用-sae-看懂并控制新药设计" class="nav-link" data-scroll-target="#解剖抗体-ai-大脑能否用-sae-看懂并控制新药设计">6. 解剖抗体 AI 大脑：能否用 SAE 看懂并控制新药设计？</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-12-22/post_all.zh.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="目录" class="level3">
+<h3 class="anchored" data-anchor-id="目录">目录</h3>
+<ol type="1">
+<li>BioDynaGen 创造了一种统一语言，让 AI 能同时理解蛋白质、小分子及其动态结合过程，比静态模型更贴近生物学真实情况。</li>
+<li>当前机器学习打分函数在全新靶点上表现不佳，但大规模预训练和少量靶点特异性数据能显著提升其泛化能力。</li>
+<li>CI-LLM 框架通过将高分子拆解为化学家熟悉的结构单元，教会了 AI 如何理解、预测并从头设计复杂的聚合物。</li>
+<li>GAMIC 融合图神经网络与文本描述，让中等规模的大语言模型更懂化学，提升了分子性质预测的准确性。</li>
+<li>BIOARC 证明，针对生物数据定制神经网络架构，能以极小的算力成本实现性能飞跃。</li>
+<li>稀疏自编码器能帮我们窥探抗体语言模型的内部运作，但要真正控制它生成指定的分子，仍有很长的路要走。</li>
+</ol>
+</section>
+<section id="biodynagenai-首次看懂蛋白质与药物的动态结合" class="level2">
+<h2 class="anchored" data-anchor-id="biodynagenai-首次看懂蛋白质与药物的动态结合">1. BioDynaGen：AI 首次看懂蛋白质与药物的动态结合</h2>
+<p><a href="post_all_image/df475daac6db68ae845b55fb42e9c9dd_MD5.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/df475daac6db68ae845b55fb42e9c9dd_MD5.jpg" class="img-fluid"></a></p>
+<p>药物发现中，蛋白质与药物分子的结合常被比作「钥匙和锁」，但这过于简化。真实的蛋白质靶点如同在水中蠕动的黏土，形状总在细微变化。当药物这把「钥匙」靠近，这块「黏土」会主动改变形状来更好地容纳它。这个动态过程称为「诱导契合」。</p>
+<p>以往的计算模型大多只能处理蛋白质的静态快照，例如 X 射线晶体衍射的图像。这虽然有用，却丢失了关键的时间维度信息，好比只看一张舞者的静止照片，去理解整支舞蹈。</p>
+<p>BioDynaGen 的目标，就是让 AI 看懂这场分子「舞蹈」。</p>
+<p><strong>它是怎么做到的</strong>？</p>
+<p>研究思路是：将描述这场「舞蹈」的所有信息，都翻译成一种 AI 能理解的统一语言。这些信息包括：<br>
+1. <strong>蛋白质序列</strong>：蛋白质的氨基酸序列。<br>
+2. <strong>小分子 SMILES</strong>：表示分子结构的化学语言。<br>
+3. <strong>自然语言</strong>：科学家描述生物过程的文字。<br>
+4. <strong>动态结合口袋构象</strong>：工作的核心，即蛋白质口袋随时间变化的连续动画。</p>
+<p>前三类信息已有成熟方法转为 AI 使用的 token。挑战在于第四点：如何将连续变化的 3D 口袋形状，编码成离散的 token？</p>
+<p>BioDynaGen 设计了一个专门的动态结合位点构象编码器 (dynamic binding site conformation tokenizer)。可以把它想象成一个动画分析师，观看分子动力学模拟产生的口袋变化「视频」，然后完成两件事：</p>
+<p><strong>看懂「舞蹈」之后，能做什么</strong>？</p>
+<p>掌握这门包含动态信息的统一语言后，AI 获得了新能力。</p>
+<p>首先是<strong>预测能力</strong>的提升。例如「配体条件下的蛋白质功能预测」，即回答：当药物分子结合到蛋白质上，蛋白质功能会发生什么变化？由于 BioDynaGen 理解动态结合过程，其预测准确率超过了只能分析静态图像的模型。</p>
+<p><strong>生成能力</strong>也同样重要。</p>
+<p>BioDynaGen 将蛋白质 - 药物相互作用的认知，从「静态照片」带入了「动态视频」时代。它让计算工具更符合生物学现实，也让我们离精准的理性药物设计更近一步。</p>
+<p>📜Title: A Multi-modal LLM for Dynamic Protein-Ligand Interactions and Generative Molecular Design<br>
+🌐Paper: https://www.biorxiv.org/content/10.64898/2025.12.01.691647v1</p>
+</section>
+<section id="ai-药物发现的泛化鸿沟模型如何应对全新靶点" class="level2">
+<h2 class="anchored" data-anchor-id="ai-药物发现的泛化鸿沟模型如何应对全新靶点">2. AI 药物发现的「泛化鸿沟」：模型如何应对全新靶点？</h2>
+<p><a href="post_all_image/generalization_beyon_2025_12_11_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/generalization_beyon_2025_12_11_image_1.jpg" class="img-fluid"></a></p>
+<p>药物发现总是在面对新靶点。因此，一篇专门研究机器学习模型在「全新靶点」上表现的论文，引人关注。AI 模型在各种基准数据集上分数越来越高，但当它进入一个真实的研发项目时，是否依然有效？这篇论文的答案是：挑战很大，但有解决之道。</p>
+<p>首先，研究者构建了一个更严格的测试集，称为「分布外」（Out-of-Distribution, OOD）数据集。常规基准测试如同考前模拟题，知识点都在复习范围内。OOD 测试则像是解决一个从未见过的实际问题。研究者为此特意挑选了与训练数据中蛋白质结构差异巨大的靶点作为测试对象。</p>
+<p>结果显示，那些在常规测试中表现优异的机器学习打分函数，到了 OOD 测试中，性能大幅下降。这表明，许多模型可能只是记住了训练集的模式，而未真正学会蛋白 - 配体相互作用的底层物理化学原理。模型的泛化能力，是当前 AI 制药面临的最大挑战之一。如果模型只对「熟悉」的靶点家族有效，其在实际项目中的价值便会受限。</p>
+<p>那么，如何解决这个问题？文章提出了两个方向。</p>
+<p>第一个方向是「预训练」（Pretraining）。这个概念借鉴自自然语言处理领域。在学习预测结合亲和力这一具体任务前，模型会先学习海量的、无标注的分子和蛋白质结构数据。这好比医学生在诊断具体疾病前，必须先掌握解剖学、生物化学等基础知识。</p>
+<p>论文中，作者使用 ATOMICA 嵌入方法进行大规模自监督预训练，让模型在没有结合力「答案」的情况下，自主学习普适的结构规律，例如一个氢键受体周围的化学环境，或一个疏水性口袋的形态。有了这些基础知识，模型在学习预测结合力时，就更容易举一反三，将知识应用到全新靶点上。数据显示，预训练后的模型在 OOD 测试集上的表现得到改善。虽然未能完全弥补性能差距，但方向是正确的。</p>
+<p>第二个方向是「微调」（Fine-tuning），更贴近现实。在药物发现项目中，我们总会通过实验获得关于新靶点的一些分子活性数据，即使最初数量不多。研究发现，利用这些有限的、靶点特异性的实验数据对预训练模型进行微调，就能显著提升其对该靶点的预测准确性。</p>
+<p>这就像一位经验丰富的老医生，只需参考几个罕见病的病例，就能结合自身知识体系，对新病人做出准确诊断。这个策略与药物发现的实际流程契合：用 AI 模型进行大规模虚拟筛选，获得苗头化合物，通过实验验证，再将新的实验数据反馈给模型，让模型对这个项目越来越了解。</p>
+<p>这篇论文让我们对 AI 模型的局限保持清醒，也指明了可行的前进方向。它提醒我们，不应盲信模型在基准测试上的高分，并验证了「大规模预训练 + 少量项目数据微调」这一技术路线的可行性。如此一来，AI 模型有望从一个只能在特定数据集上运行的「黑匣子」，转变为一个能在项目中与研发科学家并肩作战、共同成长的工具。</p>
+<p>📜Title: Generalization Beyond Benchmarks: Evaluating Learnable Protein-Ligand Scoring Functions on Unseen Targets<br>
+🌐Paper: https://arxiv.org/abs/2512.05386</p>
+</section>
+<section id="ci-llm-让大模型像化学家一样思考高分子" class="level2">
+<h2 class="anchored" data-anchor-id="ci-llm-让大模型像化学家一样思考高分子">3. CI-LLM: 让大模型像化学家一样思考高分子</h2>
+<p><a href="post_all_image/chemistry_integrated_2025_12_11_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/chemistry_integrated_2025_12_11_image_1.jpg" class="img-fluid"></a></p>
+<p>如何让机器理解复杂的长链高分子，是该领域的一个难题。传统的 SMILES (Simplified Molecular Input Line Entry System) 字符串在描述高分子时，就像逐字背诵一部长篇小说，难以抓住重复单元、主链结构等化学核心概念。机器很难从一长串重复字符中，理解这些对化学家至关重要的结构信息。</p>
+<p>CI-LLM (Chemistry Integrated Language Model) 框架为此提出了一个解决方案：让 AI 用化学家的语言来学习高分子。</p>
+<p><strong>分层抽象，让 AI 看懂化学结构</strong></p>
+<p>研究者开发了一种名为 HAPPY (Hierarchically Abstracted Repeat Units) 的表征方法。它将一个复杂的高分子结构，像剥洋葱一样，层层分解为有化学意义的子结构或基团。</p>
+<p>这好比教一个孩子认识汽车，先告诉他这是轮子、那是车门、这是发动机，而不是从单个螺丝钉开始。HAPPY 将高分子聚合物分解为重复单元、端基等化学片段，让大语言模型（Large Language Model, LLM）能从宏观到微观，全面理解分子的构成。</p>
+<p><strong>正向预测：又快又准</strong></p>
+<p>基于这种新「语言」，性能预测变得简单。框架中的 De3BERTa 模型不仅处理文本序列，还直接整合了分子量、官能团数量等化学描述符。这就像在做阅读理解时，旁边附有一份详细的背景资料和名词解释。</p>
+<p>结果，模型在预测玻璃化转变温度、带隙等关键性能上，推理速度更快，准确性也超过了传统的 SMILES 模型。模型因此能够理解化学结构和性能之间的关系，不再盲人摸象。</p>
+<p><strong>逆向设计：从需求到分子的创造</strong></p>
+<p>预测性能之后，目标是实现「逆向设计」——根据所需性能，设计出相应的分子。</p>
+<p>框架中的 CI-GPT 模型便用于此。它通过强化学习 (Reinforcement Learning) 进行训练，不断试错，直到生成的高分子结构满足预设的性能目标，如同经验丰富的化学家在实验室里优化配方。</p>
+<p>它能处理多目标优化问题，比如同时要求高强度和高柔韧性，即使这两个属性在化学上通常相互矛盾。模型还能在保留特定化学骨架 (scaffold) 的基础上进行创新，这对药物化学和材料开发很实用。</p>
+<p><strong>可解释性：知道「为什么</strong>」</p>
+<p>这个模型不是一个「黑箱」。研究者使用积分梯度 (Integrated Gradients) 分析方法，可以观察到模型在做决策时，是哪些化学基团起到了关键作用。</p>
+<p>例如，模型可能会指出，某个聚合物的高玻璃化转变温度，主要由其主链上的苯环结构贡献。这种洞察力能直接指导实验化学家进行更理性的分子设计和优化，减少对直觉和大量试错的依赖。CI-LLM 解决了数据和复杂性问题，并提供了一个理解高分子化学的新工具。</p>
+<p>📜Title: Chemistry Integrated Language Model using Hierarchically Abstracted Repeat Units for Polymer Informatics<br>
+🌐Paper: https://arxiv.org/abs/2512.06301</p>
+</section>
+<section id="gamic图神经网络助力大语言模型理解分子" class="level2">
+<h2 class="anchored" data-anchor-id="gamic图神经网络助力大语言模型理解分子">4. GAMIC：图神经网络助力大语言模型理解分子</h2>
+<p><a href="post_all_image/gamic_graph_aligned_2025_11_19_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="post_all_image/gamic_graph_aligned_2025_11_19_image_1.jpg" class="img-fluid"></a></p>
+<p>药物研发领域一直在寻找更高效的方式预测分子性质。传统方法将分子结构转为 SMILES 字符串等文本，再交由大语言模型（Large Language Models, LLMs）处理。该过程会丢失分子三维空间结构和原子间相互作用的关键信息。</p>
+<p>GAMIC 方法为此提出了新思路：同时向模型提供分子的文本信息与结构图。</p>
+<p>GAMIC 首先使用图神经网络（Graph Neural Networks, GNNs）学习分子的结构信息，解决了传统方法依赖摩根指纹（Morgan fingerprints）而丢失结构细节的问题。然后，它通过一个对比学习框架，将 GNN 学到的图形特征与分子的文本描述进行对齐。经此训练，模型便学会了关联抽象的分子图谱和具体的化学概念。</p>
+<p>在为模型挑选学习案例时，研究者采用了最大边界相关性（Maximum Marginal Relevance, MMR）策略。例如，为让模型认识「激酶抑制剂」，MMR 会挑选与目标分子相似的抑制剂作正面例子，同时选择结构差异大的抑制剂作补充，以防模型只认识特定结构。</p>
+<p>实验结果表明，在分子属性预测、化学反应产率预测等多个任务上，GAMIC 的表现优于此前的方法，部分指标提升达 20%。这证明了计算成本更低的中等规模大语言模型在整合结构信息后，性能可以得到显著增强，为在实际工作中部署 AI 工具提供了更可行的选择。</p>
+<p>消融研究证明了 GAMIC 各组成部分的必要性。引入图神经网络和使用 SciBERT 编码文本，都对最终性能有贡献。这项工作展示了如何利用图形信息增强大语言模型在分子科学领域的应用潜力。</p>
+<p>📜Title: GAMIC: Graph-Aligned Molecular In-context Learning for Molecule Analysis via LLMs<br>
+🌐Paper: https://aclanthology.org/2025.findings-emnlp.996.pdf<br>
+💻Code: Not provided</p>
+</section>
+<section id="bioarc用-nas-重新定义生物基础模型120-参数量超越-dnabert-2" class="level2">
+<h2 class="anchored" data-anchor-id="bioarc用-nas-重新定义生物基础模型120-参数量超越-dnabert-2">5. BIOARC：用 NAS 重新定义生物基础模型，1/20 参数量超越 DNABERT-2</h2>
+<p><a href="post_all_image/bioarc_discovering_2025_12_04_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="post_all_image/bioarc_discovering_2025_12_04_image_1.jpg" class="img-fluid"></a></p>
+<p>AI for Science 领域常试图将 Transformer 直接应用于 DNA 或蛋白质序列。BIOARC 论文提出不同见解：通用的自然语言处理（NLP）架构并非生物数据的最优解。</p>
+<p>研究人员开发了 BIOARC 框架，让算法自动「进化」出最佳网络结构。</p>
+<p><strong>为什么要重新设计架构</strong>？</p>
+<p>生物学「语言」遵循物理化学定律，异于人类语言的语法逻辑。BIOARC 构建了一个包含 DNA、蛋白质等多种模态的搜索空间，如同一个巨大的候选组件库。</p>
+<p>核心技术在于 <strong>Supernet（超网络</strong>）。BIOARC 采用权重共享机制，所有候选子网络共享同一个「大网」权重。这如同在同一栋大楼框架内通过调整房间布局进行测试，无需为每次设计重建大楼，从而使大规模探索具备可行性。</p>
+<p><strong>数据面前，大模型略显「虚胖</strong>」</p>
+<p>参数量和计算资源存在浪费。数据显示，BIOARC 搜索出的模型 <strong>参数量仅为 DNABERT-2 的 1/20，训练步数仅为 1/10</strong>，但在生物学基准测试中性能反超。符合生物数据特征的小模型可以击败盲目堆料的大模型，这将大幅降低药物研发机构部署高性能 AI 模型的门槛和成本。</p>
+<p><strong>不仅仅是架构，还有分词（Tokenization</strong>）</p>
+<p>BIOARC 深入研究了分词策略。最优的分词方式与网络架构高度耦合，并不存在通吃的「最佳分词法」。架构、分词和训练策略必须进行「联合优化」。</p>
+<p><strong>BIOARC Agent：你的架构设计师</strong></p>
+<p>为提升易用性，BIOARC Agent 允许用户输入任务描述（如「预测蛋白质溶解度」），基于知识库经验自动预测最适合该任务的模型架构，在迁移学习任务上表现出色。</p>
+<p>对于 AI 制药特别是序列建模任务，或许不需要数百张 A100 显卡，而是一个懂生物学的网络架构。</p>
+<p>📜Title: BIOARC: Discovering Optimal Neural Architectures for Biological Foundation Models<br>
+🌐Paper: <a href="https://arxiv.org/abs/2512.00283" class="uri">https://arxiv.org/abs/2512.00283</a></p>
+</section>
+<section id="解剖抗体-ai-大脑能否用-sae-看懂并控制新药设计" class="level2">
+<h2 class="anchored" data-anchor-id="解剖抗体-ai-大脑能否用-sae-看懂并控制新药设计">6. 解剖抗体 AI 大脑：能否用 SAE 看懂并控制新药设计？</h2>
+<p><a href="post_all_image/mechanistic_interpre_2025_12_11_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-6"><img src="post_all_image/mechanistic_interpre_2025_12_11_image_1.jpg" class="img-fluid"></a></p>
+<p>抗体药物发现面临一个共同挑战。我们使用的抗体语言模型，如本文研究的 p-IgGen，能生成海量抗体序列，但其工作原理如同一个黑箱。我们不清楚它生成特定序列的原因，这给需要精准、可控设计的药物研发带来了问题。</p>
+<p>这篇论文尝试用稀疏自编码器（Sparse Autoencoders, SAEs）打开这个黑箱。</p>
+<p>SAE 像一个高效的压缩工具，它迫使模型用最精炼的少数几个「词汇」（即特征）来描述一个复杂的抗体序列。为了能将压缩后的信息无损还原，模型必须学会抓住真正有意义的生物学概念，例如「某个位置的特定氨基酸」或「某种特定结构」。</p>
+<p>研究者测试了两种 SAE。</p>
+<p>第一种是 TopK SAE，它在「解释」上表现出色，能找到一些我们直观能懂的特征。例如，某个特征的激活，强烈对应着 CDR-H3 环特定位置出现精氨酸。这让我们得以一窥 AI 的「思考过程」。</p>
+<p>但问题随之而来。当我们试图手动激活这个「精氨酸」特征，让模型生成带精氨酸的序列时，模型却不总听从指令。这揭示了研发中的一个核心困境：相关不等于因果。一个特征的出现，可能是精氨酸存在的结果，而非原因。如同看到地面湿了，可以推断刚下过雨；但往地上泼水，并不能让天开始下雨。这个发现让人们认识到，AI 的可解释性并不简单。</p>
+<p>于是，他们尝试了第二种工具，Ordered SAE。这个方法在「控制」模型生成方面效果更好。通过激活它找到的特征，可以更可靠地引导模型产生我们想要的变化，这有助于生成具有特定性质的抗体库。</p>
+<p>然而，这些「可控制」的特征，我们又看不懂了。它们不再简单对应某个氨基酸，而可能代表更抽象的概念，比如「一段适合与抗原结合的疏水表面」。这就像找到了一个能让汽车加速的按钮，却不清楚其背后是增加了喷油量还是调整了涡轮增压。能用，但原理未知。</p>
+<p>所以，这项工作将我们带到一个岔路口：我们有了一把能「看懂」的钥匙（TopK SAE）和一把能「操控」的钥匙（Ordered SAE），但它们还不是同一把。业界的最终目标是找到代表「高亲和力」的特征，然后直接增强这个特征，让模型持续生成高亲和力的抗体。</p>
+<p>这篇论文表明，实现这一目标道阻且长。同时，它也指出了一个关键瓶颈：我们需要更多、更高质量的标注数据。没有足够的数据告诉模型哪些序列是好的、好在哪里，我们找到再多特征，也只是盲人摸象。</p>
+<p>📜Title: Mechanistic Interpretability of Antibody Language Models Using SAEs<br>
+🌐Paper: https://arxiv.org/abs/2512.05794</p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-12-22/post_all.zh.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

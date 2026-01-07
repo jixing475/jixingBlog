@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="Traditional protein structure prediction is like taking a static ‘ID photo,’ but drug development needs to see a ‘video’ of the protein in action. The CryoBoltz method uses blurry data from cryo-electron microscopy (cryo-EM) to guide an AI model in resolving multiple dynamic protein conformations. Through a ‘multi-scale guidance’ mechanism, it can reconstruct a series of clear structures from ‘ghostly’ data containing many mixed states. This helps unlock new drug targets by revealing specific conformations for drug design, making R&amp;D more efficient.">
+
+<title>CryoBoltz: Using AI to See Protein Dynamics and Unlock New Drug Targets – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="CryoBoltz: Using AI to See Protein Dynamics and Unlock New Drug Targets – MPU">
+<meta property="og:description" content="Traditional protein structure prediction is like taking a static ‘ID photo,’ but drug development needs to see a ‘video’ of the protein in action. The CryoBoltz method uses blurry data from cryo-electron microscopy (cryo-EM) to guide an AI model in resolving multiple dynamic protein conformations. Through a ‘multi-scale guidance’ mechanism, it can reconstruct a series of clear structures from ‘ghostly’ data containing many mixed states. This helps unlock new drug targets by revealing specific conformations for drug design, making R&amp;D more efficient.">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-12-18/post_all_image/multiscale_guidance_2025_12_11_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="A scientific concept diagram illustrating the core principle of the CryoBoltz method. In the center is a clear, colorful 3D model of a protein structure, shown with ribbons representing helices and folds. This model is surrounded by a translucent, glowing blue cloud, which represents the heterogeneous density map data from a cryo-EM experiment, containing mixed information from multiple dynamic protein conformations. Several glowing arrows point from the blurry cloud to the clear protein model, visually explaining how CryoBoltz uses the blurry experimental data as a 'guide' to steer an AI model toward generating a precise protein structure that fits within these constraints. The image shows how 'blurry' experimental snapshots can be turned into clear insights into a protein's dynamic processes, which is critical for discovering drug targets associated with specific functional states.
+">
+<meta name="twitter:title" content="CryoBoltz: Using AI to See Protein Dynamics and Unlock New Drug Targets – MPU">
+<meta name="twitter:description" content="Traditional protein structure prediction is like taking a static ‘ID photo,’ but drug development needs to see a ‘video’ of the protein in action. The CryoBoltz method uses blurry data from cryo-electron microscopy (cryo-EM) to guide an AI model in resolving multiple dynamic protein conformations. Through a ‘multi-scale guidance’ mechanism, it can reconstruct a series of clear structures from ‘ghostly’ data containing many mixed states. This helps unlock new drug targets by revealing specific conformations for drug design, making R&amp;D more efficient.">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-12-18/post_all_image/multiscale_guidance_2025_12_11_image_1.jpg">
+<meta name="twitter:image:alt" content="A scientific concept diagram illustrating the core principle of the CryoBoltz method. In the center is a clear, colorful 3D model of a protein structure, shown with ribbons representing helices and folds. This model is surrounded by a translucent, glowing blue cloud, which represents the heterogeneous density map data from a cryo-EM experiment, containing mixed information from multiple dynamic protein conformations. Several glowing arrows point from the blurry cloud to the clear protein model, visually explaining how CryoBoltz uses the blurry experimental data as a 'guide' to steer an AI model toward generating a precise protein structure that fits within these constraints. The image shows how 'blurry' experimental snapshots can be turned into clear insights into a protein's dynamic processes, which is critical for discovering drug targets associated with specific functional states.
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">CryoBoltz: Using AI to See Protein Dynamics and Unlock New Drug Targets</h1>
+                  <div>
+        <div class="description">
+          <p>Traditional protein structure prediction is like taking a static ‘ID photo,’ but drug development needs to see a ‘video’ of the protein in action. The CryoBoltz method uses blurry data from cryo-electron microscopy (cryo-EM) to guide an AI model in resolving multiple dynamic protein conformations. Through a ‘multi-scale guidance’ mechanism, it can reconstruct a series of clear structures from ‘ghostly’ data containing many mixed states. This helps unlock new drug targets by revealing specific conformations for drug design, making R&amp;D more efficient.</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">CryoBoltz</div>
+                <div class="quarto-category">Cryo-EM</div>
+                <div class="quarto-category">Protein Dynamics</div>
+                <div class="quarto-category">Diffusion Model</div>
+                <div class="quarto-category">Drug Discovery</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Thursday, the 18th of December, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#table-of-contents" id="toc-table-of-contents" class="nav-link active" data-scroll-target="#table-of-contents">Table of Contents</a></li>
+  <li><a href="#deeppni-fusing-sequence-and-structure-to-set-a-new-record-in-binding-energy-prediction" id="toc-deeppni-fusing-sequence-and-structure-to-set-a-new-record-in-binding-energy-prediction" class="nav-link" data-scroll-target="#deeppni-fusing-sequence-and-structure-to-set-a-new-record-in-binding-energy-prediction">1. DeepPni: Fusing Sequence and Structure to Set a New Record in Binding Energy Prediction</a></li>
+  <li><a href="#cryoboltz-using-ai-to-see-protein-dynamics-and-unlock-new-drug-targets" id="toc-cryoboltz-using-ai-to-see-protein-dynamics-and-unlock-new-drug-targets" class="nav-link" data-scroll-target="#cryoboltz-using-ai-to-see-protein-dynamics-and-unlock-new-drug-targets">2. CryoBoltz: Using AI to See Protein Dynamics and Unlock New Drug Targets</a></li>
+  <li><a href="#gvt-a-new-paradigm-for-molecular-generation-faster-and-more-accurate-than-diffusion-models" id="toc-gvt-a-new-paradigm-for-molecular-generation-faster-and-more-accurate-than-diffusion-models" class="nav-link" data-scroll-target="#gvt-a-new-paradigm-for-molecular-generation-faster-and-more-accurate-than-diffusion-models">3. GVT: A New Paradigm for Molecular Generation, Faster and More Accurate Than Diffusion Models</a></li>
+  <li><a href="#a-new-transformer-architecture-predicting-unknown-molecular-properties-from-known-ones" id="toc-a-new-transformer-architecture-predicting-unknown-molecular-properties-from-known-ones" class="nav-link" data-scroll-target="#a-new-transformer-architecture-predicting-unknown-molecular-properties-from-known-ones">4. A New Transformer Architecture: Predicting Unknown Molecular Properties from Known Ones</a></li>
+  <li><a href="#a-dual-engine-ai-drives-antimicrobial-peptide-discovery" id="toc-a-dual-engine-ai-drives-antimicrobial-peptide-discovery" class="nav-link" data-scroll-target="#a-dual-engine-ai-drives-antimicrobial-peptide-discovery">5. A Dual-Engine AI Drives Antimicrobial Peptide Discovery</a></li>
+  <li><a href="#biomedgpt-mol-an-ai-chemist-that-can-read-molecular-languages" id="toc-biomedgpt-mol-an-ai-chemist-that-can-read-molecular-languages" class="nav-link" data-scroll-target="#biomedgpt-mol-an-ai-chemist-that-can-read-molecular-languages">6. BioMedGPT-Mol: An AI Chemist That Can Read Molecular Languages</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-12-18/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="table-of-contents" class="level3">
+<h3 class="anchored" data-anchor-id="table-of-contents">Table of Contents</h3>
+<ol type="1">
+<li>DeepPni uses the ESM-2 language model and an edge-aware graph network to accurately capture how mutations affect the binding energy of protein-nucleic acid complexes, outperforming existing SOTA methods on benchmarks.</li>
+<li>CryoBoltz uses blurry cryo-EM data to guide an AI model in predicting multiple dynamic protein conformations, revealing how proteins function.</li>
+<li>GVT converts molecular graphs into discrete sequences, generating molecules with accuracy that matches or exceeds diffusion models but at a much higher speed.</li>
+<li>Researchers developed a flexible Transformer model that can predict unknown molecular properties using any combination of known properties, solving the problem of sparse chemical data in the real world.</li>
+<li>The XAMP framework uses a dual-engine architecture with ESM-2 and a Transformer to overcome data bias, identifying 2,355 high-confidence antimicrobial peptides from deep-sea microbiomes.</li>
+<li>BioMedGPT-Mol uses multi-task learning to understand different molecular languages and plan synthesis routes, taking a step toward a general-purpose AI chemist.</li>
+</ol>
+</section>
+<section id="deeppni-fusing-sequence-and-structure-to-set-a-new-record-in-binding-energy-prediction" class="level2">
+<h2 class="anchored" data-anchor-id="deeppni-fusing-sequence-and-structure-to-set-a-new-record-in-binding-energy-prediction">1. DeepPni: Fusing Sequence and Structure to Set a New Record in Binding Energy Prediction</h2>
+<p><a href="post_all_image/ad3d27850e1dd37d97e3362155d6ed22_MD5.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/ad3d27850e1dd37d97e3362155d6ed22_MD5.jpg" class="img-fluid"></a></p>
+<p>In drug design for targets like transcription factors or RNA-binding proteins, a core challenge is <strong>predicting how mutations affect binding affinity</strong>. Traditional free energy perturbation (FEP) calculations take too long, and standard machine learning models often focus on just one dimension—either sequence or structure. DeepPni combines both to offer an efficient solution.</p>
+<p><strong>Fusing Evolutionary Context and Spatial Structure</strong></p>
+<p>DeepPni’s logic is straightforward. It uses ESM-2, a protein language model developed by Meta, to process sequence information. Just like understanding text, ESM-2 can judge whether an amino acid mutation makes sense in an evolutionary context.</p>
+<p>Chemical reactions happen in 3D space, so the authors introduced an edge-aware relational graph convolutional network (RGCN). Traditional graph models often treat atoms only as nodes, ignoring the edges that connect them. The protein-nucleic acid interface is full of complex interactions like hydrogen bonds, salt bridges, van der Waals forces, and water-mediated bridges. DeepPni specifically enhances the encoding of these “edges,” using an algorithm to capture the precise physicochemical relationships between atoms to handle these different interactions accurately.</p>
+<p><strong>Real-World Performance</strong></p>
+<p>On a large dataset of 1,951 mutations, DeepPni achieved a Pearson correlation coefficient (PCC) of <strong>0.76</strong>. In the noisy field of binding energy prediction, this number represents a substantial improvement, outperforming leading models like DeePnaP and MutPni.</p>
+<p>The model’s ability to generalize is notable. It performs consistently whether the protein binds to DNA or RNA, and at experimental temperatures of 25°C or 37°C. DeepPni also maintained a high correlation on the ProNab external validation set, which includes data from both ITC (Isothermal Titration Calorimetry) and fluorescence polarization assays. For designing new mutants or new binding sites, this tool can provide high-confidence results and increase the success rate of wet-lab experiments.</p>
+<p>📜Title: DeepPni: Language and graph-based model for mutation-driven protein nucleic acid energetics 🌐Paper: <a href="https://arxiv.org/abs/2511.22239" class="uri">https://arxiv.org/abs/2511.22239</a></p>
+</section>
+<section id="cryoboltz-using-ai-to-see-protein-dynamics-and-unlock-new-drug-targets" class="level2">
+<h2 class="anchored" data-anchor-id="cryoboltz-using-ai-to-see-protein-dynamics-and-unlock-new-drug-targets">2. CryoBoltz: Using AI to See Protein Dynamics and Unlock New Drug Targets</h2>
+<p><a href="post_all_image/multiscale_guidance_2025_12_11_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/multiscale_guidance_2025_12_11_image_1.jpg" class="img-fluid"></a></p>
+<p>Proteins are not static structures; they move and change shape to perform their functions. Tools like AlphaFold can generate a static “ID photo” of a protein, but drug development needs a “video” of how they work.</p>
+<p>Cryo-electron microscopy (cryo-EM) can capture snapshots of these molecular machines. But when studying flexible proteins like ion channels or antibodies, the data is often “blurry.” This is like taking a long-exposure photo of a dancer, which results in a motion blur instead of a clear pose. This blurry data, which contains multiple conformations, is known as “heterogeneity” and has long been an obstacle in structure determination.</p>
+<p>The CryoBoltz method treats this blurriness as valuable information containing multiple conformations. It works with a diffusion-based AI model for structure prediction. You can think of this AI as a structure assembler, which starts with a random cloud of atoms and gradually builds a plausible protein structure.</p>
+<p>During this process, CryoBoltz acts as a “guide.” It uses the blurry cryo-EM density map to direct the “assembler,” making sure the constructed structure fits within the corresponding areas of the map. Its core is a “multi-scale guidance” mechanism that pays attention to both the big picture and the small details.</p>
+<ol type="1">
+<li><strong>Global Guidance</strong>: Ensures the overall shape and orientation of the entire protein model match the overall outline of the cryo-EM density map.</li>
+<li><strong>Local Guidance</strong>: Ensures that each small segment of the peptide chain and each amino acid side chain fits within its corresponding local density region.</li>
+</ol>
+<p>This dual constraint is like an experienced craftsman who ensures the overall proportions are right while also polishing the fine details. As a result, when the AI model generates a structure, it explores conformations that are both physically and chemically sound and can fit inside the experimental data. Since the data itself contains the “ghostly image” of multiple conformations, CryoBoltz can guide the model to generate a series of different, valid structures, each corresponding to one of those conformations.</p>
+<p>This method is particularly valuable in drug discovery. For example, a membrane transporter moves substances by switching between “open” and “closed” conformations, but a drug might only work on one of them. If a model can only predict a single, averaged structure, drug design is impossible. CryoBoltz can resolve both the “open” and “closed” states from the same blurry experimental data, providing clear, functionally relevant target structures for drug design.</p>
+<p>CryoBoltz is an “inference-time” method, which means it doesn’t require retraining huge AI models and can be applied directly. Any lab with cryo-EM data and a structure prediction model can integrate it into its workflow. This lowers the barrier to entry and makes resolving dynamic structures a tool available to more researchers.</p>
+<p>📜Title: Multiscale guidance of protein structure prediction with heterogeneous cryo-EM data 🌐Paper: https://arxiv.org/abs/2506.04490v2</p>
+</section>
+<section id="gvt-a-new-paradigm-for-molecular-generation-faster-and-more-accurate-than-diffusion-models" class="level2">
+<h2 class="anchored" data-anchor-id="gvt-a-new-paradigm-for-molecular-generation-faster-and-more-accurate-than-diffusion-models">3. GVT: A New Paradigm for Molecular Generation, Faster and More Accurate Than Diffusion Models</h2>
+<p><a href="post_all_image/graph_vq_transformer_2025_12_11_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/graph_vq_transformer_2025_12_11_image_1.jpg" class="img-fluid"></a></p>
+<p>The goal in molecular generation is to create novel chemical structures with good properties, while balancing speed and computational cost. Diffusion models have gained attention for their high-quality results, but they are computationally expensive. Generating a library of molecules can take days, creating a bottleneck in drug development.</p>
+<p>The Graph VQ-Transformer (GVT) model offers a new approach. It uses a discrete method and has achieved excellent results.</p>
+<p><strong>Learning Molecules Like a Language</strong></p>
+<p>GVT’s core idea has two steps, just like learning a language.</p>
+<p>The first step is to “learn words.” The model uses a Graph Vector-Quantized Variational Autoencoder (Graph VQ-VAE) to build a “molecular dictionary.” The VQ-VAE reads a molecule’s graph structure and compresses it into a series of discrete codes, or “words.” Each “word” represents a specific chemical substructure or functional group.</p>
+<p>The key is how to turn a non-linear graph structure into a linear sequence without losing connectivity information. The model uses the Reverse Cuthill-McKee (RCM) node-ordering algorithm. This algorithm systematically numbers the atoms to ensure that atoms that are close in 3D space are also adjacent in the sequence, converting a complex graph into an information-dense sequence.</p>
+<p>This design allows GVT’s VQ-VAE to achieve a near-perfect molecular reconstruction rate. If a model can’t accurately reproduce molecules it has already seen, it can’t be trusted to generate reliable new ones. GVT performs solidly on this front.</p>
+<p>The second step is to “learn grammar.” With the “dictionary” in place, an autoregressive Transformer learns how to combine these “words” into chemically valid “sentences” (i.e., molecules). The Transformer learns the patterns of how molecular “words” are arranged, such as which functional group typically follows another. When generating new molecules, it acts like a writer, outputting “words” one by one to form a complete new molecule.</p>
+<p><strong>Performance and Speed, Without Compromise</strong></p>
+<p>GVT performs well on standard benchmarks like ZINC250k, MOSES, and GuacaMol. On key metrics that measure the similarity between generated molecules and real drug molecules, such as Fréchet ChemNet Distance (FCD) and KL divergence, GVT scores better than top diffusion models.</p>
+<p>This shows that the molecules generated by GVT are not only chemically sound, but their distribution in chemical space is also closer to that of drug-like molecules.</p>
+<p>GVT’s speed advantage comes from its discrete, autoregressive generation process, which avoids the time-consuming iterative denoising calculations of diffusion models. For computational-aided drug design (CADD) teams, this can shorten the time needed to explore chemical space and speed up R&amp;D cycles.</p>
+<p>GVT proves that with smart design, discrete latent space models can perform as well as continuous models (like diffusion models) while offering advantages in efficiency and practicality. It also suggests that while chasing new technologies, re-examining classic methods might lead to better solutions.</p>
+<p>📜Title: Graph VQ-Transformer (GVT): Fast and Accurate Molecular Generation via High-Fidelity Discrete Latents 🌐Paper: https://arxiv.org/abs/2512.02667v1</p>
+</section>
+<section id="a-new-transformer-architecture-predicting-unknown-molecular-properties-from-known-ones" class="level2">
+<h2 class="anchored" data-anchor-id="a-new-transformer-architecture-predicting-unknown-molecular-properties-from-known-ones">4. A New Transformer Architecture: Predicting Unknown Molecular Properties from Known Ones</h2>
+<p><a href="post_all_image/generalized_molecula_2025_12_11_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="post_all_image/generalized_molecula_2025_12_11_image_1.jpg" class="img-fluid"></a></p>
+<p>In drug development, we always have to deal with incomplete data.</p>
+<p>A project might have hundreds of compounds. We might measure the solubility of some, the cell activity of others, and the metabolic stability of a small fraction. The final dataset looks like a block of Swiss cheese full of holes. Traditional quantitative structure-activity relationship (QSAR) models need a molecule’s structure to predict its properties and cannot make use of this valuable measured data.</p>
+<p>A new Transformer architecture can directly use known properties to predict unknown ones. For example, it can predict cell permeability (Caco-2) using only solubility (logS) and the lipophilicity (logP), without needing the molecule’s chemical structure. It treats a molecule’s set of physicochemical properties as a “sentence” and uses the Transformer’s sequence-processing power to find the relationships between them.</p>
+<p>First, the model has a special embedding layer that can clearly distinguish between “missing” data points and “zero” values. In chemical data, a value of zero is very different from a value that was “not measured.”</p>
+<p>Second, its self-attention mechanism learns the “chemical intuition” between different properties. For example, it will discover that molecules with high lipophilicity usually don’t have high solubility. These intrinsic relationships between properties are the foundation of its predictions.</p>
+<p>Finally, the model’s output is flexible—it can output whatever property needs to be predicted. This allows a single model to handle all kinds of missing data situations, without needing to train a separate model for each case.</p>
+<p>The model was validated on a dataset containing 16 million molecules and 23 properties. When provided only with properties and no structure, the model’s predictions had an R² value between 0.75 and 0.85. This shows that reliable predictions can be made based on the relationships between properties alone. This performance is even better than many QSAR models that rely solely on structure, because many physicochemical properties are themselves a condensed representation of a molecule’s structural features.</p>
+<p>In the early stages of drug discovery, a compound’s properties are often measured in batches and at different times. This tool can use the data available at any moment to “fill in the blanks” for properties that haven’t been measured or were skipped due to high cost. This can speed up compound screening and optimization, saving time and money.</p>
+<p>For example, if a lead compound has a long synthesis route and only a few basic parameters have been measured, this model could be used to predict its more complex ADME properties, helping to decide whether it’s worth investing more resources to study it further.</p>
+<p>📜Title: Generalized Molecular Property Imputation Using a Flexible Transformer Architecture 🌐Paper: https://doi.org/10.26434/chemrxiv-2025-ztp34</p>
+</section>
+<section id="a-dual-engine-ai-drives-antimicrobial-peptide-discovery" class="level2">
+<h2 class="anchored" data-anchor-id="a-dual-engine-ai-drives-antimicrobial-peptide-discovery">5. A Dual-Engine AI Drives Antimicrobial Peptide Discovery</h2>
+<p><a href="post_all_image/a_global_discovery_o_2025_11_27_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="post_all_image/a_global_discovery_o_2025_11_27_image_1.jpg" class="img-fluid"></a></p>
+<p>The threat of drug-resistant bacteria is urgent, and with terrestrial resources dwindling, the search for new antibiotics is turning to the deep sea. The extreme environment of high pressure, low temperature, and darkness has forced microorganisms to evolve unique defense mechanisms—antimicrobial peptides (AMPs).</p>
+<p>Previous prediction models often failed because of biases in their training data. The distribution of sequence lengths in databases is uneven, and they are full of artifacts like N-terminal methionines introduced by sequencing or expression technologies. If a model learns this noise, its predictions are worthless.</p>
+<p>The first task of the XAMP framework is to clean the data. The team built a balanced dataset and removed interferences to ensure the model learned real biological features.</p>
+<p><strong>The core of XAMP is its “dual-engine” design.</strong></p>
+<p>It’s like searching for treasure in a mine. Relying only on a high-precision scanner is inefficient, but using only the naked eye means you might miss something. XAMP combines the strengths of both:</p>
+<ol type="1">
+<li><strong>XAMP-T (Transformer engine)</strong>: Acts as an efficient prospector, using a Transformer architecture to quickly scan huge amounts of metagenomic data and identify potential regions of interest.</li>
+<li><strong>XAMP-E (ESM-2 engine)</strong>: This engine brings in Large Language Model (LLM) technology. It uses the ESM-2 model to create deep representations of protein sequences and perform high-precision confirmation on the initial candidates.</li>
+</ol>
+<p>This combined approach is effective: XAMP achieved a median AUC of 0.972, about a 10% improvement over the best existing tools. In drug development, that 10% often determines the success rate.</p>
+<p>To prove its real-world capability, the researchers analyzed 238 deep-sea metagenome samples and successfully identified 2,355 high-confidence AMP candidates.</p>
+<p>They cross-validated these findings with metaproteomic data, confirming that these predicted peptides are actually expressed in the deep-sea environment and are not just illusions generated by an algorithm.</p>
+<p>This work demonstrates a promising pipeline for drug discovery: using protein language models like ESM-2 combined with multi-omics data can effectively mine bioactive molecules from extreme environments.</p>
+<p>📜Title: A Global Discovery of Antimicrobial Peptides in Deep-Sea Microbiomes Driven by an ESM-2 and Transformer-based Dual-Engine Framework 🌐Paper: <a href="https://www.biorxiv.org/content/10.1101/2025.11.20.689422v1" class="uri">https://www.biorxiv.org/content/10.1101/2025.11.20.689422v1</a></p>
+</section>
+<section id="biomedgpt-mol-an-ai-chemist-that-can-read-molecular-languages" class="level2">
+<h2 class="anchored" data-anchor-id="biomedgpt-mol-an-ai-chemist-that-can-read-molecular-languages">6. BioMedGPT-Mol: An AI Chemist That Can Read Molecular Languages</h2>
+<p><a href="post_all_image/bio_med_gpt_mol_multi_2025_12_11_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-6"><img src="post_all_image/bio_med_gpt_mol_multi_2025_12_11_image_1.jpg" class="img-fluid"></a></p>
+<p>Large Language Models (LLMs) often make basic mistakes in chemistry. For example, they can’t correctly parse the parentheses and numbers in SMILES strings, leading them to output chemically invalid structures.</p>
+<p>BioMedGPT-Mol takes a different approach. Instead of building a new model from scratch, it trains a general-purpose large model to become a chemistry expert.</p>
+<p>Its core method is multi-task learning. BioMedGPT-Mol bundles multiple tasks—such as converting between molecular names, describing molecules, predicting properties, and predicting reactions—and trains the model on all of them at once using a single dataset.</p>
+<p>This training approach forces the model to find the underlying patterns between the tasks. It learns the intrinsic connections between a molecule’s IUPAC name, its linear SMILES representation, and its biological activity, building up a cognitive model of the chemical world.</p>
+<p>The model introduces special tokens to label different types of chemical information, like SMILES strings and IUPAC names. This helps the model accurately distinguish and parse different chemical languages, reducing confusion and improving the accuracy of its outputs.</p>
+<p>The model also needs to solve practical problems. Retrosynthesis planning is a complex chemical task. The researchers used a three-stage fine-tuning strategy to train the model: first, it learned forward reactions (from reactants to products), then it learned to work backward from products to reactants, and finally, it was trained on end-to-end planning.</p>
+<p>The results show that BioMedGPT-Mol performs well on the RetroBench benchmark for retrosynthesis planning. This demonstrates that the model has the ability to solve real synthesis problems, not just act as a knowledge base.</p>
+<p>The success of BioMedGPT-Mol shows that “grafting” the reasoning ability of a general-purpose large model onto a specific scientific domain, using specialized data and training methods, is a viable path. It may be better than developing entirely new AI models for every field.</p>
+<p>📜Title: BioMedGPT-Mol: Multi-task Learning for Molecular Understanding and Generation 🌐Paper: https://arxiv.org/abs/2512.04629v1</p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-12-18/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

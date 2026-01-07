@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="Deep learning models are often seen as ‘black boxes,’ but a new study reveals the ‘thought circuits’ inside a molecular transformer. Using tools like sparse autoencoders, researchers found that the model not only learns the grammatical rules of chemical language but also forms internal representations that correspond to chemical concepts like valence and functional groups. This advance improves the use of explainable AI in science. More importantly, it provides a knob to directly control the model’s ‘chemical thinking,’ allowing us to guide the AI to generate molecules with specific chemical features. This opens up a new, interactive design model for drug discovery.">
+
+<title>Dissecting the AI Chemist: The Thought Circuits of a Molecular Transformer – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="Dissecting the AI Chemist: The Thought Circuits of a Molecular Transformer – MPU">
+<meta property="og:description" content="Deep learning models are often seen as ‘black boxes,’ but a new study reveals the ‘thought circuits’ inside a molecular transformer. Using tools like sparse autoencoders, researchers found that the model not only learns the grammatical rules of chemical language but also forms internal representations that correspond to chemical concepts like valence and functional groups. This advance improves the use of explainable AI in science. More importantly, it provides a knob to directly control the model’s ‘chemical thinking,’ allowing us to guide the AI to generate molecules with specific chemical features. This opens up a new, interactive design model for drug discovery.">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-12-26/post_all_image/circuits_features_2025_12_16_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="A complex concept map illustrating how to dissect the internal workings of a molecular transformer model. The diagram might include modules representing the transformer architecture, like attention heads and neural network layers, with arrows pointing to SMILES strings or molecular structures. It visually demonstrates how researchers use tools like sparse autoencoders to extract interpretable chemical features from the model's complex internal activations, such as specific neuron activation patterns corresponding to a benzene ring or a carbonyl group. The core purpose of the image is to visualize the process of an AI model understanding chemical grammar and concepts, revealing its 'thought circuits'.
+">
+<meta name="twitter:title" content="Dissecting the AI Chemist: The Thought Circuits of a Molecular Transformer – MPU">
+<meta name="twitter:description" content="Deep learning models are often seen as ‘black boxes,’ but a new study reveals the ‘thought circuits’ inside a molecular transformer. Using tools like sparse autoencoders, researchers found that the model not only learns the grammatical rules of chemical language but also forms internal representations that correspond to chemical concepts like valence and functional groups. This advance improves the use of explainable AI in science. More importantly, it provides a knob to directly control the model’s ‘chemical thinking,’ allowing us to guide the AI to generate molecules with specific chemical features. This opens up a new, interactive design model for drug discovery.">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-12-26/post_all_image/circuits_features_2025_12_16_image_1.jpg">
+<meta name="twitter:image:alt" content="A complex concept map illustrating how to dissect the internal workings of a molecular transformer model. The diagram might include modules representing the transformer architecture, like attention heads and neural network layers, with arrows pointing to SMILES strings or molecular structures. It visually demonstrates how researchers use tools like sparse autoencoders to extract interpretable chemical features from the model's complex internal activations, such as specific neuron activation patterns corresponding to a benzene ring or a carbonyl group. The core purpose of the image is to visualize the process of an AI model understanding chemical grammar and concepts, revealing its 'thought circuits'.
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">Dissecting the AI Chemist: The Thought Circuits of a Molecular Transformer</h1>
+                  <div>
+        <div class="description">
+          <p>Deep learning models are often seen as ‘black boxes,’ but a new study reveals the ‘thought circuits’ inside a molecular transformer. Using tools like sparse autoencoders, researchers found that the model not only learns the grammatical rules of chemical language but also forms internal representations that correspond to chemical concepts like valence and functional groups. This advance improves the use of explainable AI in science. More importantly, it provides a knob to directly control the model’s ‘chemical thinking,’ allowing us to guide the AI to generate molecules with specific chemical features. This opens up a new, interactive design model for drug discovery.</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">Molecular Transformer</div>
+                <div class="quarto-category">Explainable AI</div>
+                <div class="quarto-category">Sparse Autoencoders</div>
+                <div class="quarto-category">Molecule Generation</div>
+                <div class="quarto-category">Computational Chemistry</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Friday, the 26th of December, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#synprotac-making-ai-designed-protacs-actually-synthesizable" id="toc-synprotac-making-ai-designed-protacs-actually-synthesizable" class="nav-link active" data-scroll-target="#synprotac-making-ai-designed-protacs-actually-synthesizable">1. SynPROTAC: Making AI-Designed PROTACs Actually Synthesizable</a></li>
+  <li><a href="#learning-from-failure-how-the-rosetta-energy-function-evolves" id="toc-learning-from-failure-how-the-rosetta-energy-function-evolves" class="nav-link" data-scroll-target="#learning-from-failure-how-the-rosetta-energy-function-evolves">2. Learning from Failure: How the Rosetta Energy Function Evolves</a></li>
+  <li><a href="#a-new-idea-for-ai-drug-discovery-using-knowledge-graphs-and-optimal-transport-to-predict-molecular-interactions" id="toc-a-new-idea-for-ai-drug-discovery-using-knowledge-graphs-and-optimal-transport-to-predict-molecular-interactions" class="nav-link" data-scroll-target="#a-new-idea-for-ai-drug-discovery-using-knowledge-graphs-and-optimal-transport-to-predict-molecular-interactions">3. A New Idea for AI Drug Discovery: Using Knowledge Graphs and Optimal Transport to Predict Molecular Interactions</a></li>
+  <li><a href="#scprototransformer-teaching-ai-to-read-single-cell-data-using-biological-pathways" id="toc-scprototransformer-teaching-ai-to-read-single-cell-data-using-biological-pathways" class="nav-link" data-scroll-target="#scprototransformer-teaching-ai-to-read-single-cell-data-using-biological-pathways">4. ScProtoTransformer: Teaching AI to Read Single-Cell Data Using Biological Pathways</a></li>
+  <li><a href="#dissecting-the-ai-chemist-the-thought-circuits-of-a-molecular-transformer" id="toc-dissecting-the-ai-chemist-the-thought-circuits-of-a-molecular-transformer" class="nav-link" data-scroll-target="#dissecting-the-ai-chemist-the-thought-circuits-of-a-molecular-transformer">5. Dissecting the AI Chemist: The Thought Circuits of a Molecular Transformer</a></li>
+  <li><a href="#can-ai-understand-3d-molecules-a-new-benchmark-misi-bench-reveals-the-gap" id="toc-can-ai-understand-3d-molecules-a-new-benchmark-misi-bench-reveals-the-gap" class="nav-link" data-scroll-target="#can-ai-understand-3d-molecules-a-new-benchmark-misi-bench-reveals-the-gap">6. Can AI Understand 3D Molecules? A New Benchmark, MiSI-Bench, Reveals the Gap</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-12-26/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="table-of-contents" class="level4">
+<h4 class="anchored" data-anchor-id="table-of-contents">Table of Contents</h4>
+<ol type="1">
+<li>SynPROTAC solves a core problem in drug design—the difficulty of synthesizing AI-designed PROTAC molecules—by simultaneously building the synthesis route during generation.</li>
+<li>By analyzing the experimental failures of de novo designed proteins, researchers identified and fixed a systemic bias in the Rosetta energy function that caused core overpacking.</li>
+<li>The KGOT framework addresses the scarcity of labeled data by fusing a multimodal knowledge graph with optimal transport pseudo-labeling, significantly improving the accuracy of molecule-protein interaction prediction.</li>
+<li>This work integrates biological pathway knowledge into a Transformer architecture to build a scalable and interpretable single-cell reference map across molecules, cells, and donors.</li>
+<li>This paper opens up the “black box” of molecular generation models, not only showing how AI understands chemical grammar but also giving us a knob to directly control its “chemical thinking.”</li>
+<li>Current large Vision-Language Models (VLMs) cannot yet truly understand the three-dimensional spatial structure of molecules, but a smaller, specially fine-tuned model proves that injecting domain knowledge is a key step toward scientific intelligence.</li>
+</ol>
+</section>
+<section id="synprotac-making-ai-designed-protacs-actually-synthesizable" class="level2">
+<h2 class="anchored" data-anchor-id="synprotac-making-ai-designed-protacs-actually-synthesizable">1. SynPROTAC: Making AI-Designed PROTACs Actually Synthesizable</h2>
+<p><a href="post_all_image/syn_protac_synthesiz_2025_12_16_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/syn_protac_synthesiz_2025_12_16_image_1.jpg" class="img-fluid"></a></p>
+<p>Anyone in computational drug design knows the feeling. You run a complex model for days, finally get a molecule with a great score and a perfect-looking structure, and excitedly show it to a synthetic chemist. They glance at it, shake their head, and say, “We can’t make this.” Or worse: “We can, but it’ll take six months and cost you two more postdocs.”</p>
+<p>This problem is especially acute for PROTACs (Proteolysis-Targeting Chimeras). PROTACs are inherently complex molecules. They’re like a dumbbell: one end has to grab the target protein, the other has to grab an E3 ligase, and a linker connects them. All three parts have to be just right, which gives you a lot of design freedom but also causes the synthesis complexity to rise exponentially. If an AI model doesn’t consider synthesis, it can easily design “pie-in-the-sky” molecules that look good but never leave the computer screen.</p>
+<p><strong>How SynPROTAC Works</strong></p>
+<p>The SynPROTAC model in this paper has an approach that will appeal to R&amp;D scientists on the front lines. It doesn’t design the molecule first and then figure out how to make it. It does the reverse. At every step of the design process, it treats “can this be synthesized?” as a primary constraint.</p>
+<p>You can think of it like a chemist playing with Legos. They don’t have an infinite supply of bricks, only what’s on the shelf (known chemical building blocks). And they can’t just stick them together any way they want; they have to follow specific assembly rules (known chemical reactions).</p>
+<p>SynPROTAC does exactly this. It starts with a Graphormer encoder to understand the molecule’s 3D structural information, then uses a Transformer decoder to make decisions. First, the model picks a suitable chemical reaction from a library of reaction templates. Second, it selects reactant molecules from a huge database of building blocks that can participate in that reaction. It “builds” step-by-step, with each step based on a real, feasible chemical reaction. When the process is finished, a PROTAC molecule has been designed, and its synthesis route has been generated naturally alongside it.</p>
+<p><strong>Making It Work and Making It Good</strong></p>
+<p>Of course, just being synthesizable isn’t enough. The ultimate goal is to make an effective drug. If a molecule is easy to make but has zero activity on the target, it’s a waste of time.</p>
+<p>This is where reinforcement learning comes in. During the molecular construction process, the model constantly predicts the binding affinity of the current structure to the target protein. If a design path looks promising (for example, it has a high binding score), the model gets a “reward” and is encouraged to continue down that path. If a path looks unpromising, the model receives a “penalty” and turns back to try something else.</p>
+<p>This reward-penalty mechanism is like training a search dog. It learns through trial and error, eventually figuring out how to precisely find molecules that are both easy to synthesize and have high biological activity.</p>
+<p><strong>What Were the Results?</strong></p>
+<p>The researchers used a score called SYBA to evaluate the synthetic feasibility of molecules; a higher score means it’s easier to make. The results showed that SynPROTAC-generated molecules had very high SYBA scores, meaning synthetic chemists won’t be frowning when they see them.</p>
+<p>At the same time, the physicochemical properties of the generated molecules were very similar to those in the known PROTAC database (PROTAC-DB 3.0), indicating they have basic drug-like properties. More importantly, these molecules are novel, and their predicted binding affinities are better than many known molecules.</p>
+<p>For people on the front lines of drug R&amp;D, tools like SynPROTAC are incredibly valuable. It doesn’t boast about finding a miracle drug in one shot. Instead, it solves a fundamental bottleneck: bridging the gap between computational design and chemical synthesis. It turns AI from just a blue-sky designer into an experienced chemist who understands the pains of the lab. Tools like this are what will actually speed up our research.</p>
+<p>📜Title: SynPROTAC: Synthesizable PROTACs Design Through Synthesis Constrained Generative Model and Reinforcement Learning 🌐Paper: https://www.biorxiv.org/content/10.64898/2025.12.10.693572v1</p>
+</section>
+<section id="learning-from-failure-how-the-rosetta-energy-function-evolves" class="level2">
+<h2 class="anchored" data-anchor-id="learning-from-failure-how-the-rosetta-energy-function-evolves">2. Learning from Failure: How the Rosetta Energy Function Evolves</h2>
+<p><a href="post_all_image/using_experimental_r_2025_12_16_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/using_experimental_r_2025_12_16_image_1.jpg" class="img-fluid"></a></p>
+<p>Anyone doing computer-aided drug discovery (CADD) or biomolecular simulation knows their tools aren’t perfect. Whether it’s molecular docking, free energy perturbation (FEP), or protein design, every model has its quirks and blind spots. The question is, how do we pinpoint these blind spots and systematically fix them? This paper provides a very elegant demonstration.</p>
+<p>Their approach is direct: give the model a challenging task, see where it stumbles, and then learn from the failure.</p>
+<p>Specifically, the researchers used Rosetta’s energy function for the de novo design of new proteins. This is like asking a construction AI to design an unprecedented skyscraper. According to the model’s calculations, these proteins should have had the lowest-energy, most stable folded structures.</p>
+<p>But the experimental results told a different story. Many of the designed proteins were completely unstable in reality; they just fell apart.</p>
+<p>This is where the most critical step comes in. They didn’t just throw away the failed designs. Instead, they used deep mutational scanning to carefully study <em>why</em> they failed. This technique is like stress-testing every single load-bearing beam in the skyscraper. They discovered that changing just one amino acid in the core region—for instance, swapping a “fat” amino acid for a “skinny” one—could miraculously stabilize the entire protein structure.</p>
+<p>This got to the heart of the problem: Rosetta’s energy function wasn’t penalizing steric clashing enough. It had a tendency to pack the protein’s hydrophobic core too tightly, like trying to cram too many clothes into a suitcase. In the computer, atoms can overlap a little and the energy score still looks good. But in the real world, these clashing atoms create tension throughout the structure, causing it to collapse.</p>
+<p>This tendency for “core overpacking” wasn’t just in their de novo designs. The researchers went back and checked high-resolution crystal structures that had been refined with Rosetta and found the same problem. This showed it was a systemic bias embedded in the energy function’s parameters.</p>
+<p>Once you find the root cause, the fix is straightforward. They used a set of high-quality crystal structures as the “ground truth” and retrained the energy function’s parameters, specifically increasing the penalty for atomic collisions. The result was a new version of the energy function, codenamed <code>beta_jan25</code>.</p>
+<p>This new version performed better on multiple benchmarks. It not only reduced the core clashing problem but did so without hurting the model’s accuracy on other tasks, like structure prediction.</p>
+<p>The value of this work goes far beyond just improving Rosetta. It demonstrates a powerful, closed-loop paradigm: computational design → experimental validation → failure analysis → model improvement. This logic is highly informative for improving any complex predictive model, including the popular large language models or protein design AIs of today. It’s a reminder that model progress depends not just on bigger datasets and more complex algorithms, but also on contact with the real world and the wisdom gained from learning from failure.</p>
+<p>The authors have already integrated the new <code>beta_jan25</code> energy function into the Rosetta software package, which is great news for the whole community. They also acknowledge that the model still has other issues to solve, such as an overestimation of polar interactions. But this is undoubtedly a solid step forward.</p>
+<p>📜Title: Using Experimental Results of Protein Design to Guide Biomolecular Energy-Function Development 🌐Paper: https://www.biorxiv.org/content/10.64898/2025.12.12.691241v1 💻Code: https://github.com/Haddox/design_guided_optE</p>
+</section>
+<section id="a-new-idea-for-ai-drug-discovery-using-knowledge-graphs-and-optimal-transport-to-predict-molecular-interactions" class="level2">
+<h2 class="anchored" data-anchor-id="a-new-idea-for-ai-drug-discovery-using-knowledge-graphs-and-optimal-transport-to-predict-molecular-interactions">3. A New Idea for AI Drug Discovery: Using Knowledge Graphs and Optimal Transport to Predict Molecular Interactions</h2>
+<p><a href="post_all_image/kgot_unified_knowle_2025_12_16_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/kgot_unified_knowle_2025_12_16_image_1.jpg" class="img-fluid"></a></p>
+<p>In drug discovery, we’re always playing a matching game: finding the “chosen one” from a massive library of molecules that can bind to a specific disease-causing protein. Traditional wet-lab screening is expensive and slow, so people are increasingly turning to computational methods like virtual screening. But there’s a persistent problem: training an accurate predictive model requires a lot of high-quality “molecule-protein binding” data, and that kind of data is very scarce.</p>
+<p>The KGOT framework proposed in this paper offers a smart solution. It’s not a single breakthrough but a two-pronged attack.</p>
+<p><strong>First Move: Build a Giant “Relationship Network”—the Knowledge Graph</strong></p>
+<p>Imagine trying to understand a person. You can’t just look at their ID card; you need to know about their family, friends, job, and hobbies. Similarly, to predict whether a molecule and a protein will hit it off, looking at their individual structures isn’t enough.</p>
+<p>The researchers did something fundamental but extremely important: they integrated six high-quality public databases to connect all the dots between molecules, proteins, genes, and biological pathways, building a massive multimodal Knowledge Graph.</p>
+<p>This graph is like a huge map of biological relationships. Even if we don’t have direct data on molecule A binding to protein B, the model can find indirect clues through this network. For example, maybe molecule A acts on pathway C, and protein B happens to be a key node in pathway C. Or maybe protein B belongs to the same family as another protein, D, which molecule A is known to bind. This indirect information provides valuable context for the model to make inferences when data is sparse.</p>
+<p><strong>Second Move: Use “Optimal Transport” for High-Quality “Pseudo-Labeling”</strong></p>
+<p>Having the relationship network isn’t enough. Model training ultimately needs clear labels (“binds” or “doesn’t bind”). When real labels are scarce, a common strategy is Pseudo-Labeling: let the model make predictions on a large set of unlabeled data, then take the high-confidence predictions as “pseudo-labels” and add them back to the training set for “self-learning.”</p>
+<p>But this method has a risk: if the initial model is inaccurate, the pseudo-labels it generates are “garbage.” Training on garbage will only make the model more biased.</p>
+<p>This is where KGOT shines. It introduces the Optimal Transport algorithm to ensure the quality of the pseudo-labels. You can think of Optimal Transport as an efficient “mover.” The problem it solves is how to move a pile of sand (the model’s predicted interaction scores) into a predefined shape (the true distribution of known biological interactions) at the lowest possible cost.</p>
+<p>This way, it doesn’t just apply a simple threshold (like “label as ‘binds’ if score &gt; 0.9”). Instead, it looks at the global distribution to ensure that the generated pseudo-labels as a whole align with our prior knowledge of biological systems. The pseudo-labels created this way are higher quality and more reliable.</p>
+<p><strong>How Well Does This Combo Work?</strong></p>
+<p>The experimental results are solid. In both virtual screening and protein retrieval tasks, KGOT outperformed several current mainstream methods. Its advantage is particularly clear in early enrichment—that is, its ability to concentrate more positive hits at the top of the screening list, which is extremely valuable for practical drug screening. It also has good zero-shot learning capabilities, meaning it has the potential to predict interactions for molecules and proteins it has never seen in training.</p>
+<p>From an R&amp;D scientist’s perspective, KGOT’s approach is worth learning from. It doesn’t get caught up in fancy model architectures. Instead, it tackles the problem at its data roots, combining sparse biological data with rigorous mathematical tools to solve a very practical pain point. This method not only improves prediction accuracy but also offers a new direction for how we can more intelligently use massive, multi-source biomedical data.</p>
+<p>📜Title: KGOT: Unified Knowledge Graph and Optimal Transport Pseudo-Labeling for Molecule-Protein Interaction Prediction 🌐Paper: https://arxiv.org/abs/2512.09365v1</p>
+</section>
+<section id="scprototransformer-teaching-ai-to-read-single-cell-data-using-biological-pathways" class="level2">
+<h2 class="anchored" data-anchor-id="scprototransformer-teaching-ai-to-read-single-cell-data-using-biological-pathways">4. ScProtoTransformer: Teaching AI to Read Single-Cell Data Using Biological Pathways</h2>
+<p><a href="post_all_image/sc_proto_transformer_2025_12_16_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="post_all_image/sc_proto_transformer_2025_12_16_image_1.jpg" class="img-fluid"></a></p>
+<p>Anyone doing single-cell analysis knows we are drowning in data. Massive amounts of single-cell data are generated every day, but how to effectively integrate these “data islands” from different technology platforms, batches, and even individuals to build a unified Reference Map remains a difficult problem. It’s like trying to stitch countless partial photos, taken with different cameras under different lighting, into a single, clear panoramic image. The challenge is huge.</p>
+<p>A recent paper proposes a model called ScProtoTransformer that offers a very clever solution. It doesn’t just throw more computing power at the problem; it tries to teach the model to “think” like a biologist.</p>
+<p>The model’s core innovation is a “knowledge-guided prototype tokenizer.” Let’s break that down. Traditional models process gene expression data by reading one letter at a time, making it hard to grasp the meaning of words and sentences. ScProtoTransformer’s approach is to first bundle thousands of genes into a few hundred “Prototypes” with clear biological meaning, based on our existing biological knowledge (like KEGG or GO pathways).</p>
+<p>Here’s an analogy: the model no longer looks at the individual expression levels of genes A, B, and C as 1.2, 3.4, and 0.5. Instead, it directly sees whether the overall activity of the “NF-κB signaling pathway” prototype, which they form together, is high or low. This has at least two immediate benefits:</p>
+<ol type="1">
+<li><strong>Cleaner Data</strong>. Individual gene expression levels are easily affected by technical noise like batch effects. But the overall trend of dozens or hundreds of genes in a pathway is much more stable, providing a built-in noise reduction feature.</li>
+<li><strong>Interpretable Results</strong>. When the model tells you that the key feature of a cell population is “Prototype 57,” you’re not left scratching your head. You can look up “Prototype 57” and see it corresponds to the “glycolysis pathway,” instantly connecting the computational result to biological meaning. This is crucial for forming new scientific hypotheses.</li>
+</ol>
+<p>After solving the input problem, let’s look at model training. Training a large model like a Transformer from scratch is computationally expensive, far beyond what most labs can afford. Here, the researchers used another clever trick: knowledge distillation. They had an “expert” foundation model, already pre-trained on a massive dataset, “teach” the ScProtoTransformer “student.” This way, ScProtoTransformer doesn’t have to repeat the expert’s long learning process and can efficiently inherit its learned knowledge, significantly lowering the training barrier.</p>
+<p>So, how does this “quick and smart learner” perform in practice? The paper’s benchmarks show that at the molecular level (gene embedding), cell level (cell type annotation), and the higher donor level (integrating samples from different donors), ScProtoTransformer’s performance matched or even exceeded the current top methods in the field.</p>
+<p>Even more impressive is its versatility. It can handle not only standard single-cell transcriptomics data but is also effective at integrating different modalities (like CITE-seq) or processing spatial transcriptomics data. When dealing with spatial data, it doesn’t even need to rely on spatial coordinate information. It can uncover biologically relevant spatial features based on gene expression patterns alone. This suggests the model has truly captured the underlying biological principles in the data, rather than just relying on superficial physical information.</p>
+<p>ScProtoTransformer’s approach represents a trend: moving away from blindly applying deep learning black-box models to biological data, and instead, purposefully integrating prior knowledge from biology into the model’s architecture. This makes the models not only powerful but also efficient and interpretable. For researchers on the front lines, these are the tools we really need.</p>
+<p>📜Title: ScProtoTransformer: Scalable Reference Mapping Across Molecules, Cells and Donors 🌐Paper: https://www.biorxiv.org/content/10.64898/2025.12.06.692735v1</p>
+</section>
+<section id="dissecting-the-ai-chemist-the-thought-circuits-of-a-molecular-transformer" class="level2">
+<h2 class="anchored" data-anchor-id="dissecting-the-ai-chemist-the-thought-circuits-of-a-molecular-transformer">5. Dissecting the AI Chemist: The Thought Circuits of a Molecular Transformer</h2>
+<p><a href="post_all_image/circuits_features_2025_12_16_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="post_all_image/circuits_features_2025_12_16_image_1.jpg" class="img-fluid"></a></p>
+<p>Those of us in computational chemistry and drug discovery use various deep learning models every day. Tools like the molecular transformer are very good at generating new molecules, but we’ve always used them as a “black box.” You give it a task, it gives you results, but we knew very little about how it was “thinking” internally. This work is like lifting the hood on this complex machine for the first time, letting us see how the gears turn inside.</p>
+<p>First, the researchers solved a basic question: how does the AI learn the grammar of a chemical language like SMILES? SMILES uses parentheses <code>()</code> for branches and numbers (like <code>1</code> and <code>2</code>) to mark the opening and closing of rings. One mistake, and the whole molecular structure is invalid. This paper found that specific attention heads in the transformer model are dedicated to this job. They act like “pointers”: one attention head connects an opening parenthesis to its corresponding closing one, while another pairs up the atoms that form a ring. This shows the model isn’t just memorizing patterns; it has actually learned the grammatical rules of the language.</p>
+<p>Going deeper, they investigated how the model understands a fundamental chemical concept like valence. For example, carbon typically forms four bonds. The researchers found that in the model’s high-dimensional internal space, there is a specific “direction” that represents valence capacity. If you push an atom’s internal representation along this direction, the model becomes more likely to predict a double or triple bond in the next step. Pushing it in the opposite direction favors a single bond. This is very cool. It’s as if we’ve found a “knob” to control valence, allowing us to fine-tune the model’s output to ensure chemical rules are followed as it generates a molecule.</p>
+<p>So how were these “pointers” and “knobs” found? They used a tool called Sparse Autoencoders (SAEs). You can think of a transformer’s complex internal activations as a rich, but complicated, soup. An SAE acts like a super-filter that can separate out the most critical and essential “flavors”—the interpretable features. The results were surprising. Many of these extracted features correspond directly to concepts familiar to chemists, like a benzene ring, a carbonyl group, or a specific heterocycle. It’s like we’ve installed a translator on the AI’s “subconscious,” turning its vague internal language into chemical terms we can understand.</p>
+<p>These findings aren’t just for academic curiosity; they have real practical value.</p>
+<p>First, using these SAE-extracted features for downstream tasks, like predicting molecular activity, works even better than using commonly used Morgan fingerprints. This means the features the AI learns on its own capture the essence of a molecule better than the features we design ourselves.</p>
+<p>Second, and most exciting, we can use these features to “guide” molecule generation. For instance, say we want to optimize a lead compound. We want the new molecules to keep certain key scaffolds while exploring new side chains. Traditional methods might require complex model retraining. Now, we can just tell the model: “Please generate some new molecules with more ‘aromatic ring’ features and fewer ‘flexible chain’ features.” The model can explore in the direction we want in real time, without changing any of its weights. This gives medicinal chemists an unprecedented tool for interactive molecular design with an AI.</p>
+<p>📜Title: Circuits, Features, and Heuristics in Molecular Transformers 🌐Paper: https://arxiv.org/abs/2512.09757</p>
+</section>
+<section id="can-ai-understand-3d-molecules-a-new-benchmark-misi-bench-reveals-the-gap" class="level2">
+<h2 class="anchored" data-anchor-id="can-ai-understand-3d-molecules-a-new-benchmark-misi-bench-reveals-the-gap">6. Can AI Understand 3D Molecules? A New Benchmark, MiSI-Bench, Reveals the Gap</h2>
+<p><a href="post_all_image/from_macro_to_micro_2025_12_16_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-6"><img src="post_all_image/from_macro_to_micro_2025_12_16_image_1.jpg" class="img-fluid"></a></p>
+<p>As drug discovery professionals, we work with molecular structures every day. We use software like PyMOL or Chimera to rotate and zoom, trying to understand a molecule from different angles and find potential binding sites on a target protein. This is a kind of 3D spatial intuition, developed over years of training.</p>
+<p>The question now is, can Vision-Language Models (VLMs) like GPT-4V, which can recognize almost anything in the world, have this kind of “spatial sense” at the microscopic level? Can they “see” and understand a molecule like a chemist does?</p>
+<p>A recent study, using a new benchmark test called MiSI-Bench, gives us a clear answer: not yet, but the potential is huge.</p>
+<section id="the-gap-between-macro-vision-and-micro-rules" class="level4">
+<h4 class="anchored" data-anchor-id="the-gap-between-macro-vision-and-micro-rules">The Gap Between Macro Vision and Micro Rules</h4>
+<p>VLMs are powerful because they have learned from massive amounts of image and text data. A VLM can recognize a cat because it has seen thousands of pictures of cats. But the molecular world is completely different.</p>
+<p>When you look at a picture of a molecule, you’re not just seeing how atoms and bonds are connected. Your mind immediately conjures its 3D conformation, which groups can rotate freely, where hydrogen bonds might form, which parts are hydrophilic, and which are hydrophobic. Much of this information isn’t visible in a static 2D image; it’s governed by a whole set of physical and chemical rules.</p>
+<p>General-purpose VLMs lack this underlying knowledge. They might see a molecular image as just a collection of lines and spheres, without understanding the chemical meaning behind the arrangement. This causes them to make absurd mistakes on questions that are simple for a chemist.</p>
+</section>
+<section id="misi-bench-a-precise-ruler" class="level4">
+<h4 class="anchored" data-anchor-id="misi-bench-a-precise-ruler">MiSI-Bench: A Precise Ruler</h4>
+<p>The design of MiSI-Bench is to break down this complex “spatial sense” into a series of specific, quantifiable tasks. It doesn’t just ask “What molecule is this?” like a standard image recognition test. It asks deeper questions, such as:</p>
+<ul>
+<li>Are these two molecules stereoisomers or the same compound?</li>
+<li>Are these two images different conformers of the same molecule?</li>
+<li>What would this molecule look like if we rotated this specific bond by 90 degrees?</li>
+</ul>
+<p>It’s like a customized competency test for an AI chemist. The researchers used this benchmark to evaluate some of the top VLMs, including GPT-4V and Gemini. As expected, their performance was far below human level. This confirms the suspicion: general visual training does not directly transfer to the microscopic world, which requires precise physical rules.</p>
+</section>
+<section id="domain-knowledge-is-key" class="level4">
+<h4 class="anchored" data-anchor-id="domain-knowledge-is-key">Domain Knowledge is Key</h4>
+<p>The most interesting part of this work is that they fine-tuned a 7B-parameter model on the MiSI-Bench data. As a result, this “small” model’s performance improved dramatically, even surpassing human experts on some spatial transformation tasks.</p>
+<p>What does this tell us? It shows that the VLM architecture itself is capable of learning 3D spatial relationships, but it needs the right “textbook.” Fine-tuning on specialized data is like giving the model an intensive course in molecular structure and chemical principles.</p>
+<p>The hydrogen bond recognition task mentioned in the study is a classic example. A hydrogen bond isn’t just “two atoms are close together”; it has strict requirements for the donor, acceptor, and the angle between them. A general VLM doesn’t know this, but a fine-tuned model can learn it.</p>
+<p>The takeaway is that the path to a scientific AGI may not be through one single, all-encompassing super-model. Instead, it may require “distilling” precise domain knowledge and injecting it into models. Work like MiSI-Bench gives us a ruler to measure progress, letting us know what a model has actually learned and what it still doesn’t know. For drug discovery, this means we can train AI assistants that have a better understanding of chemistry and biology, helping us analyze structures and design molecules faster.</p>
+<p>📜Title: From Macro to Micro: Benchmarking Microscopic Spatial Intelligence on Molecules via Vision-Language Models 🌐Paper: https://arxiv.org/abs/2512.10867v1</p>
+
+
+</section>
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-12-26/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

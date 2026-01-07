@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="The latest BENTO benchmark reveals a key industry pain point: from classical methods to advanced AI models like AlphaFold3, all tools face a serious generalization challenge when it comes to brand-new protein targets. The research finds that the root cause is data bias in past benchmarks, which led to models that looked good on paper but were actually overfitted. By using a stricter data-splitting method, BENTO provides a realistic assessment of the limitations of various tools in solving core drug discovery problems, offering practitioners a sober perspective and a practical guide for tool selection.">
+
+<title>A New Benchmark for AI Drug Discovery: Why Even AlphaFold3 Struggles with New Targets – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="A New Benchmark for AI Drug Discovery: Why Even AlphaFold3 Struggles with New Targets – MPU">
+<meta property="og:description" content="The latest BENTO benchmark reveals a key industry pain point: from classical methods to advanced AI models like AlphaFold3, all tools face a serious generalization challenge when it comes to brand-new protein targets. The research finds that the root cause is data bias in past benchmarks, which led to models that looked good on paper but were actually overfitted. By using a stricter data-splitting method, BENTO provides a realistic assessment of the limitations of various tools in solving core drug discovery problems, offering practitioners a sober perspective and a practical guide for tool selection.">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2026-01-09/post_all_image/bento_benchmarking_2026_01_05_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="A scientific illustration showing the core concept of molecular docking. On the left is a complex 3D protein structure with a distinct groove on its surface, the 'binding pocket.' A small molecule ligand is poised to bind with this pocket. Terms like 'Docking score' are labeled, visually explaining how computational tools evaluate the quality of the fit. This image illustrates the task that the BENTO benchmark assesses—predicting the binding mode of a molecule to a protein—and highlights the generalization challenge that existing AI tools face when the protein pocket is a novel structure.
+">
+<meta name="twitter:title" content="A New Benchmark for AI Drug Discovery: Why Even AlphaFold3 Struggles with New Targets – MPU">
+<meta name="twitter:description" content="The latest BENTO benchmark reveals a key industry pain point: from classical methods to advanced AI models like AlphaFold3, all tools face a serious generalization challenge when it comes to brand-new protein targets. The research finds that the root cause is data bias in past benchmarks, which led to models that looked good on paper but were actually overfitted. By using a stricter data-splitting method, BENTO provides a realistic assessment of the limitations of various tools in solving core drug discovery problems, offering practitioners a sober perspective and a practical guide for tool selection.">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2026-01-09/post_all_image/bento_benchmarking_2026_01_05_image_1.jpg">
+<meta name="twitter:image:alt" content="A scientific illustration showing the core concept of molecular docking. On the left is a complex 3D protein structure with a distinct groove on its surface, the 'binding pocket.' A small molecule ligand is poised to bind with this pocket. Terms like 'Docking score' are labeled, visually explaining how computational tools evaluate the quality of the fit. This image illustrates the task that the BENTO benchmark assesses—predicting the binding mode of a molecule to a protein—and highlights the generalization challenge that existing AI tools face when the protein pocket is a novel structure.
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">A New Benchmark for AI Drug Discovery: Why Even AlphaFold3 Struggles with New Targets</h1>
+                  <div>
+        <div class="description">
+          <p>The latest BENTO benchmark reveals a key industry pain point: from classical methods to advanced AI models like AlphaFold3, all tools face a serious generalization challenge when it comes to brand-new protein targets. The research finds that the root cause is data bias in past benchmarks, which led to models that looked good on paper but were actually overfitted. By using a stricter data-splitting method, BENTO provides a realistic assessment of the limitations of various tools in solving core drug discovery problems, offering practitioners a sober perspective and a practical guide for tool selection.</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">BENTO</div>
+                <div class="quarto-category">Molecular Docking</div>
+                <div class="quarto-category">Generalization</div>
+                <div class="quarto-category">AI Drug Discovery</div>
+                <div class="quarto-category">Benchmarking</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Friday, the 9th of January, 2026</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#a-new-benchmark-for-ai-drug-discovery-why-even-alphafold3-struggles-with-new-targets" id="toc-a-new-benchmark-for-ai-drug-discovery-why-even-alphafold3-struggles-with-new-targets" class="nav-link active" data-scroll-target="#a-new-benchmark-for-ai-drug-discovery-why-even-alphafold3-struggles-with-new-targets">1. A New Benchmark for AI Drug Discovery: Why Even AlphaFold3 Struggles with New Targets</a></li>
+  <li><a href="#ai-powered-nanobody-engineering-a-win-win-for-affinity-and-stability" id="toc-ai-powered-nanobody-engineering-a-win-win-for-affinity-and-stability" class="nav-link" data-scroll-target="#ai-powered-nanobody-engineering-a-win-win-for-affinity-and-stability">2. AI-Powered Nanobody Engineering: A Win-Win for Affinity and Stability</a></li>
+  <li><a href="#a-new-way-to-train-ai-how-to-build-a-general-molecular-model-in-under-100-hours" id="toc-a-new-way-to-train-ai-how-to-build-a-general-molecular-model-in-under-100-hours" class="nav-link" data-scroll-target="#a-new-way-to-train-ai-how-to-build-a-general-molecular-model-in-under-100-hours">3. A New Way to Train AI: How to Build a General Molecular Model in Under 100 Hours</a></li>
+  <li><a href="#giving-ai-a-physics-lesson-makes-protein-mutation-predictions-reliable" id="toc-giving-ai-a-physics-lesson-makes-protein-mutation-predictions-reliable" class="nav-link" data-scroll-target="#giving-ai-a-physics-lesson-makes-protein-mutation-predictions-reliable">4. Giving AI a Physics Lesson Makes Protein Mutation Predictions Reliable</a></li>
+  <li><a href="#which-ai-is-best-for-making-molecules-genetic-algorithms-vs.-reinforcement-learning" id="toc-which-ai-is-best-for-making-molecules-genetic-algorithms-vs.-reinforcement-learning" class="nav-link" data-scroll-target="#which-ai-is-best-for-making-molecules-genetic-algorithms-vs.-reinforcement-learning">5. Which AI Is Best for Making Molecules? Genetic Algorithms vs.&nbsp;Reinforcement Learning</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2026-01-09/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="contents" class="level4">
+<h4 class="anchored" data-anchor-id="contents">Contents</h4>
+<ol type="1">
+<li>The BENTO benchmark shows that all current molecular docking tools (both AI and classical) struggle to generalize to unseen protein pockets, which is the real challenge in drug development.</li>
+<li>Researchers used a deep learning model to successfully increase the affinity of an anti-VEGF nanobody by several orders of magnitude without sacrificing stability, offering a new approach for rational antibody design.</li>
+<li>By pre-training on diverse molecular geometries, an equivariant neural network can accurately predict properties for new molecules with very low computational cost.</li>
+<li>Injecting basic biophysical knowledge (priors) into existing models can significantly improve the accuracy of predicting protein mutation effects and reduce dependency on flawed datasets.</li>
+<li>There’s no one-size-fits-all model for molecular generation. Genetic algorithms excel at optimization, while reinforcement learning excels at exploration. A hybrid approach is the practical strategy for solving problems.</li>
+</ol>
+</section>
+<section id="a-new-benchmark-for-ai-drug-discovery-why-even-alphafold3-struggles-with-new-targets" class="level2">
+<h2 class="anchored" data-anchor-id="a-new-benchmark-for-ai-drug-discovery-why-even-alphafold3-struggles-with-new-targets">1. A New Benchmark for AI Drug Discovery: Why Even AlphaFold3 Struggles with New Targets</h2>
+<p><a href="post_all_image/bento_benchmarking_2026_01_05_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/bento_benchmarking_2026_01_05_image_1.jpg" class="img-fluid"></a></p>
+<p>If you work in drug discovery, you deal with computational tools every day. From classical molecular docking to the hot AI models of today, our toolkit is growing. But which of these tools actually work well? Especially when you’re facing a brand-new target, who can give you a reliable answer?</p>
+<p>Recently, a new benchmark study called BENTO gave us a pretty sobering answer. It doesn’t just run some scores and rank the tools like many past benchmarks. BENTO did something more important: it carefully curated and split its datasets specifically to test the “generalization ability” of these tools.</p>
+<p><strong>Is the problem in the data, not the algorithm?</strong></p>
+<p>Many previous benchmarks had a hidden problem: the test sets were too similar to the training sets. This is like an open-book exam. The model is just looking up answers to questions it has already “memorized,” so of course it gets a high score. But that doesn’t tell us how the model will perform when it encounters a completely new, never-before-seen protein binding pocket.</p>
+<p>The BENTO researchers knew what they were doing. They strictly controlled the structural similarity between the protein pockets in the test set and the training set. They also stratified the data by the complexity of the ligand molecules. Once they did this, the true performance of the models was exposed.</p>
+<p><strong>The real-world performance of different tools</strong></p>
+<p>BENTO evaluated 11 mainstream tools, which can be grouped into three categories:</p>
+<ol type="1">
+<li><strong>Classical Docking Tools:</strong> These are our old friends, based on physics principles and very fast. The results show that they are stable and reliable for handling small, drug-like molecules. For virtual screening projects that need to screen millions of compounds, they are still the workhorses.</li>
+<li><strong>Deep Learning Docking Tools:</strong> Represented by Gnina, these are the rising stars of recent years. In the BENTO test, Gnina performed very well, especially on drug-like molecules, ranking high in both accuracy and robustness. But they have a fatal flaw: they tend to overfit. As soon as they encounter a pocket type not seen in the training data, their predictions can be wildly wrong.</li>
+<li><strong>Co-folding Algorithms:</strong> The star player here is, of course, AlphaFold3. These methods don’t just dock; they “fold” the protein and ligand together. Their strength is in handling complex, flexible ligands, which is a weak spot for traditional docking methods. The results confirmed this; co-folding algorithms did perform better on complex ligands.</li>
+</ol>
+<p><strong>The real challenge: Pocket-level generalization</strong></p>
+<p>The most critical finding from this test is that all tools, without exception, ran into big trouble when generalizing to new pockets.</p>
+<p>What does this mean for those of us in drug discovery?</p>
+<p>If you’re working on a well-studied target family, like kinases, then existing AI and classical tools work just fine. That’s because the models have already “seen” a large number of similar pockets during training.</p>
+<p>But if you’re tackling a first-in-class target with a unique binding pocket structure, you have to question any model’s prediction. An AI model might give you a false “high score” due to overfitting, while a classical method might be wrong because of inaccurate force field parameters.</p>
+<p><strong>How should we use these tools?</strong></p>
+<p>BENTO gives us a clear roadmap:</p>
+<p>The greatest value of the BENTO study isn’t about telling us who’s number one. It’s about revealing the common challenge facing the entire field. It gives us a more rigorous evaluation framework that’s closer to real-world R&amp;D scenarios, helping us squeeze the “hype” out of AI models and see their true capabilities and limitations.</p>
+<p>📜Title: BENTO: Benchmarking Classical and AI Docking on Drug Design–Relevant Data 🌐Paper: https://www.biorxiv.org/content/10.64898/2025.12.30.696741v1</p>
+</section>
+<section id="ai-powered-nanobody-engineering-a-win-win-for-affinity-and-stability" class="level2">
+<h2 class="anchored" data-anchor-id="ai-powered-nanobody-engineering-a-win-win-for-affinity-and-stability">2. AI-Powered Nanobody Engineering: A Win-Win for Affinity and Stability</h2>
+<p><a href="post_all_image/a_deep_learning_appr_2025_10_28_image_1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/a_deep_learning_appr_2025_10_28_image_1.png" class="img-fluid"></a></p>
+<p>In antibody drug development, we’re always playing a balancing act: on one hand, we want higher affinity; on the other, we need to maintain the molecule’s stability. It’s like supercharging a race car engine—you get more power, but the engine might overheat and fail at any moment. Traditional affinity maturation methods, like phage display, are essentially brute-force screening. They blindly search for the best combinations in massive mutation libraries, which is time-consuming, labor-intensive, and often produces a bunch of unstable molecules that can’t be developed into drugs.</p>
+<p>The work in this paper aims to make this process more “rational” using computational methods.</p>
+<p>Their approach is straightforward. The first step is to get the 3D structure of the antibody and its target. The researchers used ColabFold, a simplified version of AlphaFold2, which is fast and accurate for predicting protein structures—a standard tool in the field now. With the structure, they had a foundation for making changes.</p>
+<p>The second step was to perform virtual mutation screening. They used a tool called DDgPredictor to calculate the effect of amino acid mutations on binding free energy (ΔΔG). This process is like doing experiments on a computer: you swap one amino acid for another at a specific position and then calculate if the new molecule will bind more tightly to the target. Their goal was to find the “golden mutations” that significantly lower the binding energy.</p>
+<p>But they didn’t stop there, and this is what I think makes their work so smart. They didn’t just focus on affinity. They trained a sequence-based deep learning model specifically to predict the nanobody’s melting temperature (Tm), which is a measure of thermal stability. If an antibody isn’t stable enough, it might degrade quickly in the human body, making high affinity useless. Their Tm prediction model achieved a Pearson correlation coefficient of 0.772. While not perfect, it’s good enough to serve as a filter.</p>
+<p>So, the entire workflow looks like this: 1. Predict the structure with ColabFold. 2. Perform extensive virtual mutations in the complementarity-determining regions (CDRs). 3. Use DDgPredictor to screen for mutations that improve affinity. 4. Use the Tm predictor to filter out mutations that might cause instability.</p>
+<p>By doing this, they achieved a dual-objective optimization: high affinity and good stability.</p>
+<p>What were the results? Quite good. They found some mutation combinations that could lower the binding energy by as much as -4.92 kcal/mol. What does that mean? In thermodynamics, every ~1.4 kcal/mol decrease in binding free energy corresponds to a 10-fold increase in affinity. A drop of -4.92 kcal/mol means an affinity improvement of over 1000 times. That’s a huge leap in drug discovery.</p>
+<p>This study also offers a valuable piece of practical advice: the CDR3 region of a nanobody is not only critical for binding but also has a major impact on the molecule’s overall stability. Their data showed that certain positions in CDR3 are highly sensitive to mutation. This is like a core load-bearing wall in a building—you can’t just knock holes in it. This finding helps us identify “danger zones” to avoid when designing other nanobodies in the future.</p>
+<p>Of course, these are still computational results. The critical next step is to go into the wet lab, synthesize these predicted “super-mutants,” and use experimental data to verify if they are as effective as predicted. Regardless, this work shows us a more efficient and intelligent paradigm for antibody engineering. It brings us one step closer to the goal of designing the perfect drug on a computer.</p>
+<p>📜Title: A Deep Learning Approach for Rational Affinity Maturation of Anti-VEGF Nanobodies 🌐Paper: https://www.biorxiv.org/content/10.1101/2025.10.20.683442v1</p>
+</section>
+<section id="a-new-way-to-train-ai-how-to-build-a-general-molecular-model-in-under-100-hours" class="level2">
+<h2 class="anchored" data-anchor-id="a-new-way-to-train-ai-how-to-build-a-general-molecular-model-in-under-100-hours">3. A New Way to Train AI: How to Build a General Molecular Model in Under 100 Hours</h2>
+<p><a href="post_all_image/cross_geometry_pretr_2026_01_05_image_1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/cross_geometry_pretr_2026_01_05_image_1.png" class="img-fluid"></a></p>
+<p>Anyone in computational chemistry or AI drug discovery knows this pain point: every time you start working on a new series of compounds or a new target, you often have to gather new data and train a new model from scratch. It’s like making a new key for every lock—it takes time and effort, and when data is scarce, the model’s performance is poor.</p>
+<p>What we’ve been hoping for is a more general-purpose model—one that has learned the basic principles of physics and chemistry and can be quickly fine-tuned for a new molecule. This work by Kushal Raj Roy and colleagues is a solid step in that direction.</p>
+<p>The core idea is called “Cross-Geometry Pretraining.” You can think of it like teaching a child what a “chair” is. If you only show them dining chairs, they might think a chair must have four legs and a back. But if you show them dining chairs, office chairs, armchairs, and even beanbags, they will learn the more fundamental rule that “a chair is for sitting.”</p>
+<p>That’s exactly how the researchers “taught” their AI model. Instead of using just one dataset, they mixed QM9 (containing many small molecules with different scaffolds) and MD17 (containing molecular dynamics trajectories, which are data of the same molecule in different conformations).</p>
+<p>This approach forced the model (a hybrid of EGNN and PaiNN) to learn the underlying geometric patterns and physical laws that are independent of any specific molecular scaffold. It stopped just fitting the data and started learning a kind of “intuition.”</p>
+<p>The results were immediate. The paper shows that when dealing with a brand-new molecule, this pre-trained model needed to see only a few examples (few-shot learning) to predict intermolecular forces with an accuracy that was, on average, 47% higher than a model trained from scratch.</p>
+<p>What’s even more attractive is the cost. All of this was achieved in under 100 hours on a single GPU. For many academic labs or startups with limited computing resources, this is a huge benefit.</p>
+<p>There’s another clever design in this work: multi-task learning. During training, the model wasn’t just asked to predict energy. It also had to simultaneously predict forces between atoms, the HOMO-LUMO gap, and other properties. This is like a student preparing for an exam. If they only practice math problems, they might be clueless about physics. But if they study math, physics, and chemistry at the same time, they’ll develop a deeper, more integrated understanding of the underlying scientific principles. This strategy makes the model’s internal representations more robust and more consistent with physical and chemical reality.</p>
+<p>Of course, this method is still in its early stages. It has mainly been validated on small molecules, and more experiments are needed to see if it can be directly extended to large molecules, protein-ligand complexes, or materials science. But it provides a clear and feasible blueprint: through carefully designed pre-training, we can develop more versatile and powerful tools for predicting molecular properties with limited resources.</p>
+<p>The authors have open-sourced all their code and training procedures, which is very valuable for advancing the entire field. This isn’t just a win for an algorithm; it’s a step forward for a whole research paradigm.</p>
+<p>📜Title: Cross-Geometry Pretraining for Equivariant Neural Networks: Improving Molecular Property Prediction Under Computational Constraints 🌐Paper: https://doi.org/10.26434/chemrxiv-2025-pk8gk 💻Code: https://github.com/kroy3/GeoShift</p>
+</section>
+<section id="giving-ai-a-physics-lesson-makes-protein-mutation-predictions-reliable" class="level2">
+<h2 class="anchored" data-anchor-id="giving-ai-a-physics-lesson-makes-protein-mutation-predictions-reliable">4. Giving AI a Physics Lesson Makes Protein Mutation Predictions Reliable</h2>
+<p><a href="post_all_image/biophysically_ground_2026_01_05_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="post_all_image/biophysically_ground_2026_01_05_image_1.jpg" class="img-fluid"></a></p>
+<p>In drug development, especially when designing antibodies or engineering enzymes, we always face a core question: “If I change this amino acid to another one, will the protein binding get stronger or weaker?” This is the problem of predicting changes in binding free energy (∆∆G), and it’s a routine task in protein engineering.</p>
+<p>In recent years, we’ve seen many deep learning models claim to solve this problem, with high Pearson correlation scores reported in papers. But when you try to use these models in your own projects, the results are often disappointing. What’s the problem? This study by Feldman et al.&nbsp;pulls back the curtain on an industry-wide issue.</p>
+<p><strong>The root of the problem: The dataset is the “answer key”</strong></p>
+<p>Many models are trained and tested on a public dataset called SKEMPI2. The authors point out, bluntly, that this dataset has serious data leakage issues.</p>
+<p>What does that mean? Imagine you’re training a student for a math exam. If 90% of the practice problems you give them are almost identical to the questions on the final exam, just with different numbers, they’re sure to get a high score. But does that mean they truly understand algebra? Clearly not.</p>
+<p>SKEMPI2 acts as that “answer key.” It contains a large number of protein complexes with highly similar sequences or structures. When a model trains on this data, it’s essentially “memorizing” the features of these samples rather than learning the underlying principles of protein-protein interactions.</p>
+<p>The researchers proved this. They used stricter criteria to de-duplicate and cluster the SKEMPI2 dataset, removing all the “similar problems.” As a result, the performance of nearly every model plummeted. This shows that the previous “high scores” were largely an illusion, achieved through memorization, not understanding.</p>
+<p><strong>The solution: Give the model a “physics tutor”</strong></p>
+<p>If we can’t expect a model to figure out the laws of physics from a messy pile of data on its own, why not just teach it directly? This is the design philosophy behind ProtBFF (Protein Biophysical Feature Framework).</p>
+<p>ProtBFF is not a new, massive model. It’s more like a lightweight “plug-in” or “add-on” that can be integrated into general protein language models like ESM. Its core function is to force-feed the model some of the basic biophysical knowledge (priors) that we already know.</p>
+<p>Specifically, it integrates five key physical features, such as: 1. <strong>Interface Score:</strong> Is this amino acid residue at the binding interface between two proteins? This is obviously a primary factor in determining binding affinity. 2. <strong>Burial Score:</strong> Is this residue exposed on the protein surface or buried deep in the core? This directly affects its stability and accessibility.</p>
+<p>ProtBFF uses a cross-embedding attention mechanism to force the main model to “consult” these physical features when analyzing each amino acid. It’s like putting sticky notes all over the 3D structure of the protein, telling the model, “Pay attention, this spot is a binding hotspot!” or “Be careful, this residue is buried deep; changing it might mess up the folding!”</p>
+<p><strong>The result? The model moves from “rote memorization” to “understanding and applying”</strong></p>
+<p>The effect was immediate. After integrating the ProtBFF module, the predictive accuracy of the general models improved noticeably.</p>
+<p>More importantly, the model learned to generalize. The researchers applied it to a completely new task: predicting how mutations in the SARS-CoV-2 spike protein affect its binding to the human ACE2 receptor. This is a classic “out-of-distribution” task.</p>
+<p>The results showed that even with only a small amount of new data (few-shot learning), the model that had been “tutored” by ProtBFF could make quite accurate predictions. This is what we really want—a tool that can solve new problems, not just re-do old ones.</p>
+<p>This work is a reminder that in the field of AI drug discovery, simply chasing bigger models and higher leaderboard scores might be leading us astray. Getting back to basics and cleverly integrating the decades of biophysical knowledge that human scientists have accumulated into our model designs might be the right way to make AI models smarter and more reliable.</p>
+<p>📜Title: Biophysically Grounded Deep Learning Improves Protein–Protein ∆∆G Prediction 🌐Paper: https://www.biorxiv.org/content/10.64898/2025.12.23.696257v1</p>
+</section>
+<section id="which-ai-is-best-for-making-molecules-genetic-algorithms-vs.-reinforcement-learning" class="level2">
+<h2 class="anchored" data-anchor-id="which-ai-is-best-for-making-molecules-genetic-algorithms-vs.-reinforcement-learning">5. Which AI Is Best for Making Molecules? Genetic Algorithms vs.&nbsp;Reinforcement Learning</h2>
+<p><a href="post_all_image/comparative_evaluati_2025_12_26_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="post_all_image/comparative_evaluati_2025_12_26_image_1.jpg" class="img-fluid"></a></p>
+<p>In drug discovery, we’re always searching for new molecules. Now we have all sorts of AI generative models that claim to help us design better ones. But that leads to a question: with so many methods, which one is actually good? It’s like having a toolbox with a hammer, a screwdriver, and a wrench—you need to know which tool to use for which job. This paper does something very practical: it puts several major molecule generation methods in the same ring and compares them head-to-head using rigorous statistical methods.</p>
+<p><strong>A duel of two philosophies: Refinement vs.&nbsp;Blue-sky thinking</strong></p>
+<p>The researchers primarily compared two types of algorithms: Genetic Algorithms (GA) and Reinforcement Learning (RL).</p>
+<p>A <strong>Genetic Algorithm</strong> works a lot like animal breeding. You start with a population of molecules (“parents”), then create new molecules (“offspring”) through “crossover” (stitching parts of two molecules together) and “mutation” (randomly changing a few atoms or bonds). Then, you keep only the “offspring” with the best properties and let them continue to reproduce. As this process repeats, the properties of the molecules get better and better. According to the data, GA performed impressively, achieving the highest average reward score (0.754) and generating molecules that were 100% valid. But its problem is its novelty score, which was only 55%. This means it’s very good at finely optimizing and decorating a known, promising chemical scaffold, but it struggles to think outside the box and create entirely new scaffolds. It’s more like a skilled medicinal chemist doing SAR (structure-activity relationship) studies on a mature series.</p>
+<p><strong>Reinforcement Learning</strong> is a completely different beast. It works by having the model build a molecule atom by atom, like building with blocks. With each step, if it follows chemical rules and improves the molecule’s properties, it gets a “reward.” If not, it gets a “penalty.” Through trial and error, the model learns how to “play” this block-building game well. The advantage of this method is that it’s not constrained by any existing scaffolds and can freely explore the vast chemical space. As a result, its novelty score was a perfect 100%. But its downside is that this free exploration can be inefficient, and the “optimal solution” it finds often doesn’t have as high a reward score as what GA can achieve. It’s more like a creative chemist full of wild ideas, always proposing new structures you’ve never seen before.</p>
+<p><strong>The “chemical intuition” of models</strong></p>
+<p>The study also made another important discovery: these models are highly versatile. The researchers tested them on the ZINC (a library of common drug-like molecules), QM9 (a library of quantum chemistry properties for small molecules), and an agrochemical database. They found that the performance of the models varied by less than 2% across these different datasets.</p>
+<p>What does this mean? It means these models aren’t just “memorizing” the molecular patterns from their training sets. They have actually learned some fundamental, universal chemical principles, like which ring systems are stable or which functional groups can be combined. This gives drug hunters a lot of confidence. It means we can take a model trained on a general database and apply it to a very specific drug design problem for a new target, without worrying that it won’t be a good fit.</p>
+<p><strong>How to use these tools effectively?</strong></p>
+<p>So, which one should you choose for a real project? This paper suggests a hybrid strategy.</p>
+<p>In the early stages of a drug discovery project, when you know little about the target or the chemical space, you should start with methods like reinforcement learning. Let it explore freely and generate a wide variety of novel chemical scaffolds to give you as many new starting points as possible. At this stage, we’re aiming for “breadth.”</p>
+<p>Once you’ve screened these new scaffolds and identified a few promising series, you can switch to a genetic algorithm. Use GA to finely optimize these series, dig deep into their potential, and find the single molecule with the best activity and drug-like properties. At this stage, we’re aiming for “depth.”</p>
+<p>First use RL for Exploration, then use GA for Exploitation. This process perfectly resolves the “exploration-exploitation” dilemma in molecule design. This isn’t just an AI strategy; it actually mirrors the way we human chemists think and work in practice.</p>
+<p>📜Title: Comparative Evaluation of Molecular Generation Methods for Bioactive Compound Design: A Rigorous Statistical Benchmark Across Drug, Agrochemical, and Small Molecule Datasets 🌐Paper: https://doi.org/10.26434/chemrxiv-2025-t30lx</p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2026-01-09/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

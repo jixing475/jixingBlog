@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="Explore a new paradigm for protein design. Inspired by “swarm intelligence,” this study proposes a decentralized framework where each amino acid residue is assigned an independent large language model agent. Through local collaboration, these agents autonomously explore and design new protein sequences that are experimentally verified to fold stably—all without extra training and at very low computational cost. This approach opens a new path for discovering functional proteins that don’t exist in nature, greatly improving the efficiency and flexibility of computer-aided drug discovery.">
+
+<title>Swarms of Large Language Models: Designing New Proteins Without Training – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="Swarms of Large Language Models: Designing New Proteins Without Training – MPU">
+<meta property="og:description" content="Explore a new paradigm for protein design. Inspired by “swarm intelligence,” this study proposes a decentralized framework where each amino acid residue is assigned an independent large language model agent. Through local collaboration, these agents autonomously explore and design new protein sequences that are experimentally verified to fold stably—all without extra training and at very low computational cost. This approach opens a new path for discovering functional proteins that don’t exist in nature, greatly improving the efficiency and flexibility of computer-aided drug discovery.">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-12-12/post_all_image/swarms_of_large_lang_2025_12_04_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="A concept image illustrating a protein design framework based on 'swarm intelligence.' In the center is a complex sphere made of lines, representing the protein backbone being designed. It is surrounded by dozens of small, glowing spheres connected to each other and to the central structure by lines of light. Each small sphere symbolizes an independent large language model agent responsible for a specific amino acid residue in the protein sequence. The image vividly shows the framework's decentralized idea: without central coordination, a large number of simple agents explore and construct a stable and functionally new protein through local interaction and collaboration, just as the article discusses this new method for designing proteins without training.
+">
+<meta name="twitter:title" content="Swarms of Large Language Models: Designing New Proteins Without Training – MPU">
+<meta name="twitter:description" content="Explore a new paradigm for protein design. Inspired by “swarm intelligence,” this study proposes a decentralized framework where each amino acid residue is assigned an independent large language model agent. Through local collaboration, these agents autonomously explore and design new protein sequences that are experimentally verified to fold stably—all without extra training and at very low computational cost. This approach opens a new path for discovering functional proteins that don’t exist in nature, greatly improving the efficiency and flexibility of computer-aided drug discovery.">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-12-12/post_all_image/swarms_of_large_lang_2025_12_04_image_1.jpg">
+<meta name="twitter:image:alt" content="A concept image illustrating a protein design framework based on 'swarm intelligence.' In the center is a complex sphere made of lines, representing the protein backbone being designed. It is surrounded by dozens of small, glowing spheres connected to each other and to the central structure by lines of light. Each small sphere symbolizes an independent large language model agent responsible for a specific amino acid residue in the protein sequence. The image vividly shows the framework's decentralized idea: without central coordination, a large number of simple agents explore and construct a stable and functionally new protein through local interaction and collaboration, just as the article discusses this new method for designing proteins without training.
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">Swarms of Large Language Models: Designing New Proteins Without Training</h1>
+                  <div>
+        <div class="description">
+          <p>Explore a new paradigm for protein design. Inspired by “swarm intelligence,” this study proposes a decentralized framework where each amino acid residue is assigned an independent large language model agent. Through local collaboration, these agents autonomously explore and design new protein sequences that are experimentally verified to fold stably—all without extra training and at very low computational cost. This approach opens a new path for discovering functional proteins that don’t exist in nature, greatly improving the efficiency and flexibility of computer-aided drug discovery.</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">Protein Design</div>
+                <div class="quarto-category">Large Language Models</div>
+                <div class="quarto-category">Swarm Intelligence</div>
+                <div class="quarto-category">Agents</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Friday, the 12th of December, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#table-of-contents" id="toc-table-of-contents" class="nav-link active" data-scroll-target="#table-of-contents">Table of Contents</a></li>
+  <li><a href="#hts-oracle-ai-powered-screening-for-undruggable-targets-boosts-hit-rate-176-fold" id="toc-hts-oracle-ai-powered-screening-for-undruggable-targets-boosts-hit-rate-176-fold" class="nav-link" data-scroll-target="#hts-oracle-ai-powered-screening-for-undruggable-targets-boosts-hit-rate-176-fold">1. HTS-Oracle: AI-Powered Screening for Undruggable Targets Boosts Hit Rate 176-Fold</a></li>
+  <li><a href="#tide-using-a-dual-encoder-model-to-predict-tcr-pmhc-binding" id="toc-tide-using-a-dual-encoder-model-to-predict-tcr-pmhc-binding" class="nav-link" data-scroll-target="#tide-using-a-dual-encoder-model-to-predict-tcr-pmhc-binding">2. TIDE: Using a Dual-Encoder Model to Predict TCR-pMHC Binding</a></li>
+  <li><a href="#msa-transformer-update-simulating-evolutionary-paths-to-design-hybrid-proteins" id="toc-msa-transformer-update-simulating-evolutionary-paths-to-design-hybrid-proteins" class="nav-link" data-scroll-target="#msa-transformer-update-simulating-evolutionary-paths-to-design-hybrid-proteins">3. MSA-Transformer Update: Simulating Evolutionary Paths to Design “Hybrid” Proteins</a></li>
+  <li><a href="#swarms-of-large-language-models-designing-new-proteins-without-training" id="toc-swarms-of-large-language-models-designing-new-proteins-without-training" class="nav-link" data-scroll-target="#swarms-of-large-language-models-designing-new-proteins-without-training">4. Swarms of Large Language Models: Designing New Proteins Without Training</a></li>
+  <li><a href="#genolator-a-multimodal-large-model-fusing-genes-and-structures" id="toc-genolator-a-multimodal-large-model-fusing-genes-and-structures" class="nav-link" data-scroll-target="#genolator-a-multimodal-large-model-fusing-genes-and-structures">5. Genolator: A Multimodal Large Model Fusing Genes and Structures</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-12-12/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="table-of-contents" class="level2">
+<h2 class="anchored" data-anchor-id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li>HTS-Oracle combines a molecular language model with cheminformatics to cut screening experiments by 99% with minimal data, successfully identifying active molecules for “undruggable” targets like TREM2.</li>
+<li>The TIDE framework fuses two large language models, ESM and MolFormer, using a cross-attention mechanism to improve immune recognition prediction without structural alignment.</li>
+<li>This framework uses MSA-Transformer to simulate natural evolutionary mutation steps, generating structurally stable “hybrid” proteins with dual properties from two homologous proteins.</li>
+<li>This study proposes a decentralized framework inspired by “swarm intelligence,” where each large language model agent handles one residue, successfully designing experimentally validated proteins at zero training cost.</li>
+<li>Genolator is a Multimodal Large Language Model designed to interpret protein function. It simultaneously understands natural language, gene sequences, and 3D protein structures, outperforming general models like GPT-4.</li>
+</ol>
+</section>
+<section id="hts-oracle-ai-powered-screening-for-undruggable-targets-boosts-hit-rate-176-fold" class="level2">
+<h2 class="anchored" data-anchor-id="hts-oracle-ai-powered-screening-for-undruggable-targets-boosts-hit-rate-176-fold">1. HTS-Oracle: AI-Powered Screening for Undruggable Targets Boosts Hit Rate 176-Fold</h2>
+<p><a href="post_all_image/hts_oracle_experime_2025_12_04_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/hts_oracle_experime_2025_12_04_image_1.jpg" class="img-fluid"></a></p>
+<p>Traditional high-throughput screening (HTS) is often expensive and has a low hit rate. <strong>HTS-Oracle</strong> offers an efficient solution.</p>
+<p><strong>Hybrid Architecture: Language Models Meet Chemical Fingerprints</strong></p>
+<p>HTS-Oracle uses a <strong>hybrid architecture</strong>, combining <strong>ChemBERTa</strong>, a Transformer-based molecular language model, with classic <strong>RDKit</strong> molecular fingerprints and physicochemical features.</p>
+<p>The language model captures deep structural meaning, while traditional chemical fingerprints ensure the model follows basic physicochemical rules. Together, they significantly improve its predictive power for new targets.</p>
+<p><strong>Real-World Validation: Tackling Tough Immune Targets</strong></p>
+<p>The team tested it on three challenging immune targets: <strong>TREM2, CHI3L1, and CD28</strong>.</p>
+<p>TREM2 is a key regulator in Alzheimer’s disease and for microglia, and has long lacked effective small-molecule agonists. CD28 is a classic example of an “undruggable” target. Even with very few positive samples (less than 2%) in the CD28 training data, HTS-Oracle boosted the hit rate by 8 times.</p>
+<p><strong>An Efficiency Overhaul: From Haystack to Magnet</strong></p>
+<p>The data shows that HTS-Oracle can <strong>reduce wet-lab screening volume by 99%</strong> while still finding active molecules. A screening process that used to take months and cost a fortune now only requires validating a small core set. With a hit rate improvement of up to <strong>176 times</strong>, it completely changes the logic of screening.</p>
+<p><strong>Tools and Open Source</strong></p>
+<p>The team developed an interactive web app so scientists can upload compound libraries, configure parameters, and see visualized results without writing code. For developers, all code, setup guides, and pre-trained models are open-source.</p>
+<p>📜Title: HTS-Oracle: Experimentally validated AI-enabled prioritization for generalizable small molecule hit discovery 🌐Paper: <a href="https://www.biorxiv.org/content/10.1101/2025.11.26.690784v1" class="uri">https://www.biorxiv.org/content/10.1101/2025.11.26.690784v1</a> 💻Code: <a href="https://github.com/HTS-Oracle/HTS-Oracle-TREM2" class="uri">https://github.com/HTS-Oracle/HTS-Oracle-TREM2</a></p>
+</section>
+<section id="tide-using-a-dual-encoder-model-to-predict-tcr-pmhc-binding" class="level2">
+<h2 class="anchored" data-anchor-id="tide-using-a-dual-encoder-model-to-predict-tcr-pmhc-binding">2. TIDE: Using a Dual-Encoder Model to Predict TCR-pMHC Binding</h2>
+<p><a href="post_all_image/modeling_tcr_p_mhc_bi_2025_12_04_image_1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/modeling_tcr_p_mhc_bi_2025_12_04_image_1.png" class="img-fluid"></a></p>
+<p>Predicting the binding of a T-cell receptor (TCR) to a peptide-MHC complex (pMHC) is a major challenge in computational immunology and drug development. Scarce data and the highly flexible surfaces of proteins make the task difficult. The TIDE framework offers a new solution.</p>
+<p><strong>Treating Antigenic Peptides like Small Molecules</strong></p>
+<p>TIDE’s approach is to handle the TCR and the peptide separately. It keeps the TCR as a protein and uses the <strong>ESM (Evolutionary Scale Modeling)</strong> model to extract its evolutionary and sequence features.</p>
+<p>For the peptide, TIDE converts it into a <strong>SMILES string</strong>, which is then processed by the <strong>MolFormer</strong> model. Using a SMILES string helps the model better understand the peptide’s underlying stereochemistry and electron distribution, turning a biological problem into one of physical chemistry.</p>
+<p><strong>Cross-Attention: Making Two Models Talk</strong></p>
+<p>Encoding them separately produces two independent vectors. The core of TIDE is its <strong>Multi-head Cross-attention</strong> mechanism.</p>
+<p>This process is like a conversation between the two models. The TCR encoder might identify a hydrophobic complementarity-determining region (CDR3), while the peptide encoder finds a benzene ring structure via MolFormer. The cross-attention module aligns this information, finds the most relevant parts, and weights them. This design allows the model to capture key binding patterns without relying on scarce 3D crystal structure data.</p>
+<p><strong>Performance: Stronger on New Data</strong></p>
+<p>A key test for any AI model is how it handles new data. In zero-shot and few-shot tests, TIDE performed better than existing methods like TITAN and NetTCR. Its predictions were more reliable when tested on new viral antigens or tumor neoantigens.</p>
+<p>The study also tested multiple negative sampling strategies. In immunology prediction, if the “non-binding” data is too simple, the model might not learn the real patterns. Rigorous negative sampling ensures the model truly understands the rules of binding.</p>
+<p>The code and datasets for this study are open-source.</p>
+<p>📜Title: Modeling TCR–pMHC Binding with Dual Encoders and Cross-Attention Fusion 🌐Paper: <a href="https://www.biorxiv.org/content/10.64898/2025.12.01.691424v1" class="uri">https://www.biorxiv.org/content/10.64898/2025.12.01.691424v1</a></p>
+</section>
+<section id="msa-transformer-update-simulating-evolutionary-paths-to-design-hybrid-proteins" class="level2">
+<h2 class="anchored" data-anchor-id="msa-transformer-update-simulating-evolutionary-paths-to-design-hybrid-proteins">3. MSA-Transformer Update: Simulating Evolutionary Paths to Design “Hybrid” Proteins</h2>
+<p><a href="post_all_image/generating_hybrid_pr_2025_11_27_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/generating_hybrid_pr_2025_11_27_image_1.jpg" class="img-fluid"></a></p>
+<p>Protein design faces a difficult problem: how do you “hybridize” two different but related proteins so the new molecule folds correctly and has the benefits of both? Simply averaging the two sequences in a computer or interpolating them in a latent space usually produces unfolded junk.</p>
+<p>This paper uses <strong>MSA-Transformer</strong> to build a framework that solves this by simulating natural evolution.</p>
+<p><strong>Iterative Mutation and Beam Search</strong></p>
+<p><strong>Generating intermediate sequences</strong> is the core strategy. Instead of jumping directly from protein A to protein B, the framework uses <strong>iterative randomization</strong>, applying mutations step-by-step using sequence embeddings and attention mechanisms.</p>
+<p>The key technique is <strong>Beam Search</strong>. This strategy keeps several “best solutions” at each step, allowing the model to explore multiple mutation paths at once. This approach has a higher convergence rate than random trials and generates more biologically plausible sequences.</p>
+<p><strong>The Non-Linear Geometry of Latent Space</strong></p>
+<p>The authors analyzed the geometric features of the mutation paths in latent space.</p>
+<p>The path generated by MSA-Transformer is clearly <strong>non-linear</strong>, not a simple linear interpolation. This shows the model captures the complex dynamics of protein evolution: to maintain function and stability, evolution has to navigate around “lethal” sequence spaces. This adherence to biological rules is why simulating evolution works better than simple interpolation.</p>
+<p><strong>Real-World Validation: Metallo-β-Lactamases</strong></p>
+<p>The authors tested the method on the PLA2G2, 3FTx, and tissue kallikrein families.</p>
+<p>The results were particularly clear in experiments with the <strong>B1/B2 Metallo-β-lactamase</strong> family. The generated hybrid proteins kept their core structural fold and successfully merged active site motifs from different subclasses. This offers a viable path for designing new enzymes with broader substrate scopes or higher stability.</p>
+<p><strong>Open-Source Tool</strong></p>
+<p>The authors have made the code available on GitHub. It’s an effective tool for researchers exploring protein sequence space or designing dual-function hybrid proteins by using AI to mimic nature’s “patching” strategy.</p>
+<p>📜Title: Generating Hybrid Proteins with the MSA-Transformer 🌐Paper: <a href="https://www.biorxiv.org/content/10.1101/2025.11.20.689447v1" class="uri">https://www.biorxiv.org/content/10.1101/2025.11.20.689447v1</a></p>
+</section>
+<section id="swarms-of-large-language-models-designing-new-proteins-without-training" class="level2">
+<h2 class="anchored" data-anchor-id="swarms-of-large-language-models-designing-new-proteins-without-training">4. Swarms of Large Language Models: Designing New Proteins Without Training</h2>
+<p><a href="post_all_image/swarms_of_large_lang_2025_12_04_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="post_all_image/swarms_of_large_lang_2025_12_04_image_1.jpg" class="img-fluid"></a></p>
+<p>Traditional protein design methods, like the diffusion-based model RFdiffusion, act like a master architect drawing up a complete blueprint. This study presents a different idea: let each brick think for itself.</p>
+<p>That’s the core of the “Swarm Intelligence” framework.</p>
+<p><strong>Every “Amino Acid” is an Agent</strong></p>
+<p>The researchers assigned an independent LLM agent to each residue position in the protein sequence. Each agent is only responsible for the amino acid at its own position. It looks at its neighbors, collaborates with other agents, and autonomously decides whether to mutate.</p>
+<p>This decentralized approach doesn’t rely on known protein motif scaffolds or vast amounts of pre-training data. The agents find the global optimal solution on their own through iterative, local interactions.</p>
+<p><strong>Exploring Unknown Sequence Space</strong></p>
+<p>The data shows the framework can explore sequence spaces that traditional methods haven’t reached, striking a balance between exploring novelty and converging on a stable structure. By dynamically adjusting the LLM’s behavior, the “swarm” can both boldly try new sequence combinations and quickly converge on solutions with reasonable physicochemical properties. This could lead to the discovery of new, powerful proteins that don’t exist in nature.</p>
+<p><strong>Highly Efficient Computation</strong></p>
+<p>This “swarm” framework requires no extra training. The authors note in the paper that the entire design process takes only a few GPU-hours. This not only lowers the computational cost but also allows labs without large computing resources to perform <em>de novo</em> protein design.</p>
+<p><strong>Experimental Validation</strong></p>
+<p>The researchers synthesized the designed protein sequences and tested them with circular dichroism. The results confirmed that the sequences fold correctly in solution into the intended secondary structures, like alpha-helices and beta-sheets. This shows that the method generates not just formally correct sequences, but molecules with real physical stability.</p>
+<p>For computer-aided drug discovery, this method based on a cluster of LLM agents shows flexibility and utility for rapid prototyping and multi-objective optimization.</p>
+<p>📜Title: Swarms of Large Language Model Agents for Protein Sequence Design with Experimental Validation 🌐Paper: <a href="https://arxiv.org/abs/2511.22311v1" class="uri">https://arxiv.org/abs/2511.22311v1</a></p>
+</section>
+<section id="genolator-a-multimodal-large-model-fusing-genes-and-structures" class="level2">
+<h2 class="anchored" data-anchor-id="genolator-a-multimodal-large-model-fusing-genes-and-structures">5. Genolator: A Multimodal Large Model Fusing Genes and Structures</h2>
+<p><a href="post_all_image/genolator_a_multimo_2025_11_19_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="post_all_image/genolator_a_multimo_2025_11_19_image_1.jpg" class="img-fluid"></a></p>
+<ul>
+<li>Genolator fuses three data types—natural language, genomes, and protein structures—to achieve a deep interpretation of protein function.</li>
+<li>Fine-tuned on 370,000 question-answer pairs, Genolator’s accuracy on protein function confirmation tasks surpasses that of GPT-4 and other specialized models in the field.</li>
+</ul>
+<p>Biology research, especially in protein function, faces a data explosion. We have massive amounts of gene sequences, 3D protein structures, and scientific literature. Linking these different data types so a machine can synthesize information like a scientist—to answer questions like “is this protein linked to a specific cancer?”—is a challenge. General large language models (LLMs), like GPT-4, often fall short on such highly specialized, cross-modal problems.</p>
+<p>Genolator was designed for this. It’s an expert model trained to understand three “languages” at once: human natural language, the genetic language of A/T/C/G, and the structural language that describes a protein’s 3D space.</p>
+<p>Here’s how it works: the model first extracts features from a DNA sequence, an amino acid sequence, and a protein’s 3D structure. It converts these into mathematical vectors that a machine can process, called embeddings. Next, a “Token Projectors” module fuses the vectors from these three sources. This way, when a user asks a question in natural language, the model can connect the question to the genetic and structural information it holds and make a comprehensive judgment.</p>
+<p>To train this expert model, the researchers fine-tuned it on a dataset of over 370,000 question-answer pairs about protein function. The results show that this specialized training works. On tasks like determining if a protein has a certain function, Genolator’s accuracy was higher than that of GPT-4 and other bioinformatics models.</p>
+<p>The researchers also analyzed Genolator’s hidden states and found that the model spontaneously clusters functionally related Gene Ontology (GO) terms. This suggests that Genolator is beginning to understand the internal logic between biological concepts, like distinguishing which functions are “metabolic processes” and which are “cell communication.”</p>
+<p>This research offers a new idea for computer-aided drug discovery: for solving complex problems in a specific field, a “small but specialized” multimodal expert model might be a better choice. Future AI models will need a deeper understanding of specialized knowledge domains.</p>
+<p>The researchers plan to release all code and the trained model, which will help the community build more powerful tools on top of it and accelerate exploration in the life sciences.</p>
+<p>📜Title: Genolator: A Multimodal Large Language Model Fusing Natural Language, Genomic, and Structural Tokens for Protein Function Interpretation 🌐Paper: <a href="https://www.biorxiv.org/content/10.1101/2025.11.14.688396v1" class="uri">https://www.biorxiv.org/content/10.1101/2025.11.14.688396v1</a></p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-12-12/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

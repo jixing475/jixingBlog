@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="癌症药物研发常因罕见病样本不足而受阻。CanBART 模型为此提供了创新方案：它像一个大语言模型学习人类语言一样，学习癌症的「基因语言」。通过分析海量基因突变数据，CanBART 不仅能补全不完整的基因图谱，还能生成生物学上合理的虚拟患者数据。这项技术有效解决了罕见癌症研究中的数据瓶颈，利用高质量的生成式 AI 数据，显著提升了疾病分类的准确性，为加速新药研发开辟了全新路径。">
+
+<title>CanBART：用语言模型生成虚拟癌症患者数据 – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="CanBART：用语言模型生成虚拟癌症患者数据 – MPU">
+<meta property="og:description" content="癌症药物研发常因罕见病样本不足而受阻。CanBART 模型为此提供了创新方案：它像一个大语言模型学习人类语言一样，学习癌症的「基因语言」。通过分析海量基因突变数据，CanBART 不仅能补全不完整的基因图谱，还能生成生物学上合理的虚拟患者数据。这项技术有效解决了罕见癌症研究中的数据瓶颈，利用高质量的生成式 AI 数据，显著提升了疾病分类的准确性，为加速新药研发开辟了全新路径。">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-12-14/post_all_image/can_bart_a_generativ_2025_11_19_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="一张概念图，旨在说明 CanBART 模型的工作原理。图中可能描绘了从大量真实癌症患者的基因突变数据输入到一个'黑盒'AI 模型的过程。该模型处理这些信息后，输出全新的，结构完整的虚拟患者基因图谱。这张图形象地展示了 CanBART 如何像一个语言模型学习'词汇'和'语法'一样，学习癌症的'基因语言'规律，从而生成用于研究的合成数据。它强调了该技术在解决罕见癌症数据不足问题中的核心作用。
+">
+<meta name="twitter:title" content="CanBART：用语言模型生成虚拟癌症患者数据 – MPU">
+<meta name="twitter:description" content="癌症药物研发常因罕见病样本不足而受阻。CanBART 模型为此提供了创新方案：它像一个大语言模型学习人类语言一样，学习癌症的「基因语言」。通过分析海量基因突变数据，CanBART 不仅能补全不完整的基因图谱，还能生成生物学上合理的虚拟患者数据。这项技术有效解决了罕见癌症研究中的数据瓶颈，利用高质量的生成式 AI 数据，显著提升了疾病分类的准确性，为加速新药研发开辟了全新路径。">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-12-14/post_all_image/can_bart_a_generativ_2025_11_19_image_1.jpg">
+<meta name="twitter:image:alt" content="一张概念图，旨在说明 CanBART 模型的工作原理。图中可能描绘了从大量真实癌症患者的基因突变数据输入到一个'黑盒'AI 模型的过程。该模型处理这些信息后，输出全新的，结构完整的虚拟患者基因图谱。这张图形象地展示了 CanBART 如何像一个语言模型学习'词汇'和'语法'一样，学习癌症的'基因语言'规律，从而生成用于研究的合成数据。它强调了该技术在解决罕见癌症数据不足问题中的核心作用。
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">CanBART：用语言模型生成虚拟癌症患者数据</h1>
+                  <div>
+        <div class="description">
+          <p>癌症药物研发常因罕见病样本不足而受阻。CanBART 模型为此提供了创新方案：它像一个大语言模型学习人类语言一样，学习癌症的「基因语言」。通过分析海量基因突变数据，CanBART 不仅能补全不完整的基因图谱，还能生成生物学上合理的虚拟患者数据。这项技术有效解决了罕见癌症研究中的数据瓶颈，利用高质量的生成式 AI 数据，显著提升了疾病分类的准确性，为加速新药研发开辟了全新路径。</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">CanBART</div>
+                <div class="quarto-category">生成式 AI</div>
+                <div class="quarto-category">合成数据，癌症基因组学，罕见癌症</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Sunday, the 14th of December, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#目录" id="toc-目录" class="nav-link active" data-scroll-target="#目录">目录</a></li>
+  <li><a href="#激酶预测新发现挖掘蛋白语言模型中间层的宝藏" id="toc-激酶预测新发现挖掘蛋白语言模型中间层的宝藏" class="nav-link" data-scroll-target="#激酶预测新发现挖掘蛋白语言模型中间层的宝藏">1. 激酶预测新发现：挖掘蛋白语言模型中间层的宝藏</a></li>
+  <li><a href="#aiphenoai-读图挖掘基因与性状新关联" id="toc-aiphenoai-读图挖掘基因与性状新关联" class="nav-link" data-scroll-target="#aiphenoai-读图挖掘基因与性状新关联">2. AIPheno：AI 读图挖掘基因与性状新关联</a></li>
+  <li><a href="#deepfeps生物序列特征提取的通用工具箱" id="toc-deepfeps生物序列特征提取的通用工具箱" class="nav-link" data-scroll-target="#deepfeps生物序列特征提取的通用工具箱">3. DeepFEPS：生物序列特征提取的通用工具箱</a></li>
+  <li><a href="#fdd-框架无需微调用几何感知扩散重塑抗菌肽设计" id="toc-fdd-框架无需微调用几何感知扩散重塑抗菌肽设计" class="nav-link" data-scroll-target="#fdd-框架无需微调用几何感知扩散重塑抗菌肽设计">4. FDD 框架：无需微调，用几何感知扩散重塑抗菌肽设计</a></li>
+  <li><a href="#只用序列就能挖掘蛋白质的局部结构" id="toc-只用序列就能挖掘蛋白质的局部结构" class="nav-link" data-scroll-target="#只用序列就能挖掘蛋白质的局部结构">5. 只用序列就能挖掘蛋白质的局部结构</a></li>
+  <li><a href="#canbart用语言模型生成虚拟癌症患者数据" id="toc-canbart用语言模型生成虚拟癌症患者数据" class="nav-link" data-scroll-target="#canbart用语言模型生成虚拟癌症患者数据">6. CanBART：用语言模型生成虚拟癌症患者数据</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-12-14/post_all.zh.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="目录" class="level2">
+<h2 class="anchored" data-anchor-id="目录">目录</h2>
+<ol type="1">
+<li>针对激酶功能预测，挖掘蛋白语言模型（ESM-2）的中间层表征，比直接使用最终输出层能带来更准确、更可靠的结果。</li>
+<li>AIPheno 利用生成式 AI 从图像中高通量提取数字表型，发现新基因位点，并通过生成图像直观展示基因变异如何改变生物特征。</li>
+<li>DeepFEPS 整合从 Word2Vec 到 Transformer 五大类算法，提供自动质控报告，实现生物序列特征向量化的标准化与高效处理。</li>
+<li>FDD 利用扩散映射融入任务监督信息，同时保持预训练嵌入几何结构，为抗菌肽设计提供了优于传统微调的高效方案。</li>
+<li>加州大学圣地亚哥分校的一项研究表明，利用蛋白质语言模型（protein language models, pLMs），仅凭序列即可精准识别局部结构相似性，无需构建三维（3D）模型。</li>
+<li>CanBART 模型能像大语言模型（LLM）写句子一样生成癌症患者的基因组数据，解决了罕见癌症研究中数据不足的难题。</li>
+</ol>
+</section>
+<section id="激酶预测新发现挖掘蛋白语言模型中间层的宝藏" class="level2">
+<h2 class="anchored" data-anchor-id="激酶预测新发现挖掘蛋白语言模型中间层的宝藏">1. 激酶预测新发现：挖掘蛋白语言模型中间层的宝藏</h2>
+<p><a href="post_all_image/layer_probing_improv_2025_12_04_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/layer_probing_improv_2025_12_04_image_1.jpg" class="img-fluid"></a></p>
+<p>蛋白语言模型（Protein Language Model, PLM），特别是 Meta AI 的 ESM 系列，已成为计算生物学和 AI 制药领域的标准工具。多数应用直接提取最后一层的输出作为蛋白质的特征表示。但 Ajit Kumar 和 Indra Prakash Jha 的研究指出，对于激酶（Kinase）的功能预测，这种做法可能会忽略模型中最有价值的信息。</p>
+<p><strong>深入模型中间层</strong></p>
+<p>研究人员使用 ESM-2 650M 模型进行系统性的层级探测（Layer Probing），发现模型的最后一层虽为预测序列掩码（Masked Token Prediction）而优化，却不一定最适合表征蛋白质功能。</p>
+<p>好比观察汽车组装线，最后一站看到的是为运输优化的成品包装箱，而要了解引擎的内部构造（对应蛋白质功能属性），则需在中间工序观察。数据证实了这一点：当研究者改用模型的第 20 到 33 层特征进行无监督聚类时，性能比使用最后一层提升了 32%。这表明，中间层捕捉到了更多与生物学功能相关的细微特征。</p>
+<p><strong>提升分类准确率与预测置信度</strong></p>
+<p>在监督分类任务中，这一策略同样有效。通过对第 20 至 33 层的嵌入向量取平均，模型对激酶功能的分类准确率达到 75.7%，优于仅依赖最后一层的输出。这有助于药物化学家通过计算方法筛选激酶靶点时，降低假阳性率。</p>
+<p>该研究还注重预测的可靠性。模型给出预测结果时，必须明确其把握程度。研究者引入普拉特缩放来校准分类概率，将预期校准误差降低了 28%。校准后，当模型输出「90% 置信度」时，其结果的可信度更高。</p>
+<p><strong>实用性与启示</strong></p>
+<p>这项工作建立了一个包含结构域提取（Domain Extraction）和置信度校准的完整流程。他们选用的 ESM-2 650M 模型在性能与计算成本间取得了平衡，算力资源有限的实验室也能运行。</p>
+<p>对于药物研发人员，该结论有直接的应用价值：使用大模型进行下游任务时，不应默认最后一层是最佳选择。深入模型内部，挖掘中间层的表征，可能获得更符合生物学直觉、更准确的预测。</p>
+<p>📜论文标题：Layer Probing Improves Kinase Functional Prediction with Protein Language Models<br>
+🌐论文地址：<a href="https://arxiv.org/abs/2512.00376v1" class="uri">https://arxiv.org/abs/2512.00376v1</a><br>
+💻代码地址：<a href="https://github.com/jhaaj08/Kinases-Clustering" class="uri">https://github.com/jhaaj08/Kinases-Clustering</a></p>
+</section>
+<section id="aiphenoai-读图挖掘基因与性状新关联" class="level2">
+<h2 class="anchored" data-anchor-id="aiphenoai-读图挖掘基因与性状新关联">2. AIPheno：AI 读图挖掘基因与性状新关联</h2>
+<p><a href="post_all_image/bridging_the_genotyp_2025_11_27_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/bridging_the_genotyp_2025_11_27_image_1.jpg" class="img-fluid"></a></p>
+<p>基因测序（Genotype）成本极低，数据量巨大。真正的挑战在于表型（Phenotype）。虽然拥有海量个体基因组，但描述特征（如叶片卷曲度、视网膜细微结构、体脂分布）仍依赖人工测量或简单图像处理。这种「基因型 - 表型鸿沟」限制了研究深度。</p>
+<p>AIPheno 提出一种基于 AI 的新框架填补这一空白。</p>
+<p><strong>将图像翻译为数据</strong></p>
+<p>AIPheno 采用独特的「编码器 - 生成器」架构。它充当翻译官，将复杂的医学影像或生物照片转化为一组经过优化的数字（潜在表型），专门用于与基因数据进行对撞分析。</p>
+<p>这种方法显著提升了遗传发现能力。在人类、家鸽、水稻和猪的实验中，它优于传统深度学习方法，锁定了此前被忽略的位点，如人类的 CCBE1 和家鸽的 KITLG-TMTC3。</p>
+<p><strong>打开 AI 的黑盒子</strong></p>
+<p>AIPheno 的核心优势在于「可解释性模块」。传统全基因组关联分析（GWAS）仅指出基因与疾病的相关性，AIPheno 则进一步揭示原因。它能根据特定基因变异反向合成图像，直观呈现突变后的形态。</p>
+<p>以 OCA2-HERC2 基因座为例，AIPheno 通过生成图像分析表明，该基因座通过调节血管可见性（vascular visibility）影响视网膜血管特征。这种从相关性到生物学机制的跨越提供了关键洞察。</p>
+<p><strong>闭环验证</strong></p>
+<p>对于育种，这有助于精准筛选优良性状；对于药物研发，这能加速理解靶点突变引发的临床表型变化。AIPheno 构建了从图像到基因、再回归生物学意义的闭环，既提供数据，也阐明机理。</p>
+<p>📜Title: Bridging the Genotype-Phenotype Gap with Generative Artificial Intelligence<br>
+🌐Paper: <a href="https://arxiv.org/abs/2511.13141" class="uri">https://arxiv.org/abs/2511.13141</a></p>
+</section>
+<section id="deepfeps生物序列特征提取的通用工具箱" class="level2">
+<h2 class="anchored" data-anchor-id="deepfeps生物序列特征提取的通用工具箱">3. DeepFEPS：生物序列特征提取的通用工具箱</h2>
+<p><a href="post_all_image/deep_feps_deep_learn_2025_12_04_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/deep_feps_deep_learn_2025_12_04_image_1.jpg" class="img-fluid"></a></p>
+<p>处理 DNA、RNA 或蛋白质原始序列数据，是生物信息学与 AI 制药的基础门槛。无论下游模型如何复杂，核心在于将字母序列转化为高质量的数值向量。DeepFEPS 旨在解决特征提取工具碎片化的问题，为研究者提供统一的解决方案。</p>
+<p><strong>兼容经典与前沿算法</strong></p>
+<p>DeepFEPS 整合了五类主流方法。其中包括适合快速处理局部特征的经典 k-mer 嵌入（Word2Vec, FastText），以及 DNABERT、ProtBERT 和 ESM2 等当下热门的基于 Transformer 的编码器。</p>
+<p>集成 Transformer 模型后，用户无需单独配置环境即可调用 ESM2 等工具。这对蛋白质结构预测或调控元件识别等需捕捉长距离序列依赖关系的任务至关重要。平台实现了局部特征捕捉与基于自注意力机制的全局观察能力的结合。</p>
+<p><strong>特征质量体检</strong></p>
+<p>DeepFEPS 具备自动生成质控报告的功能。特征提取完成后，系统会输出包含维数、稀疏度、方差分布和类别平衡情况的可视化图表。</p>
+<p>模型不收敛常源于输入特征向量过于稀疏或方差为零。在预处理阶段生成这些指标报告，有助于研发人员及早发现数据缺陷，大幅节省后期排错时间。</p>
+<p><strong>灵活的交互模式</strong></p>
+<p>该工具设计了两种交互方式：Web 网页版适合生物学家进行探索性分析；命令行版本方便计算化学家和生信工程师将其整合至大规模筛选流程。作为一个开源项目，DeepFEPS 既适用于教学，也能融入工业界研发管线。</p>
+<p>DeepFEPS 预留了接口以整合未来新兴模型，具备良好的扩展性，适合研发人员快速验证想法。</p>
+<p>📜Title: DeepFEPS: Deep Learning-Oriented Feature Extraction for Biological Sequences<br>
+🌐Paper: https://arxiv.org/abs/2511.22821</p>
+</section>
+<section id="fdd-框架无需微调用几何感知扩散重塑抗菌肽设计" class="level2">
+<h2 class="anchored" data-anchor-id="fdd-框架无需微调用几何感知扩散重塑抗菌肽设计">4. FDD 框架：无需微调，用几何感知扩散重塑抗菌肽设计</h2>
+<p><a href="post_all_image/freeze_diffuse_decod_2025_12_04_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="post_all_image/freeze_diffuse_decod_2025_12_04_image_1.jpg" class="img-fluid"></a></p>
+<p>利用 Transformer 模型处理蛋白质序列已是常态。核心挑战在于如何将大规模训练好的「大模型」应用于数据稀缺的下游任务，例如设计抗菌肽（Antimicrobial Peptides, AMPs）。传统微调（Fine-tuning）成本高昂，且易破坏模型原有的通用特征。作者提出的 <strong>Freeze, Diffuse, Decode (FDD</strong>) 框架，提供了一种新解法。</p>
+<p><strong>超越简单的特征提取</strong></p>
+<p>FDD 的核心逻辑分为三步：</p>
+<ol type="1">
+<li><strong>Freeze（冻结</strong>）：直接从预训练 Transformer 提取嵌入（Embeddings）。完全不动模型参数，将预训练模型视为固定的特征提取器，节省资源并保证底层特征纯粹。<br>
+</li>
+<li><strong>Diffuse（扩散</strong>）：这是框架的核心。引入「有监督的扩散过程」，在嵌入流形（Manifold）上传播信息。数据在潜伏空间并非孤立点，而是具备几何结构。FDD 顺着该结构扩散标签信息，保留原始数据拓扑结构，使模型理解任务需求。<br>
+</li>
+<li><strong>Decode（解码</strong>）：将经过几何适应调整后的表示映射为最终输出。</li>
+</ol>
+<p><strong>实战表现</strong></p>
+<p>在抗菌肽设计任务中，作者将 FDD 与 t-SNE 和自动编码器等传统降维适配方法对比。结果显示，FDD 在二分类任务中准确率更高。</p>
+<p>针对药物研发关注的<strong>检索能力</strong>，FDD 展现出优异的鲁棒性，能从全新数据集中识别具有抗菌活性的肽段，证明其学到了「抗菌」的生物学本质，而非机械记忆。</p>
+<p><strong>潜伏空间的平滑插值</strong></p>
+<p>FDD 支持在潜伏空间进行平滑插值。作者展示了从非抗菌肽到抗菌肽的渐变过程：插值路径上，肽段序列变化连续，预测的抗菌活性逐渐增强。</p>
+<p>药物研发人员可在潜伏空间内定向优化分子性质。这种具有生物学意义的连续性，弥补了许多「黑盒」模型的不足。</p>
+<p>利用大模型无需重训参数。充分利用数据原有的几何结构，即可用轻量级方法挖掘现有模型的价值。</p>
+<p>📜Title: Freeze,Diffuse,Decode: Geometry-Aware Adaptation of Pretrained Transformer Embeddings for Antimicrobial Peptide Design<br>
+🌐Paper: <a href="https://arxiv.org/abs/2511.23120v1" class="uri">https://arxiv.org/abs/2511.23120v1</a></p>
+</section>
+<section id="只用序列就能挖掘蛋白质的局部结构" class="level2">
+<h2 class="anchored" data-anchor-id="只用序列就能挖掘蛋白质的局部结构">5. 只用序列就能挖掘蛋白质的局部结构</h2>
+<p><a href="post_all_image/inferring_local_prot_2025_12_04_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="post_all_image/inferring_local_prot_2025_12_04_image_1.jpg" class="img-fluid"></a></p>
+<p>结构生物学领域在比较两个蛋白质的结构时，通常需要先获得它们的 3D 模型，无论是通过 AlphaFold 预测还是查询蛋白质数据库（PDB），都耗费计算资源和时间。加州大学圣地亚哥分校的研究团队提出了一种新思路：跳过 3D 建模，直接利用蛋白质语言模型。</p>
+<p><strong>滑动窗口的奥秘</strong></p>
+<p>研究者开发了一个新框架，其工作方式类似扫描条形码。他们以蛋白质序列为输入，通过「滑动窗口」的方法提取局部的嵌入向量（embeddings），将分析焦点从整个序列转移到局部片段上。</p>
+<p>为了从噪音中提取有效信号，研究者引入了一个基于 Sigmoid 函数的变换步骤。这一步放大了模糊的相似度信号，使真正的结构对齐区域得以凸显，如同在嘈杂环境中使用了定向麦克风。</p>
+<p><strong>最佳模型</strong></p>
+<p>在测试的多个模型中，ProtT5 和 ProstT5 表现突出。ProstT5 作为一个折叠感知模型，在训练时已接触过结构信息，因此对结构特征的敏感度很高。相比之下，传统的残基对齐方法或基于预测的 3Di 序列的方法（类似 Foldseek 的逻辑），在处理局部相似性任务时会因信息压缩过度而丢失关键的细微特征。</p>
+<p><strong>实战检验：MALISAM 基准测试</strong></p>
+<p>为验证方法的有效性，研究者使用了 MALISAM 数据集。该数据集中的蛋白质没有共同的进化祖先，整体结构也无相似性，但在特定局部区域却有惊人的结构相似性，这对依赖序列同源性的传统方法构成了挑战。</p>
+<p>结果表明，新方法在多种情况下都能精准定位到这些「伪装」的局部区域，其结构相似性评分（TM-score）超过了 0.5。这意味着，即使两个蛋白质在进化上相距甚远，只要它们的某个功能域（如结合口袋）结构相似，这套工具就能识别出来。</p>
+<p>这项技术对药物研发人员是一个实用工具。在寻找脱靶效应来源，或寻找结构新颖但功能相似的骨架时，这种无需 3D 建模即可快速扫描局部结构相似性的能力，可以节约筛选时间。</p>
+<p>📜标题：Inferring Local Protein Structural Similarity from Sequence Alone<br>
+🌐论文：<a href="https://www.biorxiv.org/content/10.1101/2025.11.24.690129v1" class="uri">https://www.biorxiv.org/content/10.1101/2025.11.24.690129v1</a></p>
+</section>
+<section id="canbart用语言模型生成虚拟癌症患者数据" class="level2">
+<h2 class="anchored" data-anchor-id="canbart用语言模型生成虚拟癌症患者数据">6. CanBART：用语言模型生成虚拟癌症患者数据</h2>
+<p><a href="post_all_image/can_bart_a_generativ_2025_11_19_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-6"><img src="post_all_image/can_bart_a_generativ_2025_11_19_image_1.jpg" class="img-fluid"></a></p>
+<p>癌症药物研发的核心瓶颈是数据。对于罕见癌症，寻找足够多的患者样本进行研究尤其困难，这阻碍了对疾病机理的理解和新药的开发。一项研究为此提出了新的解决方案：用 AI 创造可信的虚拟患者数据。</p>
+<p>这个方案的核心是 CanBART 模型，它被训练来学习癌症的「基因语言」。研究者用超过 14.4 万份癌症患者的基因突变数据训练该模型。这些数据以独特的「分子语言」记录了每位患者的基因变化。CanBART 的任务就是学习这种语言的规律。</p>
+<p>CanBART 的工作方式与大语言模型类似。它将每个基因突变视为一个「词」（token），一份完整的患者基因图谱则构成一个由这些特殊「词」组成的「句子」。通过学习海量的「句子」，CanBART 掌握了不同癌症类型中基因突变组合的规律，例如哪些基因突变倾向于同时出现。</p>
+<p>掌握规律后，CanBART 具备了两项能力。</p>
+<p>首先是补全不完整的基因图谱。临床检测常只能获得部分基因信息，如同一个不完整的句子。CanBART 能依据其学到的规则，推断出缺失的基因突变。在一项真实世界数据测试中，它成功预测了超过三分之一的缺失基因突变，这项能力有助于优化临床试验设计与精准用药。</p>
+<p>其次是创造生物学上合理的虚拟患者数据。模型学会「写句子」后，就能生成全新的、完整的合成患者基因图谱。对于样本量极少的罕见癌症，研究者可以利用 CanBART 生成一个虚拟患者队列。尽管数据是合成的，其基因突变模式与真实情况高度相似。测试表明，使用这些合成数据后，对罕见癌症的分类准确率提升了 66%，证明虚拟数据能有效弥补真实数据的不足，推动对复杂疾病的研究。</p>
+<p>这项工作开辟了新思路：当真实世界数据难以获取时，利用生成式 AI 创造高质量的合成数据，可以成为推动研究的强大引擎。</p>
+<p>📜Title: CanBART: A Generative Foundation Model of Cancer Molecular Alterations for Synthetic Patient Generation and Genomic Profile Completion<br>
+🌐Paper: https://www.medrxiv.org/content/10.1101/2025.11.04.25339512v1</p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-12-14/post_all.zh.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="冷冻电镜 (Cryo-EM) 虽能捕捉到精美的蛋白质静态结构，但无法揭示其动态过程。CryoDyna 工具通过端到端深度学习框架，将数万张 2D 颗粒图像直接重建为一个连续的蛋白质动态模型。它融合交叉视图注意力和多尺度变形预测技术，并引入物理规律约束，最终生成接近原子级别分辨率的动态「电影」。这项技术填补了静态结构与分子动力学模拟间的空白，为理解靶点功能和药物相互作用提供了前所未有的视角。">
+
+<title>CryoDyna: 让冷冻电镜「动」起来，看清蛋白质动态电影 – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="CryoDyna: 让冷冻电镜「动」起来，看清蛋白质动态电影 – MPU">
+<meta property="og:description" content="冷冻电镜 (Cryo-EM) 虽能捕捉到精美的蛋白质静态结构，但无法揭示其动态过程。CryoDyna 工具通过端到端深度学习框架，将数万张 2D 颗粒图像直接重建为一个连续的蛋白质动态模型。它融合交叉视图注意力和多尺度变形预测技术，并引入物理规律约束，最终生成接近原子级别分辨率的动态「电影」。这项技术填补了静态结构与分子动力学模拟间的空白，为理解靶点功能和药物相互作用提供了前所未有的视角。">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-12-02/post_all_image/cryo_dyna_multiscale_2025_10_28_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="一张展示复杂大分子结构的科学插图，可能是一种蛋白质或核糖体复合物。该结构由多种颜色的带状和表面模型组成，包括蓝色，紫色，绿色和橙色，描绘了其不同的亚基或构象状态。图像的动态感暗示了分子的运动和变化。这张图直观地展示了 CryoDyna 技术的核心成果：将数千张静态的冷冻电镜 2D 图像重建为连续的，原子级别的蛋白质动态模型。它体现了模型如何捕捉从整体到局部的多尺度结构变化，揭示了蛋白质在执行生物功能时的动态过程，这对于药物研发和结构生物学研究至关重要。
+">
+<meta name="twitter:title" content="CryoDyna: 让冷冻电镜「动」起来，看清蛋白质动态电影 – MPU">
+<meta name="twitter:description" content="冷冻电镜 (Cryo-EM) 虽能捕捉到精美的蛋白质静态结构，但无法揭示其动态过程。CryoDyna 工具通过端到端深度学习框架，将数万张 2D 颗粒图像直接重建为一个连续的蛋白质动态模型。它融合交叉视图注意力和多尺度变形预测技术，并引入物理规律约束，最终生成接近原子级别分辨率的动态「电影」。这项技术填补了静态结构与分子动力学模拟间的空白，为理解靶点功能和药物相互作用提供了前所未有的视角。">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-12-02/post_all_image/cryo_dyna_multiscale_2025_10_28_image_1.jpg">
+<meta name="twitter:image:alt" content="一张展示复杂大分子结构的科学插图，可能是一种蛋白质或核糖体复合物。该结构由多种颜色的带状和表面模型组成，包括蓝色，紫色，绿色和橙色，描绘了其不同的亚基或构象状态。图像的动态感暗示了分子的运动和变化。这张图直观地展示了 CryoDyna 技术的核心成果：将数千张静态的冷冻电镜 2D 图像重建为连续的，原子级别的蛋白质动态模型。它体现了模型如何捕捉从整体到局部的多尺度结构变化，揭示了蛋白质在执行生物功能时的动态过程，这对于药物研发和结构生物学研究至关重要。
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">CryoDyna: 让冷冻电镜「动」起来，看清蛋白质动态电影</h1>
+                  <div>
+        <div class="description">
+          <p>冷冻电镜 (Cryo-EM) 虽能捕捉到精美的蛋白质静态结构，但无法揭示其动态过程。CryoDyna 工具通过端到端深度学习框架，将数万张 2D 颗粒图像直接重建为一个连续的蛋白质动态模型。它融合交叉视图注意力和多尺度变形预测技术，并引入物理规律约束，最终生成接近原子级别分辨率的动态「电影」。这项技术填补了静态结构与分子动力学模拟间的空白，为理解靶点功能和药物相互作用提供了前所未有的视角。</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">CryoDyna</div>
+                <div class="quarto-category">冷冻电镜，蛋白质动态，深度学习，结构生物学</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Tuesday, the 2nd of December, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#目录" id="toc-目录" class="nav-link active" data-scroll-target="#目录">目录</a></li>
+  <li><a href="#chem-r教-ai-像化学家一样推理" id="toc-chem-r教-ai-像化学家一样推理" class="nav-link" data-scroll-target="#chem-r教-ai-像化学家一样推理">1. Chem-R：教 AI 像化学家一样推理</a></li>
+  <li><a href="#ai-微调揭秘模型何时死记硬背何时真正学会" id="toc-ai-微调揭秘模型何时死记硬背何时真正学会" class="nav-link" data-scroll-target="#ai-微调揭秘模型何时死记硬背何时真正学会">2. AI 微调揭秘：模型何时死记硬背，何时真正学会？</a></li>
+  <li><a href="#cryodyna-让冷冻电镜动起来看清蛋白质动态电影" id="toc-cryodyna-让冷冻电镜动起来看清蛋白质动态电影" class="nav-link" data-scroll-target="#cryodyna-让冷冻电镜动起来看清蛋白质动态电影">3. CryoDyna: 让冷冻电镜「动」起来，看清蛋白质动态电影</a></li>
+  <li><a href="#化学语言模型数据多样性胜过盲目扩容" id="toc-化学语言模型数据多样性胜过盲目扩容" class="nav-link" data-scroll-target="#化学语言模型数据多样性胜过盲目扩容">4. 化学语言模型：数据多样性胜过盲目扩容</a></li>
+  <li><a href="#moledit给分子大模型做微创手术的新方案" id="toc-moledit给分子大模型做微创手术的新方案" class="nav-link" data-scroll-target="#moledit给分子大模型做微创手术的新方案">5. MolEdit：给分子大模型做「微创手术」的新方案</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-12-02/post_all.zh.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="目录" class="level2">
+<h2 class="anchored" data-anchor-id="目录">目录</h2>
+<ol type="1">
+<li>Chem-R 模仿化学家的思维，解决大语言模型在化学领域的逻辑谬误，让 AI 从「知识库」向「研发伙伴」转变。</li>
+<li>大语言模型微调的效果，取决于它学习的标识符。如果标识符有意义（如基因名），模型就能学会泛化；如果是任意编码（如本体论 ID），模型就只会死记硬背。</li>
+<li>CryoDyna 将冷冻电镜 (Cryo-EM) 的静态快照转为蛋白质动态的高清电影，直接从 2D 图像重建出原子级别的连续构象变化。</li>
+<li>在药物分子生成任务中，提升训练数据的结构多样性，比单纯堆砌模型参数或扩大数据规模，更能产出高质量且多样的苗头化合物。</li>
+<li>MolEdit 利用多专家适配器和智能开关，实现了对多模态分子语言模型的高精度知识更新，有效解决重训成本高昂与微调引发的「灾难性遗忘」难题。</li>
+</ol>
+</section>
+<section id="chem-r教-ai-像化学家一样推理" class="level2">
+<h2 class="anchored" data-anchor-id="chem-r教-ai-像化学家一样推理">1. Chem-R：教 AI 像化学家一样推理</h2>
+<p><a href="post_all_image/chem_r_learning_to_2025_10_28_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/chem_r_learning_to_2025_10_28_image_1.jpg" class="img-fluid"></a></p>
+<p>现有的大语言模型 (Large Language Models, LLMs) 在解决化学问题时，常会给出看似专业的错误答案。它们能复述教科书中的反应，但面对一个新分子，它们设计的合成路线可能会出现一个连着五根键的碳原子。这说明，模型学会了化学语言，却没有掌握其背后的物理规律和逻辑。</p>
+<p>Chem-R 模型正是为了解决这个问题。它的思路很直接：教会 AI 像训练有素的化学家一样思考。</p>
+<p>它的工作原理分为三步。</p>
+<p>第一步，<strong>打好化学基础 (Chemical Foundation Training</strong>)。<br>
+这相当于让 AI 上基础化学课。模型首先用海量的分子结构、化学反应等非推理数据进行微调，目的是让它掌握基本的化学语言，例如 SMILES 表达式的写法、官能团的结构，避免犯「碳五键」这类低级错误。这是建立可靠推理能力的基础。</p>
+<p>第二步，<strong>学习专家的解题思路 (Chemical Reasoning Protocol Distillation</strong>)。<br>
+这是 Chem-R 的核心。人类解决化学问题时，会遵循一套思维流程。例如，在逆合成分析中，我们会先识别关键官能团，寻找可以断开的化学键，提出可能的合成子，再匹配到相应的合成砌块。Chem-R 就学习这套思维「协议」。它通过模仿一个更强大的「教师模型」生成的高质量、分步推理过程，让自己的输出不再是黑箱式的答案，而是一条有理有据、可供检验的思考路径。</p>
+<p>第三步，<strong>做到文理兼修，全面发展 (Multi-task Group Relative Policy Optimization</strong>)。<br>
+优秀的化学家既要懂反应预测，也要懂分子性质。这一步旨在确保模型不会「偏科」。通过一种特殊的优化策略，模型在分子层面任务（如性质预测）和反应层面任务（如产物预测）上的表现得以平衡。这能防止模型在某个任务上表现过强而牺牲其他任务的性能，使其成为一个更全面的「化学家」。</p>
+<p>Chem-R 的表现在分子和反应相关任务上，比 Gemini-2.5-Pro 和 DeepSeek-R1 等通用大模型高出 46% 到 66%，也超过了其他为化学领域专门设计的模型。</p>
+<p>人类化学专家也对 Chem-R 生成的推理过程进行了评估。结果显示，Chem-R 在化学知识的准确性、逻辑的连贯性和专家洞察力等多个维度上都获得了最高分。这说明，模型的解题思路得到了专业同行的认可。</p>
+<p>在药物研发领域，AI 或许很快就能从一个查找文献数据的「图书馆管理员」，转变为能讨论合成路线、分析分子活性、提出优化建议的「虚拟同事」。当 AI 掌握了「是什么」、「为什么」以及「如何做」，它才能在药物研发中真正发挥创造性价值。Chem-R 虽不完美，但它指明了一条正确的道路：教 AI 像专家一样思考，而不只是模仿语言。</p>
+<p>📜Title: Chem-R: Learning to Reason as a Chemist<br>
+🌐Paper: <a href="https://arxiv.org/abs/2510.16880" class="uri">https://arxiv.org/abs/2510.16880</a></p>
+</section>
+<section id="ai-微调揭秘模型何时死记硬背何时真正学会" class="level2">
+<h2 class="anchored" data-anchor-id="ai-微调揭秘模型何时死记硬背何时真正学会">2. AI 微调揭秘：模型何时死记硬背，何时真正学会？</h2>
+<p><a href="post_all_image/from_memorization_to_2025_10_28_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/from_memorization_to_2025_10_28_image_1.jpg" class="img-fluid"></a></p>
+<p>我们希望大语言模型（Large Language Models, LLM）是科研助理，不是只会背书的复读机。在生物医药领域，一项繁琐的基础工作是术语标准化，也就是把「心脏病发作」这类术语，准确对应到 <code>MeSH ID D009203</code> 这样的标准标识符上。如果 AI 能真正理解这些术语，研发将大大提速。</p>
+<p>一篇论文探究了微调究竟是在教大语言模型「理解」还是「背诵」。研究人员用 Llama 3.1 8B 模型，教它识别三种生物学术语体系：人类表型本体论 (Human Phenotype Ontology, HPO)、基因本体论 (Gene Ontology, GO) 和蛋白质 - 基因符号映射。</p>
+<p>结果对比鲜明。</p>
+<p>对于 GO 和 HPO，微调提升了模型对训练数据的准确率，但这只是死记硬背。遇到没见过的新术语，模型就无能为力，这叫「记忆」（Memorization）。</p>
+<p>但在蛋白质 - 基因符号映射任务上，模型不仅记住了训练数据，还能准确处理从未见过的蛋白质 - 基因对。这才是我们追求的「泛化」（Generalization）能力，说明模型学到了规律。</p>
+<p>造成这种差异的原因有两个：<strong>标识符流行度</strong>和<strong>标识符词汇化</strong>。</p>
+<p>「流行度」指一个术语 - 标识符对在预训练数据中出现的频率。见得越多，模型印象越深，微调效果越好。</p>
+<p>关键在「词汇化」（Lexicalization）。</p>
+<p>词汇化的标识符本身就包含语义信息。例如基因符号 <code>TP53</code>，它在海量文本中与「肿瘤抑制」、「细胞周期」等概念相关联。模型预训练时，已为 <code>TP53</code> 建立了语义网络。微调的作用，就是将这个现有网络与新术语精准连接。有了这个语义「脚手架」，模型就能举一反三。</p>
+<p>相比之下，<code>HPO:HP:0001250</code>（癫痫发作）或 <code>GO:0008150</code>（生物学过程）这类标识符是「非词汇化」的。它们是任意字符串，不携带生物学含义。模型只能死记硬背「输入 A，就输出 B」的映射关系。这种记忆是脆弱的，遇到新术语就会失效。</p>
+<p>这好比教一个熟悉各种鱼的人辨认「石斑鱼」，他能很快学会，甚至推断出其他类似鱼类的样貌。但如果你给他一张随机编码的卡片，告诉他这就是「石斑鱼」，他除了背下这张卡片，什么也学不到。</p>
+<p>研究还有两个发现：</p>
+<p>因此，在微调模型处理术语标准化任务前，先判断你的目标标识符是像 <code>TP53</code> 这样有意义的词，还是像 <code>GO:0008150</code> 这样的任意编码。</p>
+<p>这个答案决定了你的模型会成为一个助理，还是一个笨拙的复读机。</p>
+<p>📜Title: From Memorization to Generalization: Fine-Tuning Large Language Models for Biomedical Term-to-Identifier Normalization<br>
+🌐Paper: https://arxiv.org/abs/2510.19036</p>
+</section>
+<section id="cryodyna-让冷冻电镜动起来看清蛋白质动态电影" class="level2">
+<h2 class="anchored" data-anchor-id="cryodyna-让冷冻电镜动起来看清蛋白质动态电影">3. CryoDyna: 让冷冻电镜「动」起来，看清蛋白质动态电影</h2>
+<p><a href="post_all_image/cryo_dyna_multiscale_2025_10_28_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/cryo_dyna_multiscale_2025_10_28_image_1.jpg" class="img-fluid"></a></p>
+<p>蛋白质是动态的，而冷冻电镜（Cryo-EM）捕捉到的精美结构，只是其运动过程中的静态快照。仅凭一张发动机的静止照片，难以理解其工作原理，理解蛋白质也是同理。要理解靶点功能及药物的相互作用，必须观察其动态过程。CryoDyna 工具正是为此而设计。</p>
+<p><strong>它的工作原理是什么</strong>？</p>
+<p>传统流程需要先对颗粒分类、重建几个离散的静态结构，再将它们联系起来。CryoDyna 采用了一个更直接的端到端深度学习框架：输入数万张不同朝向的 2D 颗粒图像，它能直接输出一个连续的动态模型。</p>
+<p>这个过程有两个关键技术。</p>
+<p>第一是<strong>交叉视图注意力（cross-view attention）模块</strong>。为确定一个物体的三维形状，需要从不同角度观察。该模块能同时分析来自不同方向的 2D 投影图像，并融合信息。这有助于相互验证、减少噪声，确保最终重建的 3D 动态在几何上自洽。</p>
+<p>第二是<strong>多尺度变形预测（multi-scale deformation</strong>）。这个方法好比绘画，先勾勒大的轮廓和动态（粗粒度的整体运动），再添加细节（局部结构的精细变化）。CryoDyna 先学习蛋白质的大范围运动，再逐步精修局部结构。这种由粗到精的策略，使其能准确捕捉从全局到局部的多尺度结构变化。</p>
+<p><strong>它融合了物理规律</strong></p>
+<p>为避免 AI 模型生成不符合物理规律的结果，CryoDyna 引入了基于 MARTINI 的粗粒化模型。它在学习蛋白质运动时，会受到物理规则的约束，确保预测的构象变化在能量上合理。之后，通过「反向映射」过程，将这个符合物理规律的粗粒化动态模型，还原成包含所有原子的精细模型。这样得到的动态模型，不仅分辨率接近原子级别，也具备物理意义。</p>
+<p><strong>它能带来什么</strong>？</p>
+<p>研究者在多个复杂系统上验证了 CryoDyna 的能力。例如，他们解析了 RAG 信号末端复合物中一个此前未见区域的动态，并描绘了核糖体在易位过程中的状态变化。它还能揭示蛋白质和 RNA 之间的协同运动。</p>
+<p>在药物研发中，CryoDyna 能够展示激酶激活环（activation loop）的开闭过程，或 GPCR 被配体逐步激活的细节。我们还能分析药物分子如何将靶点锁定在失活构象。这些信息对设计更高效、特异的药物至关重要。</p>
+<p>CryoDyna 填补了冷冻电镜静态结构分析与分子动力学模拟（Molecular Dynamics, MD）之间的空白，让研究者能更快速、直观地利用实验数据探索蛋白质的动态过程。</p>
+<p>📜Paper: CryoDyna: Multiscale end-to-end modeling of cryoEM macromolecule dynamics with physics-aware neural network<br>
+🌐Paper: https://arxiv.org/abs/2510.16510<br>
+💻Code: https://github.com/Qmi3/CryoDyna</p>
+</section>
+<section id="化学语言模型数据多样性胜过盲目扩容" class="level2">
+<h2 class="anchored" data-anchor-id="化学语言模型数据多样性胜过盲目扩容">4. 化学语言模型：数据多样性胜过盲目扩容</h2>
+<p><a href="post_all_image/diversity_beats_size_2025_11_27_image_1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="post_all_image/diversity_beats_size_2025_11_27_image_1.png" class="img-fluid"></a></p>
+<p>AI 制药领域常有一种迷信：模型做大、数据喂多，奇迹就会发生。这在大语言模型（LLM）处理自然语言时或许成立，但在处理化学语言（SMILES）时情况不同。ChemRxiv 上的这项新研究，通过系统性实验否定了这种「大力出奇迹」的思路。</p>
+<p><strong>规模不是万能药</strong></p>
+<p>研究人员评估了基于编码器 - 解码器（Encoder-Decoder）架构的 Transformer 模型。模型参数增加到一定程度后，生成有效苗头化合物（Hits）的能力并未显著提升。单纯增加训练数据量，超过特定点后收益也会持平。制药公司无需无止境购买昂贵算力训练超大模型，化学空间探索有其独特规律。</p>
+<p>「<strong>喂养」策略</strong></p>
+<p>既然单纯「吃得多」无用，重点便在于「吃得杂」。研究人员提出<strong>数据多样化</strong>策略：根据分子量对分子聚类，从各簇中采样。</p>
+<p>这种做法优势明显。若模型训练时只接触大量相似的苯环衍生物，生成的分子往往千篇一律。强制模型接触化学空间中分布更广、结构差异更大的分子，生成的「苗头化合物」多样性会有质的飞跃。早期药物发现的核心需求，正是不同骨架（Scaffold）的潜在分子。</p>
+<p><strong>别迷信 Loss 曲线</strong></p>
+<p>研究指出，预训练损失无法准确评估模型优劣。在自然语言处理中，Loss 降低通常代表模型变强；但在化学领域，Loss 降低与分子生成、属性优化等下游任务的表现关联不大。</p>
+<p>计算辅助药物设计（CADD）从业者需将评估体系回归本质，在真实药物设计场景中测试模型，验证其生成分子的药化学规则符合度、合成可行性及结构新颖性。</p>
+<p>这项工作为 AI 制药指明了更经济高效的道路：应当优先清洗和策划高质量、高多样性的化学数据集。寻找新药征途中，见多识广比单纯死记硬背更有价值。</p>
+<p>📜Title: Diversity Beats Size Scaling for Chemical Language Models<br>
+🌐Paper: <a href="https://doi.org/10.26434/chemrxiv-2025-k14gv" class="uri">https://doi.org/10.26434/chemrxiv-2025-k14gv</a></p>
+</section>
+<section id="moledit给分子大模型做微创手术的新方案" class="level2">
+<h2 class="anchored" data-anchor-id="moledit给分子大模型做微创手术的新方案">5. MolEdit：给分子大模型做「微创手术」的新方案</h2>
+<p><a href="post_all_image/mol_edit_knowledge_e_2025_11_27_image_1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="post_all_image/mol_edit_knowledge_e_2025_11_27_image_1.png" class="img-fluid"></a></p>
+<p>科学领域的 AI 模型常面临「记忆固化」难题。模型一旦训练完成，修正错误或更新实验数据往往代价高昂：要么重头训练，要么通过微调冒着「灾难性遗忘」的风险——修好一个漏洞，却破坏了已有能力。</p>
+<p>针对多模态分子语言模型（MoLMs），新方案 MolEdit 应运而生。这类模型需同时理解化学分子结构（如 SMILES）与自然语言描述，两者映射关系复杂。MolEdit 如同一把精准的手术刀，在不破坏模型原有能力的前提下，定向修改特定分子知识。</p>
+<p>该系统依赖两大核心设计。</p>
+<p>首先是 MEKA（多专家知识适配器）。分子知识涵盖溶解度、毒性、结合靶点等多个维度。MEKA 类似于医院分诊台，将修改指令路由给负责对应领域的「专家模块」。这种策略实现了对多面性分子知识的细粒度控制。</p>
+<p>其次是 EAES（专业感知编辑开关）。它为模型加装了一道「保险栓」：仅当用户输入与存储的「补丁」高度吻合时，才激活编辑后的知识；若问题无关，系统保持静默，调用原有知识库。这一机制大幅降低了新知识对模型通用能力的干扰。</p>
+<p>为验证效果，研究建立了 MEBench 测试基准。在 MoMu 和 MolFM 两个主流分子多模态模型上的测试表明：MolEdit 修正错误的准确度（可靠性）提升 18.8%，保护无关知识不被破坏的能力（局部性）提升 12.0%。</p>
+<p>药物化学家和计算生物学家将由此获得更可控的 AI 助手。发现模型对先导化合物描述有误，或产生新的 SAR（构效关系）数据时，可直接通过 MolEdit 进行「热更新」。这有助于构建数据实时准确、能够长期演进的科学发现引擎。</p>
+<p>📜Title: MolEdit: Knowledge Editing for Multimodal Molecule Language Models<br>
+🌐Paper: <a href="https://arxiv.org/abs/2511.12770v1" class="uri">https://arxiv.org/abs/2511.12770v1</a><br>
+💻Code: <a href="https://github.com/LzyFischer/MolEdit" class="uri">https://github.com/LzyFischer/MolEdit</a></p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-12-02/post_all.zh.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

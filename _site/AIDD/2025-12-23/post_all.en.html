@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="Traditional methods struggle to find “metamorphic proteins,” which can switch between multiple structures. A new study cleverly uses AlphaFold2 by manipulating its input, coaxing it to generate multiple possible conformations for a protein. Researchers then combined this with statistical learning to train a classifier that can accurately identify these “transformer” proteins from the conformational ensembles. This efficient computational tool makes it possible to screen for metamorphic proteins on a large scale. It also opens up new ideas for developing drugs that target specific protein shapes, potentially changing how we design medicines.">
+
+<title>A New Trick for AlphaFold2: Predicting ‘Transformer’ Proteins – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="A New Trick for AlphaFold2: Predicting ‘Transformer’ Proteins – MPU">
+<meta property="og:description" content="Traditional methods struggle to find “metamorphic proteins,” which can switch between multiple structures. A new study cleverly uses AlphaFold2 by manipulating its input, coaxing it to generate multiple possible conformations for a protein. Researchers then combined this with statistical learning to train a classifier that can accurately identify these “transformer” proteins from the conformational ensembles. This efficient computational tool makes it possible to screen for metamorphic proteins on a large scale. It also opens up new ideas for developing drugs that target specific protein shapes, potentially changing how we design medicines.">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-12-23/post_all_image/classifying_metamorp_2025_12_16_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="A scientific illustration showing two different conformations of the metamorphic protein Mad2. On the left, the 'Open Mad2' conformation is shown as a ribbon diagram in blue and green. On the right, the 'Closed Mad2' conformation is shown in red and orange. An arrow between them indicates that the protein structure can convert from one to the other. This image visually explains the core concept of the article: some proteins are like 'transformers' with multiple stable structures. AlphaFold2 can be used to predict and identify these multi-state proteins, which is vital for understanding their biological functions and for drug development.
+">
+<meta name="twitter:title" content="A New Trick for AlphaFold2: Predicting ‘Transformer’ Proteins – MPU">
+<meta name="twitter:description" content="Traditional methods struggle to find “metamorphic proteins,” which can switch between multiple structures. A new study cleverly uses AlphaFold2 by manipulating its input, coaxing it to generate multiple possible conformations for a protein. Researchers then combined this with statistical learning to train a classifier that can accurately identify these “transformer” proteins from the conformational ensembles. This efficient computational tool makes it possible to screen for metamorphic proteins on a large scale. It also opens up new ideas for developing drugs that target specific protein shapes, potentially changing how we design medicines.">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-12-23/post_all_image/classifying_metamorp_2025_12_16_image_1.jpg">
+<meta name="twitter:image:alt" content="A scientific illustration showing two different conformations of the metamorphic protein Mad2. On the left, the 'Open Mad2' conformation is shown as a ribbon diagram in blue and green. On the right, the 'Closed Mad2' conformation is shown in red and orange. An arrow between them indicates that the protein structure can convert from one to the other. This image visually explains the core concept of the article: some proteins are like 'transformers' with multiple stable structures. AlphaFold2 can be used to predict and identify these multi-state proteins, which is vital for understanding their biological functions and for drug development.
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">A New Trick for AlphaFold2: Predicting ‘Transformer’ Proteins</h1>
+                  <div>
+        <div class="description">
+          <p>Traditional methods struggle to find “metamorphic proteins,” which can switch between multiple structures. A new study cleverly uses AlphaFold2 by manipulating its input, coaxing it to generate multiple possible conformations for a protein. Researchers then combined this with statistical learning to train a classifier that can accurately identify these “transformer” proteins from the conformational ensembles. This efficient computational tool makes it possible to screen for metamorphic proteins on a large scale. It also opens up new ideas for developing drugs that target specific protein shapes, potentially changing how we design medicines.</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">AlphaFold2</div>
+                <div class="quarto-category">Metamorphic Proteins</div>
+                <div class="quarto-category">Conformational Ensemble</div>
+                <div class="quarto-category">Statistical Learning</div>
+                <div class="quarto-category">Protein Structure Prediction</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Tuesday, the 23rd of December, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#gaugefixer-a-tool-to-fix-parameter-ambiguity-in-biological-models" id="toc-gaugefixer-a-tool-to-fix-parameter-ambiguity-in-biological-models" class="nav-link active" data-scroll-target="#gaugefixer-a-tool-to-fix-parameter-ambiguity-in-biological-models">1. GaugeFixer: A Tool to Fix Parameter Ambiguity in Biological Models</a></li>
+  <li><a href="#a-new-trick-for-alphafold2-predicting-transformer-proteins" id="toc-a-new-trick-for-alphafold2-predicting-transformer-proteins" class="nav-link" data-scroll-target="#a-new-trick-for-alphafold2-predicting-transformer-proteins">2. A New Trick for AlphaFold2: Predicting ‘Transformer’ Proteins</a></li>
+  <li><a href="#dynamate-a-self-correcting-ai-for-end-to-end-molecular-dynamics" id="toc-dynamate-a-self-correcting-ai-for-end-to-end-molecular-dynamics" class="nav-link" data-scroll-target="#dynamate-a-self-correcting-ai-for-end-to-end-molecular-dynamics">3. DynaMate: A Self-Correcting AI for End-to-End Molecular Dynamics</a></li>
+  <li><a href="#quantum-computing-predicts-protein-hydration-sites-in-a-new-approach-for-drug-discovery" id="toc-quantum-computing-predicts-protein-hydration-sites-in-a-new-approach-for-drug-discovery" class="nav-link" data-scroll-target="#quantum-computing-predicts-protein-hydration-sites-in-a-new-approach-for-drug-discovery">4. Quantum Computing Predicts Protein Hydration Sites in a New Approach for Drug Discovery</a></li>
+  <li><a href="#af3-on-disordered-proteins-solid-on-monomers-unpredictable-for-complexes" id="toc-af3-on-disordered-proteins-solid-on-monomers-unpredictable-for-complexes" class="nav-link" data-scroll-target="#af3-on-disordered-proteins-solid-on-monomers-unpredictable-for-complexes">5. AF3 on Disordered Proteins: Solid on Monomers, Unpredictable for Complexes</a></li>
+  <li><a href="#guanine-1.1-reveals-for-genomic-ai-models-you-can-have-the-best-of-both-worlds" id="toc-guanine-1.1-reveals-for-genomic-ai-models-you-can-have-the-best-of-both-worlds" class="nav-link" data-scroll-target="#guanine-1.1-reveals-for-genomic-ai-models-you-can-have-the-best-of-both-worlds">6. GUANinE 1.1 Reveals: For Genomic AI Models, You Can Have the Best of Both Worlds</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-12-23/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="table-of-contents" class="level4">
+<h4 class="anchored" data-anchor-id="table-of-contents">Table of Contents</h4>
+<ol type="1">
+<li>GaugeFixer solves the problem of parameter ambiguity in sequence-function models with an efficient algorithm, allowing researchers to uncover reliable biological mechanisms from massive datasets.</li>
+<li>Researchers cleverly “tricked” AlphaFold2 into generating multiple protein conformations. By combining this with statistical methods, they successfully screened for “transformer” proteins with multiple shapes from a vast pool of proteins.</li>
+<li>DynaMate, a multi-agent framework, can autonomously handle the entire molecular dynamics simulation of a protein-ligand system from start to finish, making a complex and tedious process surprisingly simple.</li>
+<li>Researchers have successfully used existing quantum computers to predict hydration sites in protein pockets with an accuracy comparable to classical methods, signaling the practical arrival of quantum computing in drug discovery.</li>
+<li>AlphaFold3 performs well on predicting single disordered proteins, but when dealing with complex interactions, it shows a “confident stubbornness,” and its predictions are often hard to interpret.</li>
+<li>The latest GUANinE v1.1 benchmark shows that supervised and unsupervised genomic models each have their strengths. Combining them is the future of genomic sequence modeling.</li>
+</ol>
+</section>
+<section id="gaugefixer-a-tool-to-fix-parameter-ambiguity-in-biological-models" class="level2">
+<h2 class="anchored" data-anchor-id="gaugefixer-a-tool-to-fix-parameter-ambiguity-in-biological-models">1. GaugeFixer: A Tool to Fix Parameter Ambiguity in Biological Models</h2>
+<p><a href="post_all_image/gauge_fixer_overcomi_2025_12_16_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/gauge_fixer_overcomi_2025_12_16_image_1.jpg" class="img-fluid"></a></p>
+<p>When we build models in biology, especially to study how sequence determines function, we often run into a frustrating problem. Imagine you train a complex model to predict the activity of a protein sequence. The model works well and its predictions are accurate. But when you try to open the “black box” to understand how much each amino acid position contributes, you hit a snag. You might find that several completely different sets of parameters can produce the exact same prediction results.</p>
+<p>This is known as “gauge freedom,” or parameter non-uniqueness. It’s like navigation: several different maps (parameter sets) can all lead you to the same destination (correct prediction), but each map uses a different coordinate system. If you want to use one of these maps to find the next treasure, which one should you trust? This makes interpreting the model extremely difficult because we can’t be sure of the biological meaning of the parameters.</p>
+<p>A new Python toolkit called <code>GaugeFixer</code> is designed to solve this problem. You can think of it as a “map calibrator.” It takes all these maps with different coordinate systems and aligns them to a single, standard “gauge.” This makes the model’s parameters unique and comparable.</p>
+<p>The most impressive part of this tool is its algorithmic efficiency. The authors used the mathematical structure of gauge-fixing projections to design an algorithm where computation time and memory usage scale linearly with the number of parameters.</p>
+<p>What does this mean for those of us doing computational work? It means the tool runs very fast. You can calibrate even massive models with millions of parameters on your own workstation or laptop, without needing to compete for time on a supercomputer. This significantly lowers the barrier to entry.</p>
+<p>To prove its worth, the authors applied <code>GaugeFixer</code> to a classic biological problem: analyzing the Shine-Dalgarno sequence in <em>E. coli</em>. This is a key sequence that determines how a ribosome binds and initiates translation. After calibrating the model with <code>GaugeFixer</code>, they clearly revealed subtle differences in ribosome binding preferences at different positions around the start codon. These detailed biological insights would likely have been lost in the “noise” of ambiguous parameters in an uncalibrated model. It’s like wiping the dust off a gem to reveal its original brilliance.</p>
+<p><code>GaugeFixer</code> is also designed to be flexible. It supports not only global models but also hierarchical models, allowing researchers to choose the calibration method that best fits their biological question.</p>
+<p>For colleagues who want to try it out, the tool is easy to get and use. It’s an open-source Python package that can be installed directly with <code>pip</code>. The authors have also provided thorough documentation and source code. This shows they hope the tool will become a standard part of the community’s workflow, helping everyone build more reliable and interpretable biological models.</p>
+<p>📜Paper: GaugeFixer: Overcoming Parameter Non-identifiability in Models of Sequence-Function Relationships<br>
+🌐Biorxiv: https://www.biorxiv.org/content/10.64898/2025.12.08.693054v1</p>
+</section>
+<section id="a-new-trick-for-alphafold2-predicting-transformer-proteins" class="level2">
+<h2 class="anchored" data-anchor-id="a-new-trick-for-alphafold2-predicting-transformer-proteins">2. A New Trick for AlphaFold2: Predicting ‘Transformer’ Proteins</h2>
+<p><a href="post_all_image/classifying_metamorp_2025_12_16_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/classifying_metamorp_2025_12_16_image_1.jpg" class="img-fluid"></a></p>
+<p>Inside our cells, most proteins are like precisely engineered parts, with a single, fixed 3D shape to perform a specific job. But there are exceptions. These are the “transformers” of the protein world, known academically as “Metamorphic Proteins.” Like a Swiss Army knife, these proteins can switch between two or more distinct, stable structures, with each structure corresponding to a different biological function.</p>
+<p>Finding these “transformers” has always been a challenge. Traditional experimental methods, like X-ray crystallography or NMR, usually capture only the most stable and common form of a protein, making it hard to see its other shapes.</p>
+<p>The arrival of AlphaFold2 changed the game for protein structure prediction, but it has its own quirks. It was designed to predict the single most likely, lowest-energy structure. You give it an amino acid sequence, and it does its best to give you the most reliable answer. This works perfectly for the vast majority of single-structure proteins. But for metamorphic proteins, it means we might only see one of their forms, missing out on other equally important ones.</p>
+<p><strong>Making AlphaFold2 “Hesitate”</strong></p>
+<p>The clever part of this new research is that the scientists didn’t try to change AlphaFold2 itself. Instead, they figured out how to manipulate its input. AlphaFold2 relies heavily on an input called a Multiple Sequence Alignment (MSA), which essentially tells it what the protein’s evolutionary relatives look like.</p>
+<p>The researchers developed a sampling method called SMICE. Instead of feeding AlphaFold2 all the information about its evolutionary relatives at once, SMICE selectively feeds it different “circles of relatives” in batches. This is like giving a detective different sets of clues from various sources. With each slightly different combination of clues, the detective might arrive at a different conclusion about the case.</p>
+<p>By doing this, they induced AlphaFold2 to make multiple predictions for the same protein sequence, each time potentially generating a slightly different yet plausible structure. This gave them a set of “possible shapes” for the protein, known as a conformational ensemble.</p>
+<p><strong>Finding the Pattern in a Pile of Structures</strong></p>
+<p>Now we have a large collection of predicted 3D structures. The next crucial step is to figure out whether this collection represents a true “transformer” protein or just random “noise” from AlphaFold2’s prediction process.</p>
+<p>This is where the authors brought in statistical learning. They extracted a few key quantitative features from the set of structures:</p>
+<ol type="1">
+<li><strong>Structural Diversity</strong>: How different are the structures from one another? If they are all clustered together and look similar, it’s likely a normal protein. If they clearly separate into distinct “structural families,” it’s probably a “transformer.”<br>
+</li>
+<li><strong>Cluster Shape</strong>: Do the structures form one large cluster or two or more separate clusters? This directly reflects the modality of the conformational space.<br>
+</li>
+<li><strong>Prediction Confidence</strong>: How confident is AlphaFold2 in each of its predicted structures (pLDDT score)? A true metamorphic protein might get high confidence scores for two or more of its different forms.</li>
+</ol>
+<p>They fed this feature data into a random forest classifier. After training the model on a dataset of known metamorphic and single-structure proteins, it learned to recognize the characteristic patterns of a “transformer.” The model’s ability to distinguish between them was quite good, with an average AUC of 0.869, meaning it makes the right call most of the time.</p>
+<p><strong>Discoveries in Practice</strong></p>
+<p>To see how well the theory and model worked in practice, the researchers applied their classifier to 600 proteins randomly selected from the Protein Data Bank (PDB). The results were exciting. The model flagged several new potential metamorphic proteins. One example is the 40S ribosomal protein S30, which is known to have antimicrobial functions. The flexibility of its function might be related to dynamic changes in its structure.</p>
+<p>The significance of this method is that it provides an efficient computational tool for large-scale screening and discovery of metamorphic proteins. For drug development, this opens a new door. Traditional drug design often targets a binding pocket on a protein’s single, stable structure. But if the target is a “transformer,” we might be able to design a drug that specifically binds to one of its particular forms, “locking” it in a non-functional or specific functional state. This could lead to entirely new mechanisms of drug action.</p>
+<p>Of course, this method is currently a powerful screening tool. Any predicted candidate protein will ultimately need to be validated by experimental methods. But it undoubtedly narrows down the search space, allowing us to more accurately find the most interesting “transformers” in the biological world, which may also play key roles in disease.</p>
+<p>📜Title: Classifying Metamorphic versus Single-Fold Proteins with Statistical Learning and AlphaFold2<br>
+🌐Paper: https://arxiv.org/abs/2512.10066v1</p>
+</section>
+<section id="dynamate-a-self-correcting-ai-for-end-to-end-molecular-dynamics" class="level2">
+<h2 class="anchored" data-anchor-id="dynamate-a-self-correcting-ai-for-end-to-end-molecular-dynamics">3. DynaMate: A Self-Correcting AI for End-to-End Molecular Dynamics</h2>
+<p><a href="post_all_image/dyna_mate_an_autonom_2025_12_16_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/dyna_mate_an_autonom_2025_12_16_image_1.jpg" class="img-fluid"></a></p>
+<p>Anyone who has run Molecular Dynamics (MD) simulations knows how tedious the work can be. To prepare a protein-ligand complex system, you need to process PDB files, parameterize the ligand, choose the right force field and water box, and then run energy minimization, heating, and equilibration before you even get to the production simulation. The whole process is a long chain of steps involving multiple tools (GROMACS, Amber, OpenMM, etc.). If any step goes wrong, hours or even days of computation time are wasted.</p>
+<p>DynaMate was created to solve this pain point. It’s not just a simple script; it’s an autonomous agent system based on a Large Language Model. You can think of it as an experienced computational chemist.</p>
+<p>Here’s how it works: You give it a task, like “run a 100-nanosecond MD simulation for this protein and this ligand, and calculate the binding free energy.”</p>
+<p>DynaMate’s internal “Planner Agent” first breaks this big task into a series of smaller, concrete steps. For example:<br>
+1. Prepare the protein structure.<br>
+2. Prepare the ligand structure and generate force field parameters.<br>
+3. Build the complex system.<br>
+4. Run energy minimization.<br>
+5. …<br>
+6. Run the production simulation.<br>
+7. Calculate the MM/PB(GB)SA binding free energy.</p>
+<p>Then, it assigns these small tasks to different “Worker Agents” to execute. These worker agents know how to call various specialized biochemical software tools.</p>
+<p>The most impressive part of this system is its intelligence. Traditional automation workflows are linear; if one step fails, the whole thing crashes. DynaMate is different. It has the ability to correct itself. For example, if the default <code>antechamber</code> tool fails while generating force field parameters for a novel ligand, the system doesn’t just stop with an error. It recognizes the error, might search online for the error code, or even use an integrated PaperQA tool to look up relevant literature for alternative methods or parameters for that type of molecule. Then, it will try to re-execute the task with the new approach. This adaptability greatly increases the success rate of simulations.</p>
+<p>The researchers tested DynaMate on 12 benchmark systems of varying complexity, and the results showed that it can independently complete simulations and analysis from start to finish.</p>
+<p>For people in drug discovery, the main concern is the accuracy of its binding free energy calculations.</p>
+<p>The paper reports that the results calculated with the MM/PB(GB)SA method show a good correlation with experimental data. This means we can use it to quickly screen and evaluate a series of compounds to see which molecules might bind more strongly to a target, guiding the next steps in chemical synthesis.</p>
+<p>The framework’s architecture is modular, so it will be easy to integrate new tools in the future or expand to more complex systems like membrane proteins, DNA, or even multimers with multiple ligands. If this tool becomes stable and widely adopted, it could free computational chemists from a lot of repetitive, tedious preparation work, allowing us to focus more on analyzing results and gaining scientific insights.</p>
+<p>📜Title: DynaMate: An Autonomous Agent for Protein-Ligand Molecular Dynamics Simulations<br>
+🌐Paper: https://arxiv.org/abs/2512.10034v1</p>
+</section>
+<section id="quantum-computing-predicts-protein-hydration-sites-in-a-new-approach-for-drug-discovery" class="level2">
+<h2 class="anchored" data-anchor-id="quantum-computing-predicts-protein-hydration-sites-in-a-new-approach-for-drug-discovery">4. Quantum Computing Predicts Protein Hydration Sites in a New Approach for Drug Discovery</h2>
+<p><a href="post_all_image/practical_protein_po_2025_12_16_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="post_all_image/practical_protein_po_2025_12_16_image_1.jpg" class="img-fluid"></a></p>
+<p>In drug design, water molecules in a protein target’s pocket are something we both love and hate. They’re like invisible furniture in a room. The drug molecule (ligand) you’re designing has to cleverly avoid or use them to find the most comfortable binding pose. A tiny difference in a water molecule’s position can be the difference between a highly effective drug and a useless one. The problem is, accurately predicting the positions of these water molecules has always been a tough nut to crack in computational chemistry.</p>
+<p>The classical methods we currently use, like 3D-RISM, give us a probability distribution map of where water molecules might be, like a blurry cloud. But they don’t explicitly tell you: “A water molecule is right here, and this is the lowest energy state.” Drug chemists need a more definitive answer.</p>
+<p>The authors of this paper took a different approach. Instead of trying to solve this hard problem head-on, they repackaged it into a problem that quantum computers are good at solving.</p>
+<p><strong>First, they use the classical 3D-RISM method.</strong> This step essentially marks out the “possible activity range” for the water molecules.</p>
+<p><strong>Second, they reframe the problem.</strong> They ask: “Among all these possible sites, how can we place water molecules so that the total energy of the system is at its minimum?” This is essentially a combinatorial optimization problem. Finding the single best solution out of thousands of possibilities is exactly where quantum computing has potential. The authors constructed the problem as a Quadratic Unconstrained Binary Optimization (QUBO) model. You can think of it as giving each possible water molecule position a switch (0 or 1, for on or off) and then finding the combination of switches that results in the lowest total energy.</p>
+<p><strong>Third, they give the problem to a quantum computer.</strong> They ran this QUBO model on IBM’s Heron quantum device, using up to 123 qubits for the largest system. This is a hybrid strategy: a classical computer does the rough calculation, and the quantum computer handles the fine-tuning and optimization.</p>
+<p>What were the results? Quite good. Compared to a classical simulated annealing algorithm, the quantum solver had a higher success rate at finding the optimal solution. This means that when exploring a vast space of possibilities, the quantum computer is less likely to get “lost” than classical algorithms and can more reliably find that lowest-energy “sweet spot.”</p>
+<p>The biggest significance of this work is its practicality. It didn’t just stay at the theoretical level; it produced competitive results directly on today’s imperfect Noisy Intermediate-Scale Quantum (NISQ) hardware. This proves that hybrid quantum-classical methods are a viable path forward right now.</p>
+<p>The authors also made resource predictions. They believe that as quantum hardware improves, we might be able to handle more complex and larger protein systems within a few years. For researchers on the front lines, this means a more powerful tool could soon be in our toolkit, helping us design drug molecules more precisely and avoid those pesky water molecule traps. This is no longer a distant future but a clear, visible roadmap.</p>
+<p>📜Title: Practical protein-pocket hydration-site prediction for drug discovery on a quantum computer<br>
+🌐Paper: https://arxiv.org/abs/2512.08390v1</p>
+</section>
+<section id="af3-on-disordered-proteins-solid-on-monomers-unpredictable-for-complexes" class="level2">
+<h2 class="anchored" data-anchor-id="af3-on-disordered-proteins-solid-on-monomers-unpredictable-for-complexes">5. AF3 on Disordered Proteins: Solid on Monomers, Unpredictable for Complexes</h2>
+<p><a href="post_all_image/alpha_fold3_and_intri_2025_12_16_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="post_all_image/alpha_fold3_and_intri_2025_12_16_image_1.jpg" class="img-fluid"></a></p>
+<p>In drug development labs, the worst thing isn’t an AI that says, “I don’t know.” It’s an AI that confidently gives you the wrong answer. A recent study evaluated the performance of AlphaFold3 (AF3) in predicting Intrinsically Disordered Proteins (IDPs). These proteins are like floating noodles; they have no fixed 3D structure but play crucial roles in life.</p>
+<p>First, let’s look at single proteins (monomers). If you just want to know which parts of a protein are disordered, AF3 is still the reliable top student you remember. Its confidence score (pLDDT) works very well, with a Matthews Correlation Coefficient (MCC) of 0.69, performing on par with its predecessor, AF2, and other tools specialized for predicting disordered regions. This ability seems to be something it “learned” from the training data rather than a feature of the model’s architecture itself.</p>
+<p>But things get tricky when you move to complexes (multimers). Although AF3’s overall score (DockQ) is similar to AF2’s, around 0.56, its behavior has changed. The researchers found that when AF3 makes a wrong prediction, it does so with extreme confidence. No matter how many times you run it, it converges to the same incorrect structure. This is like a student who has memorized a single wrong answer and gives it for every version of the question. This strong structural bias masks the protein’s actual physical flexibility.</p>
+<p>Why does this happen? It might be related to the Diffusion Model introduced in AF3. In the past, we could use physical features like hydrophobicity or charge to explain why a model’s prediction was good or bad. But with AF3, traditional structural features can only explain 42% of its performance variation. In other words, the model has become more of a black box, and its decision-making logic is beyond what traditional structural biology descriptors can capture.</p>
+<p>Another headache for drug developers is induced folding. Some protein fragments are disordered when they are free-floating but fold into a fixed shape only when they meet a specific binding partner. Both AF3 and AF2 struggle with this. They can predict the final folded state, but they have a hard time accurately identifying which fragments are these “Molecular Recognition Features” (MoRFs).</p>
+<p>Perhaps algorithmic innovation alone (like replacing Transformers with Diffusion Models) is not enough. If the training data still lacks diversity in disordered proteins, the AI will continue to see the world with a bias. For anyone trying to use AI to find new targets, blindly trusting its predictions could lead an entire project astray. We may need more diverse datasets or to use ensemble sampling methods to break this “confident error.”</p>
+<p>📜Title: AlphaFold3 and Intrinsically Disordered Proteins: Reliable Monomer Prediction, Unpredictable Multimer Performance<br>
+🌐Paper: https://www.biorxiv.org/content/10.1101/2024.12.05.627014v1</p>
+</section>
+<section id="guanine-1.1-reveals-for-genomic-ai-models-you-can-have-the-best-of-both-worlds" class="level2">
+<h2 class="anchored" data-anchor-id="guanine-1.1-reveals-for-genomic-ai-models-you-can-have-the-best-of-both-worlds">6. GUANinE 1.1 Reveals: For Genomic AI Models, You Can Have the Best of Both Worlds</h2>
+<p><a href="post_all_image/gua_nin_e_v1_1_reveals_2025_12_16_image_1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-6"><img src="post_all_image/gua_nin_e_v1_1_reveals_2025_12_16_image_1.png" class="img-fluid"></a></p>
+<p>In genomics research, we have a whole arsenal of AI models, and each one claims to be the best. But which one should we actually use? It’s like walking into a hardware store filled with all kinds of hammers and wrenches. If you pick the wrong tool, you’ll mess up the job. The new GUANinE v1.1 benchmark is like a detailed “tool review report” that helps us understand the real capabilities of these models.</p>
+<p>The core finding of this report is that different types of models have different “comfort zones.”</p>
+<p>Supervised models are like students studying with an answer key. You give them a DNA sequence and tell them the functional label for that sequence (like “promoter” or “enhancer”), and they learn the mapping. So, they perform best on tasks with clear functional annotations, like chromatin accessibility. This isn’t surprising, as it’s exactly what they were trained to do.</p>
+<p>In contrast, unsupervised models, which include the popular Genomic Large Language Models, are more like linguists. You drop them into a library full of ancient texts (raw DNA sequences) without a dictionary or a translation. They have to figure out the language’s grammar, vocabulary, and deep structure on their own. As a result, they have a remarkable intuition for the “grammar” of evolution—that is, which sequences have been preserved over millions of years. That’s why they completely outperform supervised models on tasks related to evolutionary conservation. This tells us they aren’t competitors; they are partners with different specializations.</p>
+<p>The report also introduces two new, very difficult tasks that go to the heart of drug development and clinical diagnostics: <code>cadd-snv</code> (predicting proxy deleteriousness) and <code>clinvar-snv</code> (predicting clinical pathogenicity). The distinction here is subtle but crucial. A model might accurately judge that a gene variant “looks bad,” for instance, because it could change a key amino acid. This is called “deleteriousness.” But that’s like a mechanic saying, “A part in your engine looks off.” Will that part actually cause the car to break down? That’s “pathogenicity.” The leap from “looks bad” to “will definitely cause a breakdown” is huge. The test results from GUANinE v1.1 confirm that this gap still exists. Models are decent at predicting deleteriousness but are often wrong when it comes to clinical pathogenicity. This is a sober reminder for anyone trying to use AI to interpret genetic variants.</p>
+<p>The researchers also explored a very practical engineering question: with limited computing resources, should we bet on a model with more parameters or one that can “see” further (a larger context window)? They found that it’s not as simple as “bigger is better.” The model’s parameter density and complexity are just as important. It’s like choosing a camera lens. Sometimes, a macro lens with a narrow field of view but incredible sharpness is more useful than a wide-angle lens that can capture the whole landscape. Which one you use depends on the problem you’re trying to solve.</p>
+<p>Finally, the paper points the way forward: hybrid models. Since supervised and unsupervised models each have their strengths, why not combine them? The researchers combined an unsupervised model (NT-v2-500m) with a supervised model (Sei) and found that for predicting variant effects, this “hybrid” combination outperformed either model alone. It’s like having a team with both a linguist who understands ancient texts and a top student who knows the standard curriculum. When faced with a complex problem, their combined effort is far greater than the sum of their parts. This is very likely what the next generation of genomic sequence modeling will look like.</p>
+<p>📜Title: GUANinE v1.1 Reveals Complementarity of Supervised and Genomic Language Models<br>
+🌐Paper: https://www.biorxiv.org/content/10.64898/2025.12.06.692772v1</p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-12-23/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

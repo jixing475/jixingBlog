@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="“Activity cliffs” are a big challenge in drug discovery. Tiny changes in a molecule’s structure can cause huge differences in its biological activity. The GraphCliff model was created to tackle this. It’s a graph neural network (GNN) with a unique gating mechanism at its core. This gate helps it capture both local details and global structural information in a molecule, avoiding the “over-smoothing” problem common in other GNNs. By balancing short- and long-range information, GraphCliff can more accurately predict the sharp changes in activity caused by subtle structural tweaks, offering a new way to think about drug development.">
+
+<title>GraphCliff: A New Graph Neural Network for Predicting Activity Cliffs – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="GraphCliff: A New Graph Neural Network for Predicting Activity Cliffs – MPU">
+<meta property="og:description" content="“Activity cliffs” are a big challenge in drug discovery. Tiny changes in a molecule’s structure can cause huge differences in its biological activity. The GraphCliff model was created to tackle this. It’s a graph neural network (GNN) with a unique gating mechanism at its core. This gate helps it capture both local details and global structural information in a molecule, avoiding the “over-smoothing” problem common in other GNNs. By balancing short- and long-range information, GraphCliff can more accurately predict the sharp changes in activity caused by subtle structural tweaks, offering a new way to think about drug development.">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2025-12-05/post_all_image/graph_cliff_short_lo_2025_11_19_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="A diagram showing the core idea of the GraphCliff model. It depicts the graph structure of a molecule, with circles as atoms and lines as chemical bonds. Some nodes are highlighted in orange, representing the key substructures that cause an 'activity cliff.' The entire graph is set against a dark grid background, visualizing how a graph neural network processes molecular information. The image illustrates how GraphCliff's gating mechanism identifies and focuses on the small but critical structural features that lead to drastic changes in biological activity, allowing it to accurately predict the activity cliff phenomenon.
+">
+<meta name="twitter:title" content="GraphCliff: A New Graph Neural Network for Predicting Activity Cliffs – MPU">
+<meta name="twitter:description" content="“Activity cliffs” are a big challenge in drug discovery. Tiny changes in a molecule’s structure can cause huge differences in its biological activity. The GraphCliff model was created to tackle this. It’s a graph neural network (GNN) with a unique gating mechanism at its core. This gate helps it capture both local details and global structural information in a molecule, avoiding the “over-smoothing” problem common in other GNNs. By balancing short- and long-range information, GraphCliff can more accurately predict the sharp changes in activity caused by subtle structural tweaks, offering a new way to think about drug development.">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2025-12-05/post_all_image/graph_cliff_short_lo_2025_11_19_image_1.jpg">
+<meta name="twitter:image:alt" content="A diagram showing the core idea of the GraphCliff model. It depicts the graph structure of a molecule, with circles as atoms and lines as chemical bonds. Some nodes are highlighted in orange, representing the key substructures that cause an 'activity cliff.' The entire graph is set against a dark grid background, visualizing how a graph neural network processes molecular information. The image illustrates how GraphCliff's gating mechanism identifies and focuses on the small but critical structural features that lead to drastic changes in biological activity, allowing it to accurately predict the activity cliff phenomenon.
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">GraphCliff: A New Graph Neural Network for Predicting Activity Cliffs</h1>
+                  <div>
+        <div class="description">
+          <p>“Activity cliffs” are a big challenge in drug discovery. Tiny changes in a molecule’s structure can cause huge differences in its biological activity. The GraphCliff model was created to tackle this. It’s a graph neural network (GNN) with a unique gating mechanism at its core. This gate helps it capture both local details and global structural information in a molecule, avoiding the “over-smoothing” problem common in other GNNs. By balancing short- and long-range information, GraphCliff can more accurately predict the sharp changes in activity caused by subtle structural tweaks, offering a new way to think about drug development.</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">Activity Cliffs</div>
+                <div class="quarto-category">Graph Neural Network</div>
+                <div class="quarto-category">Drug Discovery</div>
+                <div class="quarto-category">Gating Mechanism</div>
+                <div class="quarto-category">QSAR</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Friday, the 5th of December, 2025</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#table-of-contents" id="toc-table-of-contents" class="nav-link active" data-scroll-target="#table-of-contents">Table of Contents</a></li>
+  <li><a href="#dual-stream-mpnn-using-structural-alignments-for-inverse-protein-folding" id="toc-dual-stream-mpnn-using-structural-alignments-for-inverse-protein-folding" class="nav-link" data-scroll-target="#dual-stream-mpnn-using-structural-alignments-for-inverse-protein-folding">1. Dual-Stream MPNN: Using Structural Alignments for Inverse Protein Folding</a></li>
+  <li><a href="#speclig-energy-guided-ai-ligand-design-for-better-target-specificity" id="toc-speclig-energy-guided-ai-ligand-design-for-better-target-specificity" class="nav-link" data-scroll-target="#speclig-energy-guided-ai-ligand-design-for-better-target-specificity">2. SpecLig: Energy-Guided AI Ligand Design for Better Target Specificity</a></li>
+  <li><a href="#nabench-a-standardized-test-for-large-nucleotide-models" id="toc-nabench-a-standardized-test-for-large-nucleotide-models" class="nav-link" data-scroll-target="#nabench-a-standardized-test-for-large-nucleotide-models">3. NABench: A Standardized Test for Large Nucleotide Models</a></li>
+  <li><a href="#graphcliff-a-new-graph-neural-network-for-predicting-activity-cliffs" id="toc-graphcliff-a-new-graph-neural-network-for-predicting-activity-cliffs" class="nav-link" data-scroll-target="#graphcliff-a-new-graph-neural-network-for-predicting-activity-cliffs">4. GraphCliff: A New Graph Neural Network for Predicting Activity Cliffs</a></li>
+  <li><a href="#a-new-gnn-for-efficient-and-accurate-macromolecule-similarity-prediction" id="toc-a-new-gnn-for-efficient-and-accurate-macromolecule-similarity-prediction" class="nav-link" data-scroll-target="#a-new-gnn-for-efficient-and-accurate-macromolecule-similarity-prediction">5. A New GNN for Efficient and Accurate Macromolecule Similarity Prediction</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-12-05/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="table-of-contents" class="level2">
+<h2 class="anchored" data-anchor-id="table-of-contents">Table of Contents</h2>
+<ol type="1">
+<li>The DualMPNN model uses structural information from similar proteins to more accurately design amino acid sequences that can fold into a specific 3D structure.</li>
+<li>The SpecLig framework combines a hierarchical graph neural network with an energy-guided diffusion model to improve the target specificity of <em>de novo</em> ligand design.</li>
+<li>By systematically evaluating 29 models, NABench reveals performance differences among various nucleotide large language models in predicting sequence function, pointing the way for future optimization.</li>
+<li>The GraphCliff model uses an innovative gating mechanism to simultaneously capture a molecule’s local details and global information, improving prediction accuracy for activity cliff compounds.</li>
+<li>This specialized graph neural network architecture solves the trade-off between computational efficiency and accuracy in macromolecule pairwise similarity prediction, making it a useful tool for large-scale drug screening.</li>
+</ol>
+</section>
+<section id="dual-stream-mpnn-using-structural-alignments-for-inverse-protein-folding" class="level2">
+<h2 class="anchored" data-anchor-id="dual-stream-mpnn-using-structural-alignments-for-inverse-protein-folding">1. Dual-Stream MPNN: Using Structural Alignments for Inverse Protein Folding</h2>
+<p><a href="post_all_image/dual_mpnn_harnessing_2025_11_19_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/dual_mpnn_harnessing_2025_11_19_image_1.jpg" class="img-fluid"></a></p>
+<p>A core challenge in protein design is inverse protein folding: given a specific 3D structure, how do you find the amino acid sequence that will fold into it? It’s like looking at a building’s blueprint and figuring out the exact type and order of bricks needed. DualMPNN offers a new way to solve this.</p>
+<p>When designing a new chair, you might look at how existing chairs are built. DualMPNN works similarly. It doesn’t just analyze the target 3D structure (the query structure); it also finds structurally similar proteins from a database (structural homologs). This is like referencing classic designs while creating a new one.</p>
+<p>At the heart of the DualMPNN model is a dual-stream information processing system. One stream analyzes the geometric features of the target structure itself. The other stream studies the sequence and structural patterns of its homologs. The model then allows these two streams of information to interact. For example, rules about amino acid arrangements learned from the reference structures can help guide the choice of amino acids at key positions in the target structure.</p>
+<p>This approach works well. Researchers tested DualMPNN on industry-standard benchmarks like CATH, TS50, and T500. The sequence recovery rates were 65.51%, 70.99%, and 70.37%, respectively. This is an improvement of at least 12 percentage points over the high-performing ProteinMPNN model. The improvement means the designed sequences are more likely to successfully fold into the intended structure.</p>
+<p>To check if the designed sequences were biologically viable, the researchers used AlphaFold2 and AlphaFold3 to predict their folded structures. Most sequences folded back to the target structure with high accuracy, showing that the proteins designed by DualMPNN are reliable.</p>
+<p>Using structural information from known similar proteins can simplify the design of new proteins and increase the success rate. This opens up new possibilities for designing proteins with specific functions from scratch, especially in cases where sequence data is limited.</p>
+<p>📜Title: DualMPNN: Harnessing Structural Alignments for High-Recovery Inverse Protein Folding 🌐Paper: https://openreview.net/pdf/faba58f19ead837d5a34f3a9aef572473bfd2447.pdf</p>
+</section>
+<section id="speclig-energy-guided-ai-ligand-design-for-better-target-specificity" class="level2">
+<h2 class="anchored" data-anchor-id="speclig-energy-guided-ai-ligand-design-for-better-target-specificity">2. SpecLig: Energy-Guided AI Ligand Design for Better Target Specificity</h2>
+<p><a href="post_all_image/spec_lig_energy_guid_2025_11_19_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/spec_lig_energy_guid_2025_11_19_image_1.jpg" class="img-fluid"></a></p>
+<p>Drug discovery has a constant goal: make drug molecules that bind precisely to their intended target while avoiding others. It’s like designing a key that only opens the right lock. Off-target effects can cause side effects or even serious toxicity.</p>
+<p>A new computational framework called SpecLig brings a new approach to this specificity problem.</p>
+<p>Traditional drug design methods focus on improving a molecule’s binding affinity to its target. SpecLig goes a step further by also working to ensure the molecule is tailored for that specific target, achieving specificity.</p>
+<p>To do this, the researchers built a hierarchical model that avoids the noise introduced by working directly at the atomic level. They treat proteins and ligands as graph structures made of different “functional blocks.” This approach better captures the local chemical environment and overall topology of the molecules, preserving meaningful chemical fragment information.</p>
+<p>The core of SpecLig is a hierarchical variational autoencoder (VAE) and an energy-guided diffusion model. The model first learns which blocks are more likely to form stable interactions by studying a large dataset of natural protein-ligand complexes.</p>
+<p>When generating a new molecule, the energy-guided diffusion model uses these statistical “energy preferences” to guide its construction. It favors generating conformations that have stronger geometric and chemical complementarity with the target pocket, which in turn improves specificity.</p>
+<p>Researchers tested SpecLig on standard small-molecule and peptide datasets. The results showed that ligands generated by SpecLig had significantly higher specificity scores while maintaining comparable affinity to those from existing methods. Case studies also demonstrated that the method can effectively optimize a molecule’s pocket specificity and reduce off-target risks.</p>
+<p>Designing small-molecule drugs remains a big challenge. The complexity and sensitivity of chemical space mean there is still a long way to go. The researchers acknowledge that future versions could integrate more physicochemical information to further improve the model’s performance.</p>
+<p>SpecLig provides a powerful new tool. It demonstrates that by using clever modeling and data, specificity can be considered early in the drug design process, paving the way for safer and more effective drug candidates.</p>
+<p>📜Name: SpecLig: Energy-Guided Hierarchical Model for Target-Specific 3D Ligand Design 🌐Paper: https://www.biorxiv.org/content/10.1101/2025.11.06.687093v2</p>
+</section>
+<section id="nabench-a-standardized-test-for-large-nucleotide-models" class="level2">
+<h2 class="anchored" data-anchor-id="nabench-a-standardized-test-for-large-nucleotide-models">3. NABench: A Standardized Test for Large Nucleotide Models</h2>
+<p><a href="post_all_image/na_bench_large_scale_2025_11_19_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/na_bench_large_scale_2025_11_19_image_1.jpg" class="img-fluid"></a></p>
+<p>In protein engineering, using benchmarks to evaluate the performance of protein Large Language Models (LLMs) is standard practice. But for nucleic acids like DNA and RNA, a comprehensive, unified evaluation standard has been missing. NABench fills that gap.</p>
+<p>Understanding how a gene mutation affects its function is critical for drug development. A tiny change in a DNA sequence can cause a protein to malfunction and lead to disease. Accurately predicting the consequences of these changes can help in designing targeted drugs or developing gene therapies. NABench was created to systematically assess the ability of existing Nucleotide Foundation Models (NFMs) to predict these functional impacts.</p>
+<p>The researchers collected and organized data from 162 high-throughput screening experiments. The data covers a wide range of DNA and RNA families, including promoters, enhancers, ribozymes, and RNA aptamers, and includes 2.6 million mutated sequences with functional labels. With a standardized dataset and evaluation metrics, different models can finally be compared on a level playing field.</p>
+<p>The evaluation included 29 major nucleotide models and was comprehensive, covering four scenarios: zero-shot, few-shot, supervised, and transfer learning.</p>
+<p>In the zero-shot scenario, where models make predictions based only on what they’ve learned from vast amounts of sequence data, state-space models like Evo performed the best. This suggests these types of models learn more robust knowledge from evolutionary information and have better generalization ability.</p>
+<p>In the supervised learning scenario, where models are fine-tuned for a specific task, BERT-like models had an advantage. BERT-like architectures are good at incorporating task-specific data, and fine-tuning allows them to adapt better to the problem at hand.</p>
+<p>The researchers also introduced the SELEX dataset to test the models’ generalization ability. SELEX is an in-vitro screening technique that produces large numbers of synthetic sequences not found in nature. They found that models trained on natural sequences performed poorly when predicting the function of these artificial sequences. This exposes a core weakness of current models: they have learned the rules of natural evolution but lack the ability to explore the vast space of non-natural sequences.</p>
+<p>NABench provides a yardstick for the field of nucleic acid sequence research. It highlights the strengths and weaknesses of existing models and points the way forward for computational drug discovery and synthetic biology: developing next-generation nucleotide models that can both understand the rules of natural evolution and explore artificially designed spaces.</p>
+<p>📜Title: NABench: Large-Scale Benchmarks of Nucleotide Foundation Models for Fitness Prediction 🌐Paper: https://arxiv.org/abs/2511.02888</p>
+</section>
+<section id="graphcliff-a-new-graph-neural-network-for-predicting-activity-cliffs" class="level2">
+<h2 class="anchored" data-anchor-id="graphcliff-a-new-graph-neural-network-for-predicting-activity-cliffs">4. GraphCliff: A New Graph Neural Network for Predicting Activity Cliffs</h2>
+<p><a href="post_all_image/graph_cliff_short_lo_2025_11_19_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="post_all_image/graph_cliff_short_lo_2025_11_19_image_1.jpg" class="img-fluid"></a></p>
+<p>A tricky problem in drug discovery is “activity cliffs.” Two molecules might differ by just one atom or functional group, but their biological activity can be completely different. Traditional Quantitative Structure-Activity Relationship (QSAR) models often fail to capture these dramatic shifts in activity caused by such small structural changes.</p>
+<p>To address this challenge, researchers developed a Graph Neural Network (GNN) model called GraphCliff.</p>
+<p>The model introduces a new gating mechanism, which acts like an information-regulating valve. It helps the model pay attention to two types of information at the same time: a molecule’s local details, like specific chemical bonds or functional groups (short-range information), and its overall structural features (long-range information).</p>
+<p>When traditional GNN models process molecular graphs, information becomes more and more uniform after several rounds of message passing. This leads to “over-smoothing,” which can obscure key local features. GraphCliff’s gating mechanism balances local and global information, allowing the model to recognize local substructures while also understanding the molecule’s overall characteristics.</p>
+<p>Comparative experiments on the MoleculeACE benchmark dataset showed that GraphCliff performed better than existing models at predicting the activity of both ordinary compounds and, especially, activity cliff compounds. This confirmed its effectiveness at capturing subtle structural differences.</p>
+<p>A deeper analysis showed that GraphCliff’s gating mechanism played a key role. It allowed the model to better retain long-range information and ensured that the features of different atoms in the molecule remained distinct during computation. Visualizations also revealed that the model could accurately focus its attention on the key substructures that cause activity cliffs. This not only improves prediction accuracy but also gives us a better chemical understanding of the model’s decisions.</p>
+<p>📜Paper: GraphCliff: Short-Long Range Gating for Subtle Differences but Critical Changes 🌐Link: https://arxiv.org/abs/2511.03170</p>
+</section>
+<section id="a-new-gnn-for-efficient-and-accurate-macromolecule-similarity-prediction" class="level2">
+<h2 class="anchored" data-anchor-id="a-new-gnn-for-efficient-and-accurate-macromolecule-similarity-prediction">5. A New GNN for Efficient and Accurate Macromolecule Similarity Prediction</h2>
+<p><a href="post_all_image/macro_sim_gnn_effici_2025_11_27_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="post_all_image/macro_sim_gnn_effici_2025_11_27_image_1.jpg" class="img-fluid"></a></p>
+<p>Computer-Aided Drug Design (CADD) is quite mature for small molecules, but it still faces challenges in the world of macromolecules. Quickly and accurately predicting the pairwise similarity of large molecules has always been a difficult problem. The authors of this paper have introduced a Graph Neural Network (GNN) to tackle it.</p>
+<p>The authors designed a specialized architecture adapted for macromolecule data. Since the function of a macromolecule is determined by its 3D structure, the model uses these structural properties to capture the complex internal interactions and relationships. It’s like looking past a machine’s exterior to understand how the gears inside mesh together.</p>
+<p>In rigorous testing across different datasets, this method performed very well. Compared to traditional alignment methods, the new model’s prediction accuracy was much higher, and it was robust, remaining stable even with small fluctuations in the data.</p>
+<p>Computational efficiency is key for industrial applications. As biological data grows exponentially, an algorithm’s speed determines its practical value. This method can handle large-scale macromolecule data. In the early screening stages of drug discovery and protein engineering, it can help researchers quickly process huge numbers of samples and precisely identify key structural analogs.</p>
+<p>📜Title: Macro-sim-gnn-efficient-and-accurate-prediction-of-macromolecule-pairwise-similarity-via-graph-neural-network 🌐Paper: https://doi.org/10.26434/chemrxiv-2024-8hs2k-v2</p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2025-12-05/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

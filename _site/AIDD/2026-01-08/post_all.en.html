@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.43">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Jixing Liu, Ph.D.">
+<meta name="description" content="The CurvePotGCN model offers a new, back-to-basics paradigm for predicting protein-protein interactions (PPI). The method ignores complex evolutionary information and instead focuses on two core physical properties of the protein surface: curvature and electrostatic potential. By “coarse-graining” the protein surface into graph nodes and using a Graph Convolutional Network (GCN) to learn their combined patterns, CurvePotGCN can predict interactions efficiently and accurately. A major advantage of this model is its ability to directly use monomer structures predicted by AlphaFold2, greatly speeding up the process of drug target screening and off-target effect analysis.">
+
+<title>A New Way to Predict Protein Interactions: CurvePotGCN Goes Back to Basics – MPU</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<link href="../..//assets/images/cabin.png" rel="icon" type="image/png">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting-dc95f10abd972b9c41a78ec8992004fc.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap-f617cd7aebe3a1ab799ae0474552df3e.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../../site_libs/quarto-contrib/iconify-2.1.0/iconify-icon.min.js"></script>
+<script src="../../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<style>
+.language-switcher {
+  position: fixed;
+  top: 70px;
+  right: 30px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.9);
+  padding: 5px 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.language-switcher a {
+  margin: 0 5px;
+  text-decoration: none;
+  color: #0066cc;
+}
+.language-switcher a:hover {
+  text-decoration: underline;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const path = window.location.pathname;
+  const switcher = document.createElement('div');
+  switcher.className = 'language-switcher';
+
+  // 判断当前是否为中文页面
+  const isChinese = path.includes('.zh.');
+
+  let enPath, zhPath;
+
+  if (isChinese) {
+    // 当前是中文，生成英文链接
+    enPath = path.replace('.zh.', '.en.');
+    switcher.innerHTML = '<a href="' + enPath + '">EN</a> | <strong>中文</strong>';
+  } else if (path.includes('.en.')) {
+    // 当前是英文
+    zhPath = path.replace('.en.', '.zh.');
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  } else {
+    // 默认页面（如 index.html），假设为英文
+    const basePath = path.replace('.html', '');
+    zhPath = basePath + '.zh.html';
+    switcher.innerHTML = '<strong>EN</strong> | <a href="' + zhPath + '">中文</a>';
+  }
+
+  document.body.appendChild(switcher);
+});
+</script>
+
+
+<meta property="og:title" content="A New Way to Predict Protein Interactions: CurvePotGCN Goes Back to Basics – MPU">
+<meta property="og:description" content="The CurvePotGCN model offers a new, back-to-basics paradigm for predicting protein-protein interactions (PPI). The method ignores complex evolutionary information and instead focuses on two core physical properties of the protein surface: curvature and electrostatic potential. By “coarse-graining” the protein surface into graph nodes and using a Graph Convolutional Network (GCN) to learn their combined patterns, CurvePotGCN can predict interactions efficiently and accurately. A major advantage of this model is its ability to directly use monomer structures predicted by AlphaFold2, greatly speeding up the process of drug target screening and off-target effect analysis.">
+<meta property="og:image" content="https://jixing.liu.fr/AIDD/2026-01-08/post_all_image/curve_pot_gcn_a_grap_2025_10_28_image_1.jpg">
+<meta property="og:site_name" content="MPU">
+<meta property="og:image:alt" content="A diagram showing the core principle of how the CurvePotGCN model predicts
+protein-protein interactions. In the center are the surfaces of two
+opposing protein molecules, differing in shape and color. The protein on
+the left has a concave surface with blue areas, representing positive
+electrostatic potential; the protein on the right has a convex surface with
+red areas, representing negative electrostatic potential. This
+complementary 'lock-and-key' shape and 'opposites-attract' charge visually
+explains the physical basis for how the two proteins can bind. The image
+illustrates how the model uses these two fundamental features—surface
+curvature and electrostatic potential—to determine if an interaction
+exists, highlighting the method's simple and effective approach.
+">
+<meta name="twitter:title" content="A New Way to Predict Protein Interactions: CurvePotGCN Goes Back to Basics – MPU">
+<meta name="twitter:description" content="The CurvePotGCN model offers a new, back-to-basics paradigm for predicting protein-protein interactions (PPI). The method ignores complex evolutionary information and instead focuses on two core physical properties of the protein surface: curvature and electrostatic potential. By “coarse-graining” the protein surface into graph nodes and using a Graph Convolutional Network (GCN) to learn their combined patterns, CurvePotGCN can predict interactions efficiently and accurately. A major advantage of this model is its ability to directly use monomer structures predicted by AlphaFold2, greatly speeding up the process of drug target screening and off-target effect analysis.">
+<meta name="twitter:image" content="https://jixing.liu.fr/AIDD/2026-01-08/post_all_image/curve_pot_gcn_a_grap_2025_10_28_image_1.jpg">
+<meta name="twitter:image:alt" content="A diagram showing the core principle of how the CurvePotGCN model predicts
+protein-protein interactions. In the center are the surfaces of two
+opposing protein molecules, differing in shape and color. The protein on
+the left has a concave surface with blue areas, representing positive
+electrostatic potential; the protein on the right has a convex surface with
+red areas, representing negative electrostatic potential. This
+complementary 'lock-and-key' shape and 'opposites-attract' charge visually
+explains the physical basis for how the two proteins can bind. The image
+illustrates how the model uses these two fundamental features—surface
+curvature and electrostatic potential—to determine if an interaction
+exists, highlighting the method's simple and effective approach.
+">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top quarto-banner">
+    <nav class="navbar navbar-expand-lg " data-bs-theme="dark">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container mx-auto">
+    <a href="../../index.html" class="navbar-brand navbar-brand-logo">
+    <img src="../../assets/images/cabin.png" alt="" class="navbar-logo">
+    </a>
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">MPU</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" role="menu" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../index.html"> 
+<span class="menu-text">About</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../blog.en.html"> 
+<span class="menu-text">Blog</span></a>
+  </li>  
+  <li class="nav-item">
+    <a class="nav-link" href="../../aidd.en.html"> 
+<span class="menu-text">AIDD</span></a>
+  </li>  
+</ul>
+          </div> <!-- /navcollapse -->
+            <div class="quarto-navbar-tools">
+</div>
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">A New Way to Predict Protein Interactions: CurvePotGCN Goes Back to Basics</h1>
+                  <div>
+        <div class="description">
+          <p>The CurvePotGCN model offers a new, back-to-basics paradigm for predicting protein-protein interactions (PPI). The method ignores complex evolutionary information and instead focuses on two core physical properties of the protein surface: curvature and electrostatic potential. By “coarse-graining” the protein surface into graph nodes and using a Graph Convolutional Network (GCN) to learn their combined patterns, CurvePotGCN can predict interactions efficiently and accurately. A major advantage of this model is its ability to directly use monomer structures predicted by AlphaFold2, greatly speeding up the process of drug target screening and off-target effect analysis.</p>
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">Protein-Protein Interaction</div>
+                <div class="quarto-category">CurvePotGCN</div>
+                <div class="quarto-category">Graph Convolutional Network</div>
+                <div class="quarto-category">Computational Biology</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      <div>
+      <div class="quarto-title-meta-heading">Author</div>
+      <div class="quarto-title-meta-contents">
+               <p><a href="https://jixing.liu.fr">Jixing Liu, <em>Ph.D.</em></a> <a href="https://orcid.org/0000-0002-3396-4548" class="quarto-title-author-orcid"> <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA2ZpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMC1jMDYwIDYxLjEzNDc3NywgMjAxMC8wMi8xMi0xNzozMjowMCAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wTU09Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9tbS8iIHhtbG5zOnN0UmVmPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvc1R5cGUvUmVzb3VyY2VSZWYjIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo1N0NEMjA4MDI1MjA2ODExOTk0QzkzNTEzRjZEQTg1NyIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDozM0NDOEJGNEZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDozM0NDOEJGM0ZGNTcxMUUxODdBOEVCODg2RjdCQ0QwOSIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ1M1IE1hY2ludG9zaCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkZDN0YxMTc0MDcyMDY4MTE5NUZFRDc5MUM2MUUwNEREIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjU3Q0QyMDgwMjUyMDY4MTE5OTRDOTM1MTNGNkRBODU3Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+84NovQAAAR1JREFUeNpiZEADy85ZJgCpeCB2QJM6AMQLo4yOL0AWZETSqACk1gOxAQN+cAGIA4EGPQBxmJA0nwdpjjQ8xqArmczw5tMHXAaALDgP1QMxAGqzAAPxQACqh4ER6uf5MBlkm0X4EGayMfMw/Pr7Bd2gRBZogMFBrv01hisv5jLsv9nLAPIOMnjy8RDDyYctyAbFM2EJbRQw+aAWw/LzVgx7b+cwCHKqMhjJFCBLOzAR6+lXX84xnHjYyqAo5IUizkRCwIENQQckGSDGY4TVgAPEaraQr2a4/24bSuoExcJCfAEJihXkWDj3ZAKy9EJGaEo8T0QSxkjSwORsCAuDQCD+QILmD1A9kECEZgxDaEZhICIzGcIyEyOl2RkgwAAhkmC+eAm0TAAAAABJRU5ErkJggg=="></a></p>
+            </div>
+    </div>
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">Thursday, the 8th of January, 2026</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#a-new-approach-to-ai-antibody-design-simbinder-if-boosts-affinity-prediction-by-156" id="toc-a-new-approach-to-ai-antibody-design-simbinder-if-boosts-affinity-prediction-by-156" class="nav-link active" data-scroll-target="#a-new-approach-to-ai-antibody-design-simbinder-if-boosts-affinity-prediction-by-156">1. A New Approach to AI Antibody Design: SimBinder-IF Boosts Affinity Prediction by 156%</a></li>
+  <li><a href="#ai-antibody-design-gflownet-and-large-models-unlock-diversity" id="toc-ai-antibody-design-gflownet-and-large-models-unlock-diversity" class="nav-link" data-scroll-target="#ai-antibody-design-gflownet-and-large-models-unlock-diversity">2. AI Antibody Design: GFlowNet and Large Models Unlock Diversity</a></li>
+  <li><a href="#a-new-way-to-predict-protein-interactions-curvepotgcn-goes-back-to-basics" id="toc-a-new-way-to-predict-protein-interactions-curvepotgcn-goes-back-to-basics" class="nav-link" data-scroll-target="#a-new-way-to-predict-protein-interactions-curvepotgcn-goes-back-to-basics">3. A New Way to Predict Protein Interactions: CurvePotGCN Goes Back to Basics</a></li>
+  <li><a href="#reflection-pretraining-teaching-protein-models-to-think-and-self-correct" id="toc-reflection-pretraining-teaching-protein-models-to-think-and-self-correct" class="nav-link" data-scroll-target="#reflection-pretraining-teaching-protein-models-to-think-and-self-correct">4. Reflection Pretraining: Teaching Protein Models to Think and Self-Correct</a></li>
+  <li><a href="#ai-protein-hazard-screening-moving-beyond-random-tests-to-real-world-challenges" id="toc-ai-protein-hazard-screening-moving-beyond-random-tests-to-real-world-challenges" class="nav-link" data-scroll-target="#ai-protein-hazard-screening-moving-beyond-random-tests-to-real-world-challenges">5. AI Protein Hazard Screening: Moving Beyond Random Tests to Real-World Challenges</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2026-01-08/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+
+
+<section id="table-of-contents" class="level4">
+<h4 class="anchored" data-anchor-id="table-of-contents">Table of Contents</h4>
+<ol type="1">
+<li>Researchers have turned a basic protein design model into a highly effective tool for antibody affinity optimization using a clever preference optimization method, showing strong performance on unseen targets.</li>
+<li>Researchers combined GFlowNet with a protein language model to develop a new AI framework that generates diverse and effective antibodies without relying on specific training data.</li>
+<li>The CurvePotGCN model provides an efficient and accurate new method for predicting protein-protein interactions (PPI) by focusing on two fundamental physicochemical properties of the protein surface: curvature and electrostatic potential.</li>
+<li>By introducing “reflection” and “correction” steps into the training data, biological sequence models can now perform logical reasoning like large language models, significantly improving prediction accuracy.</li>
+<li>SafeBench-Seq provides a more realistic and stringent benchmark for protein hazard screening models by simulating “never-before-seen” threats, addressing the over-optimism caused by traditional random-split methods.</li>
+</ol>
+</section>
+<section id="a-new-approach-to-ai-antibody-design-simbinder-if-boosts-affinity-prediction-by-156" class="level2">
+<h2 class="anchored" data-anchor-id="a-new-approach-to-ai-antibody-design-simbinder-if-boosts-affinity-prediction-by-156">1. A New Approach to AI Antibody Design: SimBinder-IF Boosts Affinity Prediction by 156%</h2>
+<p><a href="post_all_image/structure_aware_anti_2025_12_26_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-1"><img src="post_all_image/structure_aware_anti_2025_12_26_image_1.jpg" class="img-fluid"></a></p>
+<p>In antibody drug discovery, we’re always playing a high-stakes game: how do you pick the one candidate that binds tightest to its target from thousands of options? Traditional methods are slow and laborious, and computational simulations are often not very accurate. A recent paper proposes a model called SimBinder-IF, which offers a very practical solution.</p>
+<p>The starting point for this work is interesting. Instead of building a new large model from scratch, the researchers took an existing, powerful protein inverse folding model, ESM-IF, and performed what you could call “minor surgery” on it.</p>
+<p>ESM-IF itself is like a translator who is fluent in structural biology. You give it a protein’s backbone structure (its 3D coordinates), and it can translate it back into the amino acid sequence most likely to form that structure. This is useful for designing new proteins, but it doesn’t directly care about binding affinity.</p>
+<p>Here’s how the researchers modified it:</p>
+<p>First, they split the ESM-IF model into two parts: a “structure understanding” module (the structure encoder) and a “sequence generating” module (the sequence decoder). They figured that ESM-IF’s ability to understand structure was already good enough, so they didn’t touch it. They simply froze this part. This left only 18% of the parameters needing to be trained, which solves the problem of computational resources and time. The entire training process can run on a single GPU, with each epoch finishing in under 13 hours. This is a huge draw for R&amp;D teams that need to iterate fast.</p>
+<p>The second step, and the most important one, was to introduce a training strategy called Simple Preference Optimization (SimPO). Many previous methods, like DPO, need a reference model to show the main model what “bad” looks like. It’s like teaching a child to draw by not only showing them good examples but also a pile of bad ones. SimPO simplifies this. It doesn’t need the “bad example” model. Instead, it directly tells the model: out of all the options, A is better than B, and B is better than C. The training goal is just to get the model to learn this ranking, pushing sequences with a high log-likelihood (you can think of this as the model’s “confidence” in a sequence) to the top. The benefit is that the training objective aligns perfectly with the final evaluation metric we want (high affinity ≈ high log-likelihood). As a result, it corrected nearly half of the incorrect rankings made by the DPO strategy.</p>
+<p>So, how well does this modified model perform? The data speaks for itself.</p>
+<p>On AbBiBench, a public benchmark with 11 different antibodies, the Spearman correlation between SimBinder-IF’s predicted log-likelihood and experimentally measured binding affinity jumped from the baseline model’s 0.264 to 0.410—a 55% increase.</p>
+<p>The performance in zero-shot tests was even more striking. The researchers used four antigen-antibody complexes the model had never seen during training. In this “unseen exam,” the correlation shot up from 0.115 to 0.294, a 156% improvement. This shows that SimBinder-IF isn’t just memorizing answers; it has actually learned some general rules about antibody affinity and can apply them to new targets. For drug development, that is invaluable.</p>
+<p>In practice, what we care about most is whether a model can help us pick out the truly effective designs from a large pool. SimBinder-IF also clearly outperformed other models like ESM-IF and ProteinDPO in Top-10 prediction accuracy. This means that candidate molecules selected by this model have a higher chance of success in experimental validation.</p>
+<p>To further test this, the researchers did a case study on optimizing a known antibody, F045-092, which targets the pdmH1N1 influenza virus. The new sequences designed by SimBinder-IF had an average change in binding free energy (ΔΔG), calculated by FoldX, of -75.16 kcal/mol. For comparison, sequences designed by the standard ESM-IF only reached -46.57 kcal/mol. The more negative this number, the tighter and more stable the binding.</p>
+<p>Of course, a good antibody design isn’t just about affinity. Its 3D structure must be stable, not like a wet noodle, and its binding interface with the target must be credible. The researchers checked the quality of the designed structures using a series of metrics (pLDDT, ipLDDT) and found that the increase in affinity did not come at the cost of structural stability. Even more interesting, the binding sites designed by the model tended to cluster on the head region of the influenza hemagglutinin (HA) protein—the primary target for the immune system. This seems to suggest that the model’s design strategy, in a way, mimics the body’s natural immune response.</p>
+<p>The method has its limitations. For instance, it might have an excessive preference for certain immunodominant epitopes, which may not be ideal for antibodies that need broad-spectrum activity. It also currently optimizes for only a single objective: affinity. Future work might introduce multi-objective optimization, considering affinity, stability, and off-target effects at the same time.</p>
+<p>This work provides a lightweight, efficient, and effective tool for optimizing antibody affinity. It’s not a one-size-fits-all model, but rather a focused, precise scalpel, well-suited for rapidly screening and optimizing lead compounds in a real-world R&amp;D workflow.</p>
+<p>📜Title: Structure-Aware Antibody Design with Affinity-Optimized Inverse Folding 🌐Paper: https://arxiv.org/abs/2512.17815v1</p>
+</section>
+<section id="ai-antibody-design-gflownet-and-large-models-unlock-diversity" class="level2">
+<h2 class="anchored" data-anchor-id="ai-antibody-design-gflownet-and-large-models-unlock-diversity">2. AI Antibody Design: GFlowNet and Large Models Unlock Diversity</h2>
+<p><a href="post_all_image/synergy_of_g_flow_net_2025_12_26_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-2"><img src="post_all_image/synergy_of_g_flow_net_2025_12_26_image_1.jpg" class="img-fluid"></a></p>
+<p>In antibody discovery, we’re always playing a numbers game. The sequence space of an antibody’s Complementarity-Determining Regions (CDRs) is enormous. Finding a candidate in this space with high affinity, high specificity, and good developability is like finding a needle in a haystack. Traditional generative models, like Generative Adversarial Networks (GANs) or Variational Autoencoders (VAEs), tend to suffer from “mode collapse” when exploring this space. They repeatedly generate similar “optimal” solutions, leading to a lack of diversity among the candidates.</p>
+<p>The new framework proposed in this paper, PG-AbD, offers an interesting solution. It introduces Generative Flow Networks (GFlowNets).</p>
+<p>A GFlowNet works differently from traditional models. Think of it as a hiker, not a tourist who only sticks to the main roads. It doesn’t just want to find the highest peak (the optimal solution); it wants to map out all the paths leading to different peaks and decide how often to explore each path based on its “reward.” This mechanism naturally encourages diversity because it samples proportionally from the entire space of high-quality solutions, instead of just focusing on one point.</p>
+<p>But a GFlowNet alone is not enough; you also need a good map to guide it. This is where Protein Language Models (PLMs) come in.</p>
+<p>A PLM, like ESM-2, is like an expert who is fluent in the “language of proteins.” By learning from hundreds of millions of natural protein sequences, it understands the underlying rules of how amino acids combine and knows which sequence combinations are structurally stable and reasonable. This provides “global” guidance for the GFlowNet’s exploration, ensuring it doesn’t generate bizarre sequences that violate biological principles.</p>
+<p>The clever part of PG-AbD is that it has two “experts”—a PLM and a Potts model—guiding the GFlowNet at the same time. The PLM ensures the overall sequence is plausible, while the Potts model focuses more on local details, like interactions between specific pairs of amino acids. This dual constraint of global and local guidance makes the GFlowNet’s exploration both bold and reliable.</p>
+<p>What about the results? The data shows that on RabDab and SabDab, two standard antibody database benchmarks, the diversity of sequences generated by PG-AbD was 13.5% to 31.1% higher than existing methods.</p>
+<p>Diversity is critical in antibody drug development. You don’t want to put all your eggs in one basket by getting a bunch of candidates that are structurally and functionally similar. Higher diversity means you have a better chance of finding unique molecules with new binding modes or the ability to overcome drug resistance.</p>
+<p>One of the most appealing aspects of this framework is that it can work without specific training data. In many projects, especially those targeting a brand-new target or epitope, we simply don’t have a large set of known antibody sequences for the model to learn from. PG-AbD’s “zero-shot” capability makes it flexible enough to be used for designing entirely new antibodies as well as for optimizing existing lead compounds.</p>
+<p>In short, PG-AbD gives us a more powerful searchlight to illuminate more of the previously unexplored corners of the antibody sequence universe. It generates candidates that are not only numerous but also “unusual” in a plausible way, which is exactly what’s needed in the early stages of drug discovery.</p>
+<p>📜<strong>Title</strong>: Synergy of GFlowNet and Protein Language Model Makes a Diverse Antibody Designer 🌐<strong>Paper</strong>: https://ojs.aaai.org/index.php/AAAI/article/download/34370/36525</p>
+</section>
+<section id="a-new-way-to-predict-protein-interactions-curvepotgcn-goes-back-to-basics" class="level2">
+<h2 class="anchored" data-anchor-id="a-new-way-to-predict-protein-interactions-curvepotgcn-goes-back-to-basics">3. A New Way to Predict Protein Interactions: CurvePotGCN Goes Back to Basics</h2>
+<p><a href="post_all_image/curve_pot_gcn_a_grap_2025_10_28_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-3"><img src="post_all_image/curve_pot_gcn_a_grap_2025_10_28_image_1.jpg" class="img-fluid"></a></p>
+<p>In drug development, predicting how proteins interact with each other—known as protein-protein interaction (PPI)—has always been a central challenge. Many diseases are caused by proteins shaking hands when they shouldn’t, or failing to embrace when they should. Traditional methods often rely on amino acid sequences, complex evolutionary information, or high-quality protein complex structures, all of which are expensive to obtain.</p>
+<p>A recent paper proposes a model called CurvePotGCN that offers a refreshingly simple idea. The authors argue that at its core, protein interaction is about physics and chemistry. Whether two protein molecules will “click” largely depends on whether their surface shapes (curvature) and charge distributions (electrostatic potential) are complementary. It’s like two Lego bricks: they can only fit together if the bumps and hollows match up.</p>
+<p>Here’s how the model works:</p>
+<p>First, it doesn’t look at the complex atomic details inside the protein. It treats the protein surface like a map and uses a “coarse-graining” method to divide this map into different small patches (nodes).</p>
+<p>Next, it gives each patch two key labels: whether the terrain here is a bump or a dip (surface curvature), and whether the “climate” here is positively or negatively charged (electrostatic potential).</p>
+<p>Finally, it feeds these labeled patches into a Graph Convolutional Network (GCN). A GCN is good at learning relationships between nodes and the overall structure of a graph. Through training, it learns which combinations of curvature and potential patterns signal that two proteins are likely to interact.</p>
+<p>This “back-to-basics” approach works surprisingly well. On a human protein interaction dataset, its AUROC (Area Under the ROC Curve, a common metric for a model’s predictive power) reached 98%, and on a yeast dataset, it was 89%. These results are comparable to or even better than those from models that rely on much more complex features.</p>
+<p>What I find striking about this model is its ability to directly use monomer structures predicted by AlphaFold2. This means we no longer need to go through the expensive and time-consuming process of determining crystal structures of protein complexes. As long as you have a reliable prediction of a single protein’s structure, you can quickly and massively screen for its potential interaction partners. This is a huge help for finding new drug targets or understanding a drug’s off-target effects.</p>
+<p>The researchers now plan to extend this model to other species and even use it to predict cross-species protein interactions, such as those between pathogens and their hosts. This opens up a new door for developing anti-infective drugs.</p>
+<p>📜Title: CurvePotGCN - A graph neural network to predict protein-protein interactions using surface curvature and electrostatic potential as node-features 🌐Paper: https://doi.org/10.26434/chemrxiv-2025-xr8r3</p>
+</section>
+<section id="reflection-pretraining-teaching-protein-models-to-think-and-self-correct" class="level2">
+<h2 class="anchored" data-anchor-id="reflection-pretraining-teaching-protein-models-to-think-and-self-correct">4. Reflection Pretraining: Teaching Protein Models to Think and Self-Correct</h2>
+<p><a href="post_all_image/reflection_pretraini_2025_12_26_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-4"><img src="post_all_image/reflection_pretraini_2025_12_26_image_1.jpg" class="img-fluid"></a></p>
+<p>We’ve long wanted AI models in biology to have the same kind of reasoning and logical abilities that Large Language Models (LLMs) have with text. But there’s a hurdle: the “vocabulary” of biology is tiny. DNA has just four bases (A, T, C, G), and proteins have only 20 amino acids. Compare that to the vast ocean of words in human language. This makes it hard for biological sequence models to learn complex chains of reasoning. They often just give a final answer without showing how they got there, leaving us in the dark.</p>
+<p>This new work proposes a clever solution called “Reflection Pretraining.”</p>
+<p>The core idea is simple, much like how we teach a student to solve a problem. We don’t just show them the correct answer. We also show them the steps to get there, and maybe even write out a wrong solution and then tell them, “See, this part was wrong. Here’s how you should fix it.”</p>
+<p>That’s exactly how the researchers trained their model. They added special “reasoning tokens” to the training data, deliberately creating errors and then guiding the model to reflect on and correct them. For example, the model might first generate an initial amino acid sequence. Then, a <code>&lt;REFLECT&gt;</code> token signals the start of reflection, where the model points out a potential issue in the sequence. Next, a <code>&lt;CORRECT&gt;</code> token guides the model to generate a revised, more accurate sequence.</p>
+<p>The whole process is like the model talking to itself: “I predicted a leucine (L) here, but looking back at the mass spectrometry data, the signal seems to support isoleucine (I) more. I should change it.”</p>
+<p>This method sounds simple, but it works remarkably well. The researchers applied it to the classic problem of <em>de novo</em> peptide sequencing. This task is like piecing together a sentence from a bunch of fragmented clues and really tests a model’s logical skills. The results showed that the model trained with reflection pretraining was far more accurate than standard models that just “solve the problem silently.”</p>
+<p>Even more interesting, the researchers found that deliberately increasing the proportion of errors during training actually made the model’s self-correction ability stronger. This suggests the model is truly learning from its mistakes, not just memorizing answers.</p>
+<p>What does this mean for people in drug development? It means we might have more reliable AI tools in the future. Whether we’re designing new protein drugs or analyzing complex experimental data, a model that can “show its work” and “correct its own mistakes” is far more trustworthy than a black box. We can trace its decision-making path and understand why it made a certain prediction, which is critical in the rigorously validated field of drug R&amp;D.</p>
+<p>📜Title: Reflection Pretraining Enables Token-Level Self-Correction in Biological Sequence Models 🌐Paper: https://arxiv.org/abs/2512.20954v1 💻Code: The paper mentions that the code, model weights, and results are available on GitHub.</p>
+</section>
+<section id="ai-protein-hazard-screening-moving-beyond-random-tests-to-real-world-challenges" class="level2">
+<h2 class="anchored" data-anchor-id="ai-protein-hazard-screening-moving-beyond-random-tests-to-real-world-challenges">5. AI Protein Hazard Screening: Moving Beyond Random Tests to Real-World Challenges</h2>
+<p><a href="post_all_image/safe_bench_seq_a_hom_2025_12_26_image_1.jpg" class="lightbox" data-gallery="quarto-lightbox-gallery-5"><img src="post_all_image/safe_bench_seq_a_hom_2025_12_26_image_1.jpg" class="img-fluid"></a></p>
+<p>In drug R&amp;D and biosecurity, we deal with massive amounts of sequence data every day. A core task is to quickly determine if a new protein sequence is potentially hazardous, like a toxin. Everyone is using Machine Learning models for this now, but that raises a question: how do you know if your model is actually effective, or just fooling itself?</p>
+<p>The SafeBench-Seq benchmark, proposed in this paper, is designed to solve this trust problem.</p>
+<p>In the past, the most common way to evaluate these models was to randomly split a dataset. This is like giving a student a question bank to practice with, then testing them with a random selection of questions from that same bank. The student might get a high score, but they may have just memorized the answers, not actually learned the concepts. In the context of protein screening, a model might just memorize certain “surface features” of known toxin families. The moment it encounters a novel, never-before-seen hazardous protein, it’s stumped. This evaluation method gives us a false sense of security, which can be dangerous in the real world.</p>
+<p>SafeBench-Seq takes a completely different approach. It uses what’s called a “homology-clustered split.”</p>
+<p>You can think of it this way: first, it groups all proteins into different families based on their “kinship” (homology). When splitting the dataset, it puts an entire family into either the training set or the test set. This way, the proteins in the test set are like a “new species” to the model. The model can no longer “guess the answer” from memory; it must learn to recognize the deeper, underlying rules that determine a protein’s function.</p>
+<p>The authors found that when tested this way, the models’ performance showed a huge “robustness gap” compared to their performance on random splits. This directly proves how unreliable traditional evaluation methods are.</p>
+<p>Beyond this core design, the benchmark has several other advantages that are highly relevant to front-line R&amp;D.</p>
+<p>First, it is based entirely on public data and only requires a CPU to run. This means any lab, regardless of its computational resources, can use it to validate its models. This greatly lowers the barrier to entry for biosecurity research.</p>
+<p>Second, it puts a strong emphasis on “calibrated probability outputs.” When screening high-risk sequences, we don’t just want to know if the model thinks it “is” or “is not” a hazardous protein; we want to know how reliable its “confidence level” is. If a model says there’s a “95% probability of being hazardous,” we want its actual accuracy to be 95%. The authors used specific methods to calibrate the model’s probability outputs, making the predictions more valuable for real-world decision-making.</p>
+<p>Third, the researchers also designed “spurious-signal probes” to prevent the model from taking shortcuts. For instance, they would scramble the amino acid sequence of a hazardous protein while keeping the amino acid composition and length the same. If the model still gave a high-risk score in this case, it would suggest it’s just relying on simple signals like composition, not truly understanding the sequence information. The tests showed that the models are indeed learning deep, sequence-level signals, which gives us more confidence in their abilities.</p>
+<p>Finally, while advancing the technology, this work also gives full consideration to biosecurity. The authors only released metadata like protein index numbers and cluster information, without directly distributing any hazardous sequences. This responsible approach sets a good example for the industry.</p>
+<p>Overall, SafeBench-Seq is not just a new dataset; it represents a more honest and realistic way of thinking about evaluation. It reminds us that in a field like biosecurity with very little room for error, we must measure our tools with the strictest possible ruler.</p>
+<p>📜Title: SafeBench-Seq: A Homology-Clustered, CPU-Only Baseline for Protein Hazard Screening with Physicochemical/Composition Features and Cluster-Aware Confid… 🌐Paper: <a href="https://arxiv.org/abs/2512.17527v1" class="uri">https://arxiv.org/abs/2512.17527v1</a> 💻Code: <a href="https://github.com/HARISKHAN-1729/SafeBench-Seq" class="uri">https://github.com/HARISKHAN-1729/SafeBench-Seq</a></p>
+
+
+</section>
+
+<a onclick="window.scrollTo(0, 0); return false;" role="button" id="quarto-back-to-top"><i class="bi bi-arrow-up"></i> Back to top</a></main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp("https:\/\/jixing\.liu\.fr");
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://giscus.app/client.js" data-repo="jixing475/jixingBlog" data-repo-id="R_kgDOOkm1fA" data-category="AIDD" data-category-id="DIC_kwDOOkm1fM4Cq4Dm" data-mapping="title" data-reactions-enabled="1" data-emit-metadata="0" data-input-position="top" data-theme="dark_dimmed" data-lang="en" crossorigin="anonymous" async="">
+</script>
+<input type="hidden" id="giscus-base-theme" value="dark_dimmed">
+<input type="hidden" id="giscus-alt-theme" value="dark_dimmed">
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Powered by <a href="https://quarto.org"><iconify-icon inline="true" role="img" icon="simple-icons:quarto" aria-label="Icon quarto from simple-icons Iconify.design set." title="Icon quarto from simple-icons Iconify.design set."></iconify-icon> Quarto</a>.</p>
+</div>   
+    <div class="nav-footer-center">
+<p>© <span id="current-year"></span> Jixing Liu. <a href="https://github.com/sponsors/jixing475?o=esb"><iconify-icon inline="true" role="img" icon="octicon:heart-fill-16" aria-label="Icon heart-fill-16 from octicon Iconify.design set." title="Icon heart-fill-16 from octicon Iconify.design set."></iconify-icon> Sponsor</a>.</p>
+<div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jixing475/jixing.liu.fr/edit/main/AIDD/2026-01-08/post_all.en.md" class="toc-action"><i class="bi bi-github"></i>Edit this page</a></li><li><a href="https://github.com/jixing475/jixing.liu.fr/issues/new" class="toc-action"><i class="bi empty"></i>Report an issue</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>License: <a href="https://creativecommons.org/licenses/by-nc-sa/4.0">CC BY NC SA 4.0</a>.</p>
+</div>
+  </div>
+</footer>
+<script type="text/javascript">
+  const dateElements = document.querySelectorAll("p.date, div.listing-date, div.listing-file-modified");
+  dateElements.forEach((el) => {
+    el.innerHTML = el.innerHTML.replace(
+      /(\d+)(st|nd|rd|th)/g,
+      "$1<sup style='font-size:0.5em;font-style:italic;'>$2</sup>"
+    );
+  });
+</script>
+<script>
+  document.getElementById('current-year').textContent = new Date().getFullYear();
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>
