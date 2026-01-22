@@ -4,6 +4,7 @@ project:
     - publications.r
   resources:
     - _headers
+    - landing
   render:
     - "*.qmd"
     - "*.en.qmd"
@@ -50,6 +51,12 @@ website:
         href: blog.en.qmd
       - text: AIDD
         href: aidd.en.qmd
+      - text: Services
+        menu:
+          - text: "💰 计算服务报价 (中文)"
+            href: landing/pricing.zh.html
+          - text: "💰 Pricing (English)"
+            href: landing/pricing.en.html
 
 format:
   html:

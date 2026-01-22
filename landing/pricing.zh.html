@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>榴莲忘返 AIDD - 计算服务报价</title>
+    <!-- Google Fonts: Poppins (Heading) and Lora (Body) and Noto Sans SC (Chinese) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400;1,600&family=Noto+Sans+SC:wght@300;400;500;700&family=Poppins:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            dark: '#141413',
+                            light: '#faf9f5',
+                            midGray: '#b0aea5',
+                            lightGray: '#e8e6dc',
+                            orange: '#d97757',
+                            blue: '#6a9bcc',
+                            green: '#788c5d',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Poppins', 'Noto Sans SC', 'Arial', 'sans-serif'],
+                        serif: ['Lora', 'Noto Serif SC', 'Georgia', 'serif'],
+                    },
+                    boxShadow: {
+                        'soft': '0 4px 20px -2px rgba(20, 20, 19, 0.05)',
+                        'glow': '0 0 15px rgba(217, 119, 87, 0.2)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #faf9f5;
+            color: #141413;
+            font-family: 'Lora', 'Noto Serif SC', serif;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        th,
+        .sans-heading {
+            font-family: 'Poppins', 'Noto Sans SC', sans-serif;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .gradient-text {
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            background-image: linear-gradient(135deg, #d97757 0%, #6a9bcc 100%);
+        }
+    </style>
+</head>
+
+<body
+    class="min-h-screen py-10 px-4 md:px-8 bg-[url('https://images.unsplash.com/photo-1635070041078-e363dbe005cb?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3')] bg-fixed bg-cover bg-no-repeat bg-center">
+    <!-- Overlay to ensure text readability -->
+    <div class="fixed inset-0 bg-[#faf9f5]/90 -z-10"></div>
+
+    <!-- Language Switcher -->
+    <div
+        class="fixed top-5 right-8 z-50 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-lg shadow-soft border border-brand-lightGray">
+        <a href="pricing.en.html" class="text-brand-blue hover:underline font-sans text-sm">EN</a>
+        <span class="text-brand-midGray mx-2">|</span>
+        <strong class="text-brand-dark font-sans text-sm">中文</strong>
+    </div>
+
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <header class="text-center mb-16 space-y-4">
+            <div
+                class="inline-block px-6 py-2 rounded-full bg-brand-light border border-brand-midGray/20 shadow-soft mb-4">
+                <span class="text-brand-orange font-bold tracking-wider text-sm uppercase font-sans">Premium AIDD
+                    Services</span>
+            </div>
+            <h1 class="text-5xl md:text-6xl font-bold text-brand-dark tracking-tight leading-tight">
+                榴莲忘返 <span class="gradient-text">AIDD</span>
+            </h1>
+            <p class="text-xl md:text-2xl text-brand-midGray font-serif italic max-w-2xl mx-auto mt-4">
+                专业计算生物学服务与解决方案
+            </p>
+        </header>
+
+        <!-- Pricing Table/List Container -->
+        <div class="space-y-8">
+
+            <!-- Service 1: Molecular Docking -->
+            <div
+                class="group relative glass-panel rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 border-l-4 border-brand-green overflow-hidden">
+                <div class="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <svg class="w-32 h-32" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                            d="M20.71 5.63l-2.34-2.34a1 1 0 0 0-1.41 0l-3.12 3.12a1 1 0 0 0 0 1.41l2.34 2.34a1 1 0 0 0 1.41 0l3.12-3.12a1 1 0 0 0 0-1.41zM3 13.59l2.83 2.83a1 1 0 0 0 1.41 0L17.59 6.07l-2.83-2.83L4.41 13.59a1 1 0 0 0-1.41 0z" />
+                    </svg>
+                </div>
+
+                <div class="grid md:grid-cols-12 gap-6 items-center relative z-10">
+                    <!-- Title & Type -->
+                    <div class="md:col-span-3">
+                        <h2 class="text-2xl font-bold text-brand-dark mb-2">分子对接</h2>
+                        <div
+                            class="text-brand-green font-medium font-sans bg-brand-green/10 inline-block px-3 py-1 rounded-full text-sm">
+                            分子/多肽/蛋白对接
+                        </div>
+                    </div>
+
+                    <!-- Details & Report -->
+                    <div class="md:col-span-6 space-y-3 border-l border-brand-midGray/20 pl-0 md:pl-6">
+                        <div class="flex items-start gap-2">
+                            <span class="text-brand-green mt-1">✓</span>
+                            <span class="text-brand-dark/80 text-sm md:text-base">结合模式图 + 中英文报告</span>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <span class="text-brand-green mt-1">✓</span>
+                            <span class="text-brand-dark/80 text-sm md:text-base">详细操作流程</span>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <span class="text-brand-green mt-1">✓</span>
+                            <span class="text-brand-dark/80 text-sm md:text-base font-medium">售后服务（半年内）</span>
+                        </div>
+                    </div>
+
+                    <!-- Price & Cycle -->
+                    <div class="md:col-span-3 text-right bg-white/50 p-4 rounded-xl border border-brand-lightGray">
+                        <div class="text-3xl font-bold text-brand-dark font-sans">99<span
+                                class="text-lg text-brand-midGray font-normal"> 元</span></div>
+                        <div class="text-brand-green font-medium font-sans mt-1">周期：2-3 天</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service 2: Molecular Dynamics -->
+            <div
+                class="group relative glass-panel rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 border-l-4 border-brand-orange overflow-hidden">
+                <div class="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <svg class="w-32 h-32" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                            d="M15 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16zM2 12C2 6.48 6.48 2 12 2s10 4.48 10 10-4.48 10-10 10S2 17.52 2 12zm10-5c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5z" />
+                    </svg>
+                </div>
+
+                <div class="grid md:grid-cols-12 gap-6 items-center relative z-10">
+                    <div class="md:col-span-3">
+                        <h2 class="text-2xl font-bold text-brand-dark mb-2">分子动力学模拟</h2>
+                        <div
+                            class="text-brand-orange font-medium font-sans bg-brand-orange/10 inline-block px-3 py-1 rounded-full text-sm">
+                            Mechanism Study / AMD
+                        </div>
+                    </div>
+
+                    <div class="md:col-span-6 space-y-4 border-l border-brand-midGray/20 pl-0 md:pl-6">
+                        <p class="text-brand-dark/90 text-sm leading-relaxed">
+                            <span class="font-bold text-brand-orange">计费公式：</span> (模拟 ns 数 + 蛋白 kDa 数) × 1.4<br>
+                            <span class="text-xs text-brand-midGray italic block mt-1 ml-4">* 60kDa 以上按 x2.1 计算，超过
+                                120kDa 费用私聊<br>* 例：50kDa 蛋白模拟 100ns 费用约为 210 元</span>
+                        </p>
+                        <div class="w-full h-px bg-brand-midGray/20"></div>
+                        <div class="grid grid-cols-2 gap-2 text-sm text-brand-dark/80">
+                            <div class="flex items-center gap-2"><span class="text-brand-orange">●</span> 详细流程</div>
+                            <div class="flex items-center gap-2"><span class="text-brand-orange">●</span> 匹配实验母的的结果
+                            </div>
+                            <div class="flex items-center gap-2"><span class="text-brand-orange">●</span> 文章需要的图</div>
+                            <div class="flex items-center gap-2"><span class="text-brand-orange">●</span> 售后（半年内）</div>
+                        </div>
+                    </div>
+
+                    <div class="md:col-span-3 text-right bg-white/50 p-4 rounded-xl border border-brand-lightGray">
+                        <div class="text-2xl font-bold text-brand-dark font-sans">按体系面议</div>
+                        <div class="text-brand-orange font-medium font-sans mt-1">周期：2-3 周</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Service 3: Virtual Screening -->
+            <div
+                class="group relative glass-panel rounded-2xl p-8 hover:shadow-2xl transition-all duration-300 border-l-4 border-brand-blue overflow-hidden">
+                <div class="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                    <svg class="w-32 h-32" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                            d="M4.5 11h-2V9h2v2zm0-4h-2V5h2v2zm0 8h-2v-2h2v2zm4 0h-2v-2h2v2zm0-4h-2V5h2v2zm0 8h-2v-2h2v2zm4 0h-2v-2h2v2zm4-12h-2v2h2v-2zm0 4h-2v2h2V7zm0 4h-2v2h2v-2zm0 4h-2v2h2v-2z" />
+                    </svg>
+                </div>
+
+                <div class="grid md:grid-cols-12 gap-6 items-start relative z-10">
+                    <div class="md:col-span-3">
+                        <h2 class="text-2xl font-bold text-brand-dark mb-2">虚拟筛选</h2>
+                        <div
+                            class="text-brand-blue font-medium font-sans bg-brand-blue/10 inline-block px-3 py-1 rounded-full text-sm">
+                            High Throughput Screening
+                        </div>
+                        <div class="mt-4 text-sm text-brand-midGray border-t border-brand-midGray/20 pt-4">
+                            <p class="font-bold text-brand-dark mb-2">包含内容：</p>
+                            <ul class="space-y-1 list-disc list-inside">
+                                <li>售前评估报告</li>
+                                <li>完整的筛选流程</li>
+                                <li>人工筛选</li>
+                                <li>活性化合物结合模式</li>
+                                <li>售后（一年内）</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="md:col-span-9">
+                        <!-- Pricing Tiers for Virtual Screening -->
+                        <div class="grid md:grid-cols-3 gap-4">
+                            <!-- Tier 1 -->
+                            <div
+                                class="bg-white p-5 rounded-xl border border-brand-lightGray hover:border-brand-blue transition-colors flex flex-col justify-between h-full">
+                                <div>
+                                    <h3 class="text-brand-blue font-bold text-lg mb-1">基础库</h3>
+                                    <div class="text-3xl font-sans font-bold text-brand-dark mb-2">100 <span
+                                            class="text-sm font-normal">万化合物</span></div>
+                                </div>
+                                <div class="mt-4 pt-4 border-t border-brand-lightGray/50">
+                                    <div class="flex justify-between items-center mb-1">
+                                        <span class="text-sm text-brand-midGray">费用</span>
+                                        <span class="font-bold text-brand-dark">5,600 元</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm text-brand-midGray">周期</span>
+                                        <span class="text-brand-blue font-medium">2-3 周</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tier 2 -->
+                            <div
+                                class="bg-brand-blue/5 p-5 rounded-xl border border-brand-blue/30 flex flex-col justify-between h-full relative">
+                                <div
+                                    class="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-brand-blue text-white text-xs px-2 py-0.5 rounded-full">
+                                    POPULAR</div>
+                                <div>
+                                    <h3 class="text-brand-blue font-bold text-lg mb-1">标准库</h3>
+                                    <div class="text-3xl font-sans font-bold text-brand-dark mb-2">300 <span
+                                            class="text-sm font-normal">万化合物</span></div>
+                                </div>
+                                <div class="mt-4 pt-4 border-t border-brand-blue/20">
+                                    <div class="flex justify-between items-center mb-1">
+                                        <span class="text-sm text-brand-midGray">费用</span>
+                                        <span class="font-bold text-brand-dark">10,500 元</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm text-brand-midGray">周期</span>
+                                        <span class="text-brand-blue font-medium">4-6 周</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tier 3 -->
+                            <div
+                                class="bg-white p-5 rounded-xl border border-brand-lightGray hover:border-brand-blue transition-colors flex flex-col justify-between h-full">
+                                <div>
+                                    <h3 class="text-brand-blue font-bold text-lg mb-1">旗舰库</h3>
+                                    <div class="text-3xl font-sans font-bold text-brand-dark mb-2">700 <span
+                                            class="text-sm font-normal">万化合物</span></div>
+                                </div>
+                                <div class="mt-4 pt-4 border-t border-brand-lightGray/50">
+                                    <div class="flex justify-between items-center mb-1">
+                                        <span class="text-sm text-brand-midGray">费用</span>
+                                        <span class="font-bold text-brand-dark">14,000 元</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm text-brand-midGray">周期</span>
+                                        <span class="text-brand-blue font-medium">5-8 周</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer -->
+        <footer class="mt-16 text-center border-t border-brand-midGray/20 pt-8">
+            <p class="text-brand-midGray text-sm font-serif">© 2026 榴莲忘返 AIDD | 致力于生物医药计算创新</p>
+            <div class="mt-4 flex justify-center space-x-4">
+                <span class="w-2 h-2 rounded-full bg-brand-orange"></span>
+                <span class="w-2 h-2 rounded-full bg-brand-blue"></span>
+                <span class="w-2 h-2 rounded-full bg-brand-green"></span>
+            </div>
+        </footer>
+    </div>
+</body>
+
+</html>
